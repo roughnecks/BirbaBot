@@ -23,7 +23,8 @@ exit;
 
 =head2 read_config
 
-Read the configuration file, which should be passed on the command line, and return an hashref with key-value pairs for the bot config. 
+Read the configuration file, which should be passed on the command
+line, and return an hashref with key-value pairs for the bot config.
 
 =cut 
 
