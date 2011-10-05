@@ -7,7 +7,7 @@
 -- If the same feed is used in multiple channels, we use two different records with all the same columns and different channel/active values.
 
 PRAGMA foreign_keys = ON;
-CREATE TABLE rss (
+CREATE TABLE IF NOT EXISTS rss (
         r_id    	INTEGER PRIMARY KEY,
 	date		DATETIME,
 	f_handle	VARCHAR(255),
@@ -19,7 +19,7 @@ CREATE TABLE rss (
 -- EXAMPLE TABLE which will store the content of each feed item. (feed_handle)
 -- f_id is the feed id number (incremental); f_handle is the same as in the rss table.
 
-CREATE TABLE feed_laltromondo (
+CREATE TABLE IF NOT EXISTS feed_laltromondo (
         f_id          	INTEGER PRIMARY KEY,
         f_handle    	TEXT,
         title	    	VARCHAR(255),
@@ -29,7 +29,7 @@ CREATE TABLE feed_laltromondo (
 	body		TEXT
 );
 
-CREATE TABLE feed_lamerbot (
+CREATE TABLE IF NOT EXISTS feed_lamerbot (
         f_id          	INTEGER PRIMARY KEY,
         f_handle    	TEXT,
         title	    	VARCHAR(255),
