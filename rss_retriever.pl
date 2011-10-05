@@ -39,20 +39,10 @@ sub add_new_rss {
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   return unless ($feedname =~ m/^\w+$/s);
   # first the table to hold the data
-  my $createtab = 
-	"CREATE TABLE IF NOT EXISTS feed_$feedname (
-        id          	INTEGER PRIMARY KEY,
-        date            DATETIME,
-        title	    	VARCHAR(255),
-        author		VARCHAR(255),
-	url	    	TEXT UNIQUE,
-	description	TEXT);";
-  my $sthfeeds = $dbh->prepare($createtab);
-  $sthfeeds->execute();
   # then update the rss table
-  my $populate_meta_rss = "INSERT INTO rss VALUES (?, DATE('NOW'), ?, ?, ?, ?)";
+  my $populate_meta_rss = "INSERT INTO rss VALUES (NULL, DATE('NOW'), ?, ?, ?, ?)";
   my $populate = $dbh->prepare($populate_meta_rss);
-  $populate->execute(undef, $feedname, $channel, $url, $active);
+  $populate->execute($feedname, $channel, $url, $active);
   $dbh->disconnect;
 }
 
@@ -63,6 +53,8 @@ Create the master rss table if it doesn't exist.
 =cut
 
 sub create_db {
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+
   my $create_meta_rss = "CREATE TABLE IF NOT EXISTS rss (
         r_id    	INTEGER PRIMARY KEY,
 	date		DATE,
@@ -71,10 +63,23 @@ sub create_db {
         url     	TEXT,
         active		BOOLEAN
 );";
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   my $sth = $dbh->prepare($create_meta_rss);
   $sth->execute();
+
+  my $createtab = 
+	"CREATE TABLE IF NOT EXISTS feeds (
+        id          	INTEGER PRIMARY KEY,
+        feedname        VARCHAR(30),
+        date            DATETIME,
+        title	    	VARCHAR(255),
+        author		VARCHAR(255),
+	url	    	TEXT UNIQUE,
+	description	TEXT);";
+  my $sthfeeds = $dbh->prepare($createtab);
+  $sthfeeds->execute();
+
   $dbh->disconnect;
+
   add_new_rss('laltrowiki', 
 	      '#l_altro_mondo',
 	      'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss',
@@ -167,9 +172,10 @@ sub rss_fetch {
 
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
-	$dbh->prepare("INSERT INTO feed_$feedname VALUES (NULL, DATETIME('NOW'), ?, ?, ?, ?)");
+	$dbh->prepare("INSERT INTO feeds VALUES (NULL, ?, DATETIME('NOW'), ?, ?, ?, ?)");
       foreach my $item (@{$rss->{'items'}}) {
 	$sth->execute(
+		      $feedname,
 		      $item->{'title'},
 		      $item->{'author'},
 		      $item->{'link'},
