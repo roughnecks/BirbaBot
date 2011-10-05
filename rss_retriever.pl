@@ -167,7 +167,7 @@ sub rss_fetch {
 
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
-	$dbh->prepare("INSERT INTO feed_$feedname VALUES (NULL, DATETIME(NOW), ?, ?, ?, ?)");
+	$dbh->prepare("INSERT INTO feed_$feedname VALUES (NULL, DATETIME('NOW'), ?, ?, ?, ?)");
       foreach my $item (@{$rss->{'items'}}) {
 	$sth->execute(
 		      $item->{'title'},
