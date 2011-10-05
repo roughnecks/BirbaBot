@@ -36,7 +36,7 @@ This function adds a new feed to watch.
 
 sub add_new_rss {
   my ($feedname, $channel, $url, $active) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","", { PrintError=>0 });
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   return unless ($feedname =~ m/^\w+$/s);
   # first the table to hold the data
   my $createtab = 
@@ -135,7 +135,7 @@ sub rss_fetch {
   $ua->show_progress(1);
 
   # here we open the db;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "");
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "", { PrintError=>0 });
 
   # and here we start the routineca
   foreach my $feedname (keys %urls) {
