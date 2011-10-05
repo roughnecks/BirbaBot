@@ -36,7 +36,7 @@ This function adds a new feed to watch.
 
 sub add_new_rss {
   my ($feedname, $channel, $url, $active) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","", { PrintError=>0 });
   return unless ($feedname =~ m/^\w+$/s);
   # first the table to hold the data
   my $createtab = 
