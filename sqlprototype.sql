@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS feed_lamerbot (
 --- Load some sample data
 ---
 
-INSERT INTO rss VALUES (NULL, DATETIME('NOW'), 'laltrowiki', '#l_altromondo', 'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss', 1);
+INSERT INTO rss VALUES (NULL, DATETIME('NOW'), 'laltrowiki', '#l_altro_mondo', 'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss', 1);
 INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#l_altro_mondo', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 1);
 INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#lamerbot', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 0);
 
@@ -74,3 +74,7 @@ SELECT * FROM feed_laltromondo ORDER BY f_id DESC LIMIT 2;
 
 -- query a feed_name to get the last 2 fetched items for feed_handle (from selected tables)
 SELECT f_handle,title,url FROM feed_laltromondo ORDER BY f_id DESC LIMIT 2;
+
+-- query to select active feeds in channel f_channel (e.g. #laltromondo)
+SELECT f_handle FROM rss WHERE f_channel='#l_altro_mondo' AND active=1;
+
