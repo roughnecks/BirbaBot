@@ -11,11 +11,12 @@ use Data::Dumper;
 use LWP::UserAgent;
 use File::Spec;
 use File::Path;
+use DBI;
 
-my %urls = ('wiki' => 'http://laltromondo.dynalias.net/gitweb/?p=LAltroWiki.git;a=rss',
-	    'bot' =>    'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
-	    'library' => 'http://theanarchistlibrary.org/rss.xml'
-	   );
+my $dbname = "rss.db";
+create_db() unless (-f $dbname);
+
+my %urls = get_the_rss_to_fetch();
 
 my $localdir = File::Spec->catdir('data','rss');
 File::Path->make_path($localdir) unless (-d $localdir);
@@ -33,6 +34,12 @@ foreach my $url (keys %urls) {
   # now, as far as I understand, the "mirror" response doesn't return
   # the content, which is actually stored in the file.
   # So I guess we either do 'get' request, or we open the file
+  unless ($url =~ m/^\w+$/s) {
+    print "Warning: the name of the rss must be alphanumeric + underscore only!\n";
+    next;
+  }
+
+
   if ($response->is_success) {
     my $rss = XML::RSS->new();
     $rss->parsefile($destfile);
@@ -46,3 +53,42 @@ foreach my $url (keys %urls) {
   }
 }
 
+sub add_new_rss {
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  
+  $dbh->disconnect;
+}
+
+sub create_db {
+  my $create_meta_rss = "CREATE TABLE IF NOT EXISTS rss (
+        r_id    	INTEGER PRIMARY KEY,
+	date		DATETIME,
+	f_handle	VARCHAR(255),
+	f_channel	VARCHAR(30),
+        url     	TEXT,
+        active		BOOLEAN
+);";
+  my $populate_meta_rss = "INSERT INTO rss VALUES (?, DATETIME('NOW'), ?, ?, ?, ?)";
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $sth = $dbh->prepare($create_meta_rss);
+  $sth->execute();
+  my $populate = $dbh->prepare($populate_meta_rss);
+  $populate->execute(undef, 'laltrowiki', '#l_altromondo', 'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss', 1);
+  $populate->execute(undef, 'lamerbot', '#l_altro_mondo', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 1);
+  $populate->execute(undef, 'lamerbot', '#lamerbot', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 0);
+  $dbh->disconnect;
+}
+
+sub get_the_rss_to_fetch {
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $sth = $dbh->prepare('SELECT DISTINCT url,f_handle FROM rss WHERE active=1;');
+  $sth->execute();
+  my %rsses;
+  while (my @data = $sth->fetchrow_array()) {
+    my $rss = $data[1];
+    my $value = $data[0];
+    $rsses{$rss} = $value;
+  }
+  $dbh->disconnect;
+  return %rsses
+}
