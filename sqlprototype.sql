@@ -27,13 +27,13 @@ INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#lamerbot', 'h
 
 --- SECTION 3: documented queries
 
--- query rss table to see which urls needs to be fetched for which channel
+SELECT 'query rss table to see which urls needs to be fetched for which channel';
 SELECT url,f_channel FROM rss WHERE active=1;
 
--- query rss table to see which urls of which feed_handle needs to be fetched without duplicates
+SELECT 'query rss table to see which urls of which feed_handle needs to be fetched without duplicates';
 SELECT DISTINCT url,f_handle FROM rss WHERE active=1;
 
--- query rss table to select active feeds in channel f_channel (e.g. #laltromondo)
+SELECT 'query rss table to select active feeds in channel f_channel (e.g. #laltromondo)';
 SELECT f_handle FROM rss WHERE f_channel='#l_altro_mondo' AND active=1;
 
 
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS feed_laltromondo (
         title	    	VARCHAR(255),
         author		VARCHAR(255),
 	url	    	TEXT UNIQUE,
-	data		TEXT
+	description	TEXT
 );
 
 --- SECTION 2
@@ -57,37 +57,18 @@ INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'first commit', 'rough
 INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata2');
 INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3');
 
--- EXAMPLE TABLES which will store the content of each feed item. (feed_handle)
--- f_id is the feed id number (incremental); f_handle is the same as in the rss table.
-
-CREATE TABLE IF NOT EXISTS feed_lamerbot (
-        f_id          	INTEGER PRIMARY KEY,
-        f_handle    	TEXT,
-        title	    	VARCHAR(255),
-        author		VARCHAR(255),
-	url	    	TEXT UNIQUE,
-	data		TEXT
-);
-
---- SECTION 2
---- Load some sample data
----
-
-INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'first commit', 'melmothx', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info01', 'blahblahdata3');
-INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info02', 'blahblahdata4');
-
 
 --- SECTION 3: documented queries for feeds TABLES
 
--- query feed_handle table(s) to get already fetched urls
+SELECT 'query feed_handle table(s) to get already fetched urls';
 SELECT url FROM feed_laltromondo;
 
--- query a feed_name to get the last fetched item id for feed_handle
+SELECT 'query a feed_name to get the last fetched item id for feed_handle';
 SELECT f_id FROM feed_laltromondo ORDER BY f_id DESC LIMIT 1;
 
--- query a feed_name to get the last 2 fetched items for feed_handle (from all tables)
+SELECT 'query a feed_name to get the last 2 fetched items for feed_handle (from all tables)';
 SELECT * FROM feed_laltromondo ORDER BY f_id DESC LIMIT 2;
 
--- query a feed_name to get the last 2 fetched items for feed_handle (from selected tables)
+SELECT 'query a feed_name to get the last 2 fetched items for feed_handle (from selected tables)';
 SELECT f_handle,title,url FROM feed_laltromondo ORDER BY f_id DESC LIMIT 2;
 
