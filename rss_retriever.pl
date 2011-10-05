@@ -120,9 +120,16 @@ This function accept a reference to an hash like this
 
 It fetches the feeds, dumps them in the db, and return an hash reference like this:
      
-     { 'feed1' => [ "title desc author url", "title desc author url"]
-       'feed2' => ["title desc author url"] )
-
+     {
+       'lamerbot' => [
+                       {
+                         'link' => 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=commitdiff;h=d45c48b6303defb3977eaad68cbfbfd080b74c3a',
+                         'desc' => 'new sql: date fixes',
+                         'author' => 'roughnecks <simcana@gmail.com>',
+                         'title' => 'new sql: date fixes'
+                       }
+                     ]
+     };
 So the next step is to dispatch the feed to the relative channels
 
 =cut
@@ -130,6 +137,7 @@ So the next step is to dispatch the feed to the relative channels
 
 sub rss_fetch {
   # initialize the user agent
+  my %output;
   my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
   $ua->agent('Mozilla' . $ua->_agent);
   $ua->show_progress(1);
@@ -139,6 +147,7 @@ sub rss_fetch {
 
   # and here we start the routineca
   foreach my $feedname (keys %urls) {
+    my @outputfeed;
     unless ($feedname =~ m/^\w+$/s) {
       print "Warning: the name of the rss must be alphanumeric", 
 	" + underscore only!\n";
@@ -157,20 +166,27 @@ sub rss_fetch {
 
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
-	$dbh->prepare("INSERT INTO feed_$feedname VALUES (?, ?, ?, ?, ?)");
+	$dbh->prepare("INSERT INTO feed_$feedname VALUES (NULL, ?, ?, ?, ?)");
       foreach my $item (@{$rss->{'items'}}) {
-	$sth->execute(undef, # the primary key
+	$sth->execute(
 		      $item->{'title'},
 		      $item->{'author'},
 		      $item->{'link'},
 		      $item->{'description'});
-	if ($sth->err) {
-	  print $sth->err;
+	unless ($sth->err) {
+	  # here we push the new feed in a multidimensional hash
+	  push @outputfeed,
+	    {'title' =>  $item->{'title'},
+	     'author' => $item->{'author'},
+	     'link' =>   $item->{'link'},
+	     'desc' =>   $item->{'description'} };
+	
 	}
-      }
-    } else {
-      print "$feedname skipped\n"
+      } 
+      $output{$feedname} = \@outputfeed;
     }
   }
   $dbh->disconnect;
+  print Dumper(\%output);
+  return \%output;
 }
