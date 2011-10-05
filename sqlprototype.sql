@@ -21,7 +21,6 @@ CREATE TABLE rss (
 
 CREATE TABLE feed_laltromondo (
         f_id          	INTEGER PRIMARY KEY,
-	date		DATETIME,
         f_handle    	TEXT,
         title	    	VARCHAR(255),
         author		VARCHAR(255),
@@ -32,7 +31,6 @@ CREATE TABLE feed_laltromondo (
 
 CREATE TABLE feed_lamerbot (
         f_id          	INTEGER PRIMARY KEY,
-	date		DATETIME,
         f_handle    	TEXT,
         title	    	VARCHAR(255),
         author		VARCHAR(255),
@@ -50,17 +48,20 @@ INSERT INTO rss VALUES (NULL, '2011-10-05 00:10:00', 'laltrowiki', '#l_altromond
 INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#l_altro_mondo', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 1);
 INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#lamerbot', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 0);
 
-INSERT INTO feed_laltromondo VALUES (NULL, '2011-10-05 00:12:00', 'laltromondo', 'first commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f', 'blahblahdata1', 'blahblahbody1');
-INSERT INTO feed_laltromondo VALUES (NULL, '2011-10-05 00:13:00', 'laltromondo', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;', 'blahblahdata2', 'blahblahbody2');
-INSERT INTO feed_laltromondo VALUES (NULL, '2011-10-06 00:13:00', 'laltromondo', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;', 'blahblahdata3', 'blahblahbody3');
+INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'first commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata1', 'blahblahbody1');
+INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;02', 'blahblahdata2', 'blahblahbody2');
+INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3', 'blahblahbody3');
 
-INSERT INTO feed_lamerbot VALUES (NULL, '2011-10-05 00:15:00', 'lamerbot', 'first commit', 'melmothx', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=in', 'blahblahdata3', 'blahblahbody3');
-INSERT INTO feed_lamerbot VALUES (NULL, '2011-10-05 00:16:00', 'lamerbot', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info', 'blahblahdata4', 'blahblahbody5');
+INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'first commit', 'melmothx', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info01', 'blahblahdata3', 'blahblahbody3');
+INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info02', 'blahblahdata4', 'blahblahbody5');
 
 --- SECTION 3: documented queries
 
--- query to see which urls we need to fetch for which channel
+-- query rss table to see which urls needs to be for which channel
 SELECT url,f_channel FROM rss WHERE active=1;
+
+-- query feed_handle table(s) to get already fetched urls
+SELECT url FROM feed_laltromondo;
 
 -- query a feed_name to get the last fetched item id for feed_handle
 SELECT f_id FROM feed_laltromondo ORDER BY f_id DESC LIMIT 1;
