@@ -57,8 +57,11 @@ INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'second commit', 'rough', 'h
 
 --- SECTION 3: documented queries
 
--- query rss table to see which urls needs to be for which channel
+-- query rss table to see which urls needs to be fetched for which channel
 SELECT url,f_channel FROM rss WHERE active=1;
+
+-- query rss table to see which urls needs to be fetched without duplicates
+SELECT DISTINCT url FROM rss WHERE active=1;
 
 -- query feed_handle table(s) to get already fetched urls
 SELECT url FROM feed_laltromondo;
