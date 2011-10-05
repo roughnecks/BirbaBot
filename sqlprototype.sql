@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS feed_lamerbot (
 --- Load some sample data
 ---
 
-INSERT INTO rss VALUES (NULL, '2011-10-05 00:10:00', 'laltrowiki', '#l_altromondo', 'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss', 1);
+INSERT INTO rss VALUES (NULL, DATETIME('NOW'), 'laltrowiki', '#l_altromondo', 'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss', 1);
 INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#l_altro_mondo', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 1);
 INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#lamerbot', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 0);
 
