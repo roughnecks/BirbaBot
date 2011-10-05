@@ -47,8 +47,7 @@ SELECT f_handle FROM rss WHERE f_channel='#l_altro_mondo' AND active=1;
 -- f_id is the feed id number (incremental); f_handle is the same as in the rss table.
 
 CREATE TABLE IF NOT EXISTS feed_laltromondo (
-        f_id          	INTEGER PRIMARY KEY,
-        f_handle    	TEXT,
+        id          	INTEGER PRIMARY KEY,
         title	    	VARCHAR(255),
         author		VARCHAR(255),
 	url	    	TEXT UNIQUE,
@@ -59,12 +58,12 @@ CREATE TABLE IF NOT EXISTS feed_laltromondo (
 --- Load some sample data
 ---
 
-INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'first commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata1');
+INSERT INTO feed_laltromondo VALUES (NULL, 'first commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata1');
 SELECT '
 here there is a wanted error caused by the url in the next INSERT statement wich is not unique
 ';
-INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata2');
-INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3');
+INSERT INTO feed_laltromondo VALUES (NULL, 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata2');
+INSERT INTO feed_laltromondo VALUES (NULL, 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3');
 
 
 --- SECTION 3: documented queries for feeds TABLES
@@ -77,15 +76,10 @@ SELECT url FROM feed_laltromondo;
 SELECT '
 query a feed_name to get the last fetched item id for feed_handle
 ';
-SELECT f_id FROM feed_laltromondo ORDER BY f_id DESC LIMIT 1;
+SELECT id FROM feed_laltromondo ORDER BY id DESC LIMIT 1;
 
 SELECT '
 query a feed_name to get the last 2 fetched items for feed_handle (from all tables)
 ';
-SELECT * FROM feed_laltromondo ORDER BY f_id DESC LIMIT 2;
-
-SELECT '
-query a feed_name to get the last 2 fetched items for feed_handle (from selected tables)
-';
-SELECT f_handle,title,url FROM feed_laltromondo ORDER BY f_id DESC LIMIT 2;
+SELECT * FROM feed_laltromondo ORDER BY id DESC LIMIT 2;
 
