@@ -14,28 +14,50 @@ use File::Spec;
 use File::Path;
 use DBI;
 
+# initialize the db
 my $dbname = "rss.db";
 create_db() unless (-f $dbname);
 
+# initialize the local storage
+my $localdir = File::Spec->catdir('data','rss');
+File::Path->make_path($localdir) unless (-d $localdir);
+
+
+
 my %urls = get_the_rss_to_fetch();
+rss_fetch();
 
+=head2 add_new_rss($feedname, $channel, $url, $active)
 
-=head2 add_new_rss 
-
-Function to add a new rss
+This function adds a new feed to watch.
 
 =cut
 
 
 sub add_new_rss {
+  my ($feedname, $channel, $url, $active) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  
+  return unless ($feedname =~ m/^\w+$/s);
+  # first the table to hold the data
+  my $createtab = 
+	"CREATE TABLE IF NOT EXISTS feed_$feedname (
+        id          	INTEGER PRIMARY KEY,
+        title	    	VARCHAR(255),
+        author		VARCHAR(255),
+	url	    	TEXT UNIQUE,
+	description	TEXT);";
+  my $sthfeeds = $dbh->prepare($createtab);
+  $sthfeeds->execute();
+  # then update the rss table
+  my $populate_meta_rss = "INSERT INTO rss VALUES (?, DATETIME('NOW'), ?, ?, ?, ?)";
+  my $populate = $dbh->prepare($populate_meta_rss);
+  $populate->execute(undef, $feedname, $channel, $url, $active);
   $dbh->disconnect;
 }
 
 =head2 create_db
 
-Create a new database if it doesn't exist.
+Create the master rss table if it doesn't exist.
 
 =cut
 
@@ -48,17 +70,24 @@ sub create_db {
         url     	TEXT,
         active		BOOLEAN
 );";
-  my $populate_meta_rss = "INSERT INTO rss VALUES (?, DATETIME('NOW'), ?, ?, ?, ?)";
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   my $sth = $dbh->prepare($create_meta_rss);
   $sth->execute();
-  my $populate = $dbh->prepare($populate_meta_rss);
-  $populate->execute(undef, 'laltrowiki', '#l_altromondo', 'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss', 1);
-  $populate->execute(undef, 'lamerbot', '#l_altro_mondo', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 1);
-  $populate->execute(undef, 'lamerbot', '#lamerbot', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 0);
   $dbh->disconnect;
+  add_new_rss('laltrowiki', 
+	      '#l_altro_mondo',
+	      'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss',
+	      1);
+  add_new_rss('lamerbot',
+	      '#l_altro_mondo',
+	      'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
+	      1);
+  add_new_rss('lamerbot',
+	      '#lamerbot',
+	      'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
+	      1);
+  # all done
 }
-
 
 =head2 get_the_rss_to_fetch()
 
@@ -91,51 +120,56 @@ This function accept a reference to an hash like this
 
 It fetches the feeds, dumps them in the db, and return an hash reference like this:
      
-     { '#channel' => [ "title desc author url", "title desc author url"]
-       '#channel2' => ["title desc author url"] )
+     { 'feed1' => [ "title desc author url", "title desc author url"]
+       'feed2' => ["title desc author url"] )
 
-So it will be ready to be output to the channel.
+So the next step is to dispatch the feed to the relative channels
 
 =cut
 
 
 sub rss_fetch {
-
-# initialize the local storage
-  my $localdir = File::Spec->catdir('data','rss');
-  File::Path->make_path($localdir) unless (-d $localdir);
-
   # initialize the user agent
   my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
-  $ua->agent('Mozilla/BunnyBot' . $ua->_agent);
+  $ua->agent('Mozilla' . $ua->_agent);
   $ua->show_progress(1);
 
   # here we open the db;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "");
 
-  foreach my $url (keys %urls) {
-    print "Fetching data for $url\n";
-    my $destfile = File::Spec->catfile($localdir, $url);
-    my $response = $ua->mirror($urls{$url}, $destfile);
+  # and here we start the routineca
+  foreach my $feedname (keys %urls) {
+    unless ($feedname =~ m/^\w+$/s) {
+      print "Warning: the name of the rss must be alphanumeric", 
+	" + underscore only!\n";
+      # no next!
+      next;
+    }
+    print "Fetching data for $feedname\n";
+    my $destfile = File::Spec->catfile($localdir, $feedname);
+    my $response = $ua->mirror($urls{$feedname}, $destfile);
     # now, as far as I understand, the "mirror" response doesn't return
     # the content, which is actually stored in the file.
     # So I guess we either do 'get' request, or we open the file
-    unless ($url =~ m/^\w+$/s) {
-      print "Warning: the name of the rss must be alphanumeric + underscore only!\n";
-      next;
-    }
-
-
     if ($response->is_success) {
       my $rss = XML::RSS->new();
       $rss->parsefile($destfile);
+
+      # create a table to hold the data, if doesn't exist yet.
+      my $sth = 
+	$dbh->prepare("INSERT INTO feed_$feedname VALUES (?, ?, ?, ?, ?)");
       foreach my $item (@{$rss->{'items'}}) {
-	print "title: $item->{'title'}\n";
-	print "link: $item->{'link'}\n";
-	print "description: $item->{'description'}\n";
+	$sth->execute(undef, # the primary key
+		      $item->{'title'},
+		      $item->{'author'},
+		      $item->{'link'},
+		      $item->{'description'});
+	if ($sth->err) {
+	  print $sth->err;
+	}
       }
     } else {
-      print "$url skipped\n"
+      print "$feedname skipped\n"
     }
   }
   $dbh->disconnect;
