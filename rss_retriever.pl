@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# -*- mode: cperl -*-
 
 # This library is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -18,46 +19,6 @@ create_db() unless (-f $dbname);
 
 my %urls = get_the_rss_to_fetch();
 
-# initialize the local storage
-my $localdir = File::Spec->catdir('data','rss');
-File::Path->make_path($localdir) unless (-d $localdir);
-
-# initialize the user agent
-my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
-$ua->agent('Mozilla/BunnyBot' . $ua->_agent);
-$ua->show_progress(1);
-
-# here we open the db;
-my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-
-foreach my $url (keys %urls) {
-  print "Fetching data for $url\n";
-  my $destfile = File::Spec->catfile($localdir, $url);
-  my $response = $ua->mirror($urls{$url}, $destfile);
-  # now, as far as I understand, the "mirror" response doesn't return
-  # the content, which is actually stored in the file.
-  # So I guess we either do 'get' request, or we open the file
-  unless ($url =~ m/^\w+$/s) {
-    print "Warning: the name of the rss must be alphanumeric + underscore only!\n";
-    next;
-  }
-
-
-  if ($response->is_success) {
-    my $rss = XML::RSS->new();
-    $rss->parsefile($destfile);
-    foreach my $item (@{$rss->{'items'}}) {
-      print "title: $item->{'title'}\n";
-      print "link: $item->{'link'}\n";
-      print "description: $item->{'description'}\n";
-    }
-  } else {
-    print "$url skipped\n"
-  }
-}
-$dbh->disconnect;
-
-exit;
 
 =head2 add_new_rss 
 
@@ -118,4 +79,64 @@ sub get_the_rss_to_fetch {
   }
   $dbh->disconnect;
   return %rsses
+}
+
+
+=head2 rss_fetch(\%rsses)
+
+This function accept a reference to an hash like this
+   
+     { lamerbot => http://domain.com/rss.xml,
+       lamerbot2 => http://domain.org/rss.xml}
+
+It fetches the feeds, dumps them in the db, and return an hash reference like this:
+     
+     { '#channel' => [ "title desc author url", "title desc author url"]
+       '#channel2' => ["title desc author url"] )
+
+So it will be ready to be output to the channel.
+
+=cut
+
+
+sub rss_fetch {
+
+# initialize the local storage
+  my $localdir = File::Spec->catdir('data','rss');
+  File::Path->make_path($localdir) unless (-d $localdir);
+
+  # initialize the user agent
+  my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
+  $ua->agent('Mozilla/BunnyBot' . $ua->_agent);
+  $ua->show_progress(1);
+
+  # here we open the db;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+
+  foreach my $url (keys %urls) {
+    print "Fetching data for $url\n";
+    my $destfile = File::Spec->catfile($localdir, $url);
+    my $response = $ua->mirror($urls{$url}, $destfile);
+    # now, as far as I understand, the "mirror" response doesn't return
+    # the content, which is actually stored in the file.
+    # So I guess we either do 'get' request, or we open the file
+    unless ($url =~ m/^\w+$/s) {
+      print "Warning: the name of the rss must be alphanumeric + underscore only!\n";
+      next;
+    }
+
+
+    if ($response->is_success) {
+      my $rss = XML::RSS->new();
+      $rss->parsefile($destfile);
+      foreach my $item (@{$rss->{'items'}}) {
+	print "title: $item->{'title'}\n";
+	print "link: $item->{'link'}\n";
+	print "description: $item->{'description'}\n";
+      }
+    } else {
+      print "$url skipped\n"
+    }
+  }
+  $dbh->disconnect;
 }
