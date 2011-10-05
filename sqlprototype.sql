@@ -24,9 +24,8 @@ CREATE TABLE IF NOT EXISTS feed_laltromondo (
         f_handle    	TEXT,
         title	    	VARCHAR(255),
         author		VARCHAR(255),
-	url	    	TEXT,
-	data		TEXT,
-	body		TEXT
+	url	    	TEXT UNIQUE,
+	data		TEXT
 );
 
 CREATE TABLE IF NOT EXISTS feed_lamerbot (
@@ -34,9 +33,8 @@ CREATE TABLE IF NOT EXISTS feed_lamerbot (
         f_handle    	TEXT,
         title	    	VARCHAR(255),
         author		VARCHAR(255),
-	url	    	TEXT,
-	data		TEXT,
-	body		TEXT
+	url	    	TEXT UNIQUE,
+	data		TEXT
 );
 
 
@@ -48,12 +46,12 @@ INSERT INTO rss VALUES (NULL, DATETIME('NOW'), 'laltrowiki', '#l_altro_mondo', '
 INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#l_altro_mondo', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 1);
 INSERT INTO rss VALUES (NULL, '2011-10-05 00:11:00', 'lamerbot', '#lamerbot', 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss', 0);
 
-INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'first commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata1', 'blahblahbody1');
-INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;02', 'blahblahdata2', 'blahblahbody2');
-INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3', 'blahblahbody3');
+INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'first commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata1');
+INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata2');
+INSERT INTO feed_laltromondo VALUES (NULL, 'laltromondo', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3');
 
-INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'first commit', 'melmothx', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info01', 'blahblahdata3', 'blahblahbody3');
-INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info02', 'blahblahdata4', 'blahblahbody5');
+INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'first commit', 'melmothx', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info01', 'blahblahdata3');
+INSERT INTO feed_lamerbot VALUES (NULL, 'lamerbot', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;f=info02', 'blahblahdata4');
 
 --- SECTION 3: documented queries
 
