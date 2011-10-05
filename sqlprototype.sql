@@ -46,25 +46,25 @@ SELECT f_handle FROM rss WHERE f_channel='#l_altro_mondo' AND active=1;
 -- EXAMPLE TABLES which will store the content of each feed item. (feed_handle)
 -- f_id is the feed id number (incremental); f_handle is the same as in the rss table.
 
-CREATE TABLE IF NOT EXISTS feed_laltromondo (
+CREATE TABLE IF NOT EXISTS feeds (
         id          	INTEGER PRIMARY KEY,
-	date		DATETIME,
+        feedname        VARCHAR(30),
+        date            DATETIME,
         title	    	VARCHAR(255),
         author		VARCHAR(255),
 	url	    	TEXT UNIQUE,
-	description	TEXT
-);
+	description	TEXT);
 
 --- SECTION 2
 --- Load some sample data
 ---
 
-INSERT INTO feed_laltromondo VALUES (NULL, DATETIME('NOW'), 'first commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata1');
+INSERT INTO feeds VALUES (NULL, 'laltromondo', DATETIME('NOW'), 'first commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata1');
 SELECT '
 here there is a wanted error caused by the url in the next INSERT statement wich is not unique
 ';
-INSERT INTO feed_laltromondo VALUES (NULL, DATETIME('NOW'), 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata2');
-INSERT INTO feed_laltromondo VALUES (NULL, '2011-10-04 20:17:00', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3');
+INSERT INTO feeds VALUES (NULL, 'laltromondo', DATETIME('NOW'), 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata2');
+INSERT INTO feeds  VALUES (NULL, 'laltromondo', '2011-10-04 20:17:00', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3');
 
 
 --- SECTION 3: documented queries for feeds TABLES
