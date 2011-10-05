@@ -42,6 +42,7 @@ sub add_new_rss {
   my $createtab = 
 	"CREATE TABLE IF NOT EXISTS feed_$feedname (
         id          	INTEGER PRIMARY KEY,
+        date            DATETIME,
         title	    	VARCHAR(255),
         author		VARCHAR(255),
 	url	    	TEXT UNIQUE,
@@ -49,7 +50,7 @@ sub add_new_rss {
   my $sthfeeds = $dbh->prepare($createtab);
   $sthfeeds->execute();
   # then update the rss table
-  my $populate_meta_rss = "INSERT INTO rss VALUES (?, DATETIME('NOW'), ?, ?, ?, ?)";
+  my $populate_meta_rss = "INSERT INTO rss VALUES (?, DATE('NOW'), ?, ?, ?, ?)";
   my $populate = $dbh->prepare($populate_meta_rss);
   $populate->execute(undef, $feedname, $channel, $url, $active);
   $dbh->disconnect;
@@ -64,7 +65,7 @@ Create the master rss table if it doesn't exist.
 sub create_db {
   my $create_meta_rss = "CREATE TABLE IF NOT EXISTS rss (
         r_id    	INTEGER PRIMARY KEY,
-	date		DATETIME,
+	date		DATE,
 	f_handle	VARCHAR(255),
 	f_channel	VARCHAR(30),
         url     	TEXT,
@@ -166,7 +167,7 @@ sub rss_fetch {
 
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
-	$dbh->prepare("INSERT INTO feed_$feedname VALUES (NULL, ?, ?, ?, ?)");
+	$dbh->prepare("INSERT INTO feed_$feedname VALUES (NULL, DATETIME(NOW), ?, ?, ?, ?)");
       foreach my $item (@{$rss->{'items'}}) {
 	$sth->execute(
 		      $item->{'title'},
