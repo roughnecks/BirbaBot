@@ -308,7 +308,8 @@ sub process_feeds {
 	next # wtf, no title?
       }
       if ($news->{'link'}) {
-	$string .= make_tiny_url($news->{'link'}) . " ";
+	# $string .= "<" . make_tiny_url($news->{'link'}) . "> ";
+	$string .= "<" . $news->{'link'} . "> ";
       } else {
 	next # wtf, no link?
       }
