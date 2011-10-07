@@ -10,6 +10,8 @@ use warnings;
 use XML::RSS;
 use Data::Dumper;
 use LWP::UserAgent;
+use HTTP::Response;
+use HTTP::Request::Common;
 use File::Spec;
 use File::Path;
 use DBI;
@@ -237,9 +239,8 @@ sub rss_fetch {
           push @outputfeed,
             {'title' =>  $item->{'title'},
              'author' => $item->{'author'},
-             'link' =>   $item->{'link'},
+             'link' =>   make_tiny_url($item->{'link'}),
              'desc' =>   $item->{'description'} };
-        
         }
       } 
       $output{$feedname} = \@outputfeed;
@@ -247,4 +248,25 @@ sub rss_fetch {
   }
   $dbh->disconnect;
   return \%output;
+}
+
+=head2 make_tiny_url($url)
+
+Given a url string $url, return a shortened url quering various
+tinyurler on the net.
+
+=cut
+
+sub make_tiny_url {
+  my $url = shift;
+  print $url, "\n";
+  my $ua = LWP::UserAgent->new(timeout => 10);
+  $ua->agent( 'Mozilla' );
+  my $response = $ua->request( POST 'http://api.x0.no/post/', ["u" => $url]);
+  print $response->content, "\n";
+  if ($response->is_success and $response->content =~ m!(http://x0.no/\w+)!) {
+    return $1;
+  } else {
+    return $url;
+  }
 }
