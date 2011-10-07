@@ -83,6 +83,11 @@ query channels for active feeds
 
 SELECT f_handle FROM channels WHERE active=1;
 
+SELECT '
+query for channels where we need to send updates for f_handle where it is active
+';
+
+SELECT f_channel FROM channesl WHERE f_handle='laltrowiki' AND active=1;
 
 
 
