@@ -61,33 +61,26 @@ al contrario non posso eliminare il feed slashdot dalla lista degli rss se ho de
 CREATE TABLE IF NOT EXISTS channels (
         f_handle        VARCHAR(30) NOT NULL,
 	f_channel	VARCHAR(30) NOT NULL,
-        active		BOOLEAN,
 	FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE
 );
 
 
-INSERT INTO channels VALUES ('laltrowiki', '#l_altro_mondo', 1);
-INSERT INTO channels VALUES ('lamerbot', '#l_altro_mondo', 0);
-INSERT INTO channels VALUES ('lamerbot', '#lamerbot', 1);
+INSERT INTO channels VALUES ('laltrowiki', '#l_altro_mondo');
+INSERT INTO channels VALUES ('lamerbot', '#l_altro_mondo');
+INSERT INTO channels VALUES ('lamerbot', '#lamerbot');
 
 SELECT '
 errore voluto, rss non presente in menu
 ';
 
-INSERT INTO channels VALUES ('rbot', '#l_altro_mondo', 1);
+INSERT INTO channels VALUES ('rbot', '#l_altro_mondo');
 
 
 SELECT '
-query channels for active feeds
+query for channels where we need to send updates for f_handle
 ';
 
-SELECT f_handle FROM channels WHERE active=1;
-
-SELECT '
-query for channels where we need to send updates for f_handle where it is active
-';
-
-SELECT f_channel FROM channesl WHERE f_handle='laltrowiki' AND active=1;
+SELECT f_channel FROM channels WHERE f_handle='laltrowiki';
 
 
 
@@ -169,6 +162,12 @@ provo a cancellare un rss quando ci sono notizie nella tabella feeds per testare
 ';
 
 DELETE FROM rss WHERE f_handle='laltrowiki';
+
+SELECT '
+adesso provo invece a cancellare un canale che seguiva lamerbot e non lo vuole + :in questo caso posso eliminarlo nonostante ci siano notizie presenti. 
+';
+
+DELETE FROM channels WHERE f_handle='laltrowiki' AND f_channel='#l_altro_mondo';
 
 SELECT '
 adesso cancello tutti le notizie relative a laltrowiki e poi riprovo a cancellare la entry in rss e relative entry nella tabella canali
