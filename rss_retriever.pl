@@ -27,24 +27,6 @@ File::Path->make_path($localdir) unless (-d $localdir);
 my %urls = get_the_rss_to_fetch();
 rss_fetch();
 
-=head2 add_new_rss($feedname, $channel, $url, $active)
-
-This function adds a new feed to watch.
-
-=cut
-
-
-sub add_new_rss {
-  my ($feedname, $channel, $url, $active) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  return unless ($feedname =~ m/^\w+$/s);
-  # first the table to hold the data
-  # then update the rss table
-  my $populate_meta_rss = "INSERT INTO rss VALUES (NULL, DATE('NOW'), ?, ?, ?, ?)";
-  my $populate = $dbh->prepare($populate_meta_rss);
-  $populate->execute($feedname, $channel, $url, $active);
-  $dbh->disconnect;
-}
 
 =head2 create_db
 
@@ -94,6 +76,27 @@ sub create_db {
 	      1);
   # all done
 }
+
+=head2 add_new_rss($feedname, $channel, $url, $active)
+
+This function adds a new feed to watch.
+
+=cut
+
+
+sub add_new_rss {
+  my ($feedname, $channel, $url, $active) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  return unless ($feedname =~ m/^\w+$/s);
+  # first the table to hold the data
+  # then update the rss table
+  my $populate_meta_rss = "INSERT INTO rss VALUES (NULL, DATE('NOW'), ?, ?, ?, ?)";
+  my $populate = $dbh->prepare($populate_meta_rss);
+  $populate->execute($feedname, $channel, $url, $active);
+  $dbh->disconnect;
+}
+
+
 
 =head2 get_the_rss_to_fetch()
 
