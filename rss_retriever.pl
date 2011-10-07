@@ -239,7 +239,7 @@ sub rss_fetch {
           push @outputfeed,
             {'title' =>  $item->{'title'},
              'author' => $item->{'author'},
-             'link' =>   make_tiny_url($item->{'link'}),
+             'link' =>   $item->{'link'},
              'desc' =>   $item->{'description'} };
         }
       } 
