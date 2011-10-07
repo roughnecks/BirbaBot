@@ -159,22 +159,35 @@ INSERT INTO feeds VALUES (NULL, '2011-10-08 21:18:00', 'laltrowiki', 'fifth comm
 SELECT id,title FROM feeds WHERE f_handle='laltrowiki';
 
 
---- SECTION 5: test if we are able to DELETE an rss item and all related feeds and channels
+SELECT '
+provo a cancellare un rss quando ci sono notizie nella tabella feeds per testare le FOREYGN KEYS
+';
+
+DELETE FROM rss WHERE f_handle='laltrowiki';
 
 SELECT '
-per eliminare un rss del tutto, prima si cancellano le notizie che riguardano il feed stesso
+adesso cancello tutti le notizie relative a laltrowiki e poi riprovo a cancellare la entry in rss e relative entry nella tabella canali
 ';
 
 DELETE FROM feeds WHERE f_handle='laltrowiki';
+DELETE FROM rss WHERE f_handle='laltrowiki';
 
-SELECT '
-poi si cancela la entry nel menu rss ed automagicamente se ne vanno tutti i record per quel feed dalla tabella channels
-';
 
-DELETE FROM rss WHERE f_handle IN (SELECT f_handle FROM channels WHERE f_handle = 'laltrowiki');
+--- SECTION 5: test if we are able to DELETE an rss item and all related feeds and channels
 
-SELECT '
-dovrei riuscire a cancellare tutto con un solo delete: work in progress
-';
+-- SELECT '
+-- per eliminare un rss del tutto, prima si cancellano le notizie che riguardano il feed stesso
+-- ';
 
+-- DELETE FROM feeds WHERE f_handle='laltrowiki';
+
+-- SELECT '
+-- poi si cancela la entry nel menu rss ed automagicamente se ne vanno tutti i record per quel feed dalla tabella channels
+-- ';
+
+-- DELETE FROM rss WHERE f_handle IN (SELECT f_handle FROM channels WHERE f_handle = 'laltrowiki');
+
+-- SELECT '
+-- dovrei riuscire a cancellare tutto con un solo delete: work in progress
+-- ';
 
