@@ -28,7 +28,7 @@ File::Path->make_path($localdir) unless (-d $localdir);
 
 my %urls = get_the_rss_to_fetch();
 my $output = rss_fetch();
-print Dumper($output);
+dispatch_feeds($output);
 
 
 =head2 create_db
@@ -295,5 +295,12 @@ sub make_tiny_url_metamark {
   } 
   else {
     return 0;
+  }
+}
+
+sub dispatch_feeds {
+  my $hashref = shift;
+  foreach my $feedname (keys %$hashref) {
+    print Dumper($hashref->{$feedname});
   }
 }
