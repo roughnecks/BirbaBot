@@ -92,13 +92,13 @@ sub create_db {
 
   add_new_rss('laltrowiki',
               '#l_altro_mondo',
-              'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss';
+              'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss');
   add_new_rss('lamerbot',
               '#l_altro_mondo',
-              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss';
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
   add_new_rss('lamerbot',
               '#lamerbot',
-              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss';
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
   # all done
 }
 
@@ -110,19 +110,10 @@ This function adds a new feed to watch.
 
 
 sub add_new_rss {
-  my ($feedname, $channel, $url, $active) = @_;
+  my ($feedname, $channel, $url) = @_;
 
   # sanity check
   return 0 unless ($feedname =~ m/^\w+$/s);
-
-  # normalize the active
-  if ($active) {
-    $active = 1;
-  } else {
-    $active = undef;
-  }
-
-
 
   # our queries
   my $add_to_rss_query = 'INSERT INTO rss VALUES (?, ?);'; # f_handle & url
@@ -138,7 +129,7 @@ sub add_new_rss {
   $rssq->execute($feedname, $url);
 
   my $chanq = $dbh->prepare($add_to_channels_query);
-  $chanq->execute($feedname, $channel, $active);
+  $chanq->execute($feedname, $channel);
 
   # we should return the errors, but for now go without
   $dbh->disconnect;
@@ -154,7 +145,7 @@ Query the db to see which urls we need to fetch
 
 sub get_the_rss_to_fetch {
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $sth = $dbh->prepare('SELECT DISTINCT url, feedname FROM rss;');
+  my $sth = $dbh->prepare('SELECT DISTINCT url, f_handle FROM rss;');
   $sth->execute();
   my %rsses;
   while (my @data = $sth->fetchrow_array()) {
