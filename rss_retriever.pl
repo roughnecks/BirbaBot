@@ -25,7 +25,8 @@ File::Path->make_path($localdir) unless (-d $localdir);
 
 
 my %urls = get_the_rss_to_fetch();
-rss_fetch();
+my $output = rss_fetch();
+print Dumper($output);
 
 
 =head2 create_db
@@ -245,6 +246,5 @@ sub rss_fetch {
     }
   }
   $dbh->disconnect;
-  print Dumper(\%output);
   return \%output;
 }
