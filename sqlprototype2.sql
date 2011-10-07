@@ -114,8 +114,11 @@ INSERT INTO feeds VALUES (NULL, DATETIME('NOW'), 'laltrowiki', 'first commit', '
 SELECT '
 here there is a wanted error caused by the url in the next INSERT statement wich is not unique
 ';
+
 INSERT INTO feeds VALUES (NULL, DATETIME('NOW'), 'laltrowiki', 'second commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;01', 'blahblahdata2');
-INSERT INTO feeds VALUES (NULL, '2011-10-04 20:17:00', 'laltrowiki', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3');
+INSERT INTO feeds VALUES (NULL, '2011-10-04 20:17:00', 'laltrowiki', 'second commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;02', 'blahblahdata2');
+INSERT INTO feeds VALUES (NULL, '2011-10-06 20:17:00', 'laltrowiki', 'third commit', 'melmoth', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;03', 'blahblahdata3');
+INSERT INTO feeds VALUES (NULL, '2011-10-07 21:18:00', 'laltrowiki', 'fourth commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;04', 'blahblahdata4');
 
 
 --- SECTION 3: documented queries for feeds TABLES
@@ -130,3 +133,27 @@ query a feed_name to get the last fetched item id for feed_handle laltrowiki
 ';
 SELECT id FROM feeds WHERE f_handle='laltrowiki' ORDER BY id DESC LIMIT 1;
 
+
+--- SECTION 4: test some DELETE
+
+SELECT '
+this query shows the actual situation of already fetched feeds for laltrowiki with their ids
+';
+
+SELECT id,title FROM feeds WHERE f_handle='laltrowiki';
+
+SELECT '
+now we delete one row in the middle and look how it goes with ids
+';
+
+DELETE FROM feeds WHERE title='third commit';
+
+SELECT id,title FROM feeds WHERE f_handle='laltrowiki';
+
+SELECT '
+finally we add a new feed to see further
+';
+
+INSERT INTO feeds VALUES (NULL, '2011-10-08 21:18:00', 'laltrowiki', 'fifth commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;05', 'blahblahdata5');
+
+SELECT id,title FROM feeds WHERE f_handle='laltrowiki';
