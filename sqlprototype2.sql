@@ -28,7 +28,7 @@ in rss abbiamo solo nome del feed, tipo slashdot e suo url.
 ';
 
 CREATE TABLE IF NOT EXISTS rss (
-        feedname    	VARCHAR(30) PRIMARY KEY NOT NULL,
+        f_handle   	VARCHAR(30) PRIMARY KEY NOT NULL,
         url     	TEXT UNIQUE
 );
 
@@ -47,7 +47,7 @@ questa tabella mantiene solo la lista dei feed che si possono eventualmente abil
 l unica query che torna utile è quela che ci dice appunto quali quali feed possiamo abilitare
 ';
 
-SELECT feedname FROM rss;
+SELECT f_handle FROM rss;
 
 
 SELECT '
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS channels (
         f_handle        VARCHAR(30) NOT NULL,
 	f_channel	VARCHAR(30) NOT NULL,
         active		BOOLEAN,
-	FOREIGN KEY(f_handle) REFERENCES rss(feedname)
+	FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE
 );
 
 
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS feeds (
         author			VARCHAR(255),
 	url	    		TEXT UNIQUE,
 	description		TEXT,
-	FOREIGN KEY(f_handle) REFERENCES rss(feedname)
+	FOREIGN KEY(f_handle) REFERENCES rss(f_handle)
 );
 
 --- SECTION 2
@@ -157,3 +157,24 @@ finally we add a new feed to see further
 INSERT INTO feeds VALUES (NULL, '2011-10-08 21:18:00', 'laltrowiki', 'fifth commit', 'rough', 'http://laltromondo.dynalias.net/gitweb?p=LAltroWiki.git;a=blobdiff;05', 'blahblahdata5');
 
 SELECT id,title FROM feeds WHERE f_handle='laltrowiki';
+
+
+--- SECTION 5: test if we are able to DELETE an rss item and all related feeds and channels
+
+SELECT '
+per eliminare un rss del tutto, prima si cancellano le notizie che riguardano il feed stesso
+';
+
+DELETE FROM feeds WHERE f_handle='laltrowiki';
+
+SELECT '
+poi si cancela la entry nel menu rss ed automagicamente se ne vanno tutti i record per quel feed dalla tabella channels
+';
+
+DELETE FROM rss WHERE f_handle IN (SELECT f_handle FROM channels WHERE f_handle = 'laltrowiki');
+
+SELECT '
+dovrei riuscire a cancellare tutto con un solo delete: work in progress
+';
+
+
