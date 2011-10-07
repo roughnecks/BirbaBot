@@ -239,7 +239,7 @@ sub rss_fetch {
           push @outputfeed,
             {'title' =>  $item->{'title'},
              'author' => $item->{'author'},
-             'link' =>   make_tiny_url($item->{'link'}),
+             'link' =>   $item->{'link'},
              'desc' =>   $item->{'description'} };
         }
       } 
@@ -263,10 +263,37 @@ sub make_tiny_url {
   my $ua = LWP::UserAgent->new(timeout => 10);
   $ua->agent( 'Mozilla' );
   my $response = $ua->request( POST 'http://api.x0.no/post/', ["u" => $url]);
-  print $response->content, "\n";
-  if ($response->is_success and $response->content =~ m!(http://x0.no/\w+)!) {
+  my $short; ;
+  if ($short = make_tiny_url_x ($ua, $url)) {
+    return $short
+  } elsif ($short = make_tiny_url_metamark( $ua, $url)) {
+    return $short
+  }
+  else {
+    return $url
+  }
+}
+
+sub make_tiny_url_x {
+  my ($ua, $url) = @_;
+  my $response = $ua->request( POST 'http://api.x0.no/post/', ["u" => $url]);
+  #  print $response->content, "\n";
+  if ($response->is_success and $response->content =~ m!(http://[\w.]+/\w+)!) {
     return $1;
-  } else {
-    return $url;
+  } 
+  else {
+    return 0;
+  };
+}
+
+sub make_tiny_url_metamark {
+  my ($ua, $url) = @_;
+  my $response = $ua->request( POST 'http://metamark.net/api/rest/simple',
+			       ["long_url" => $url]);
+  if ($response->is_success and $response->content =~ m!(http://[\w.]+/\w+)!) {
+    return $1;
+  } 
+  else {
+    return 0;
   }
 }
