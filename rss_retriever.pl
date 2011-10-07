@@ -68,15 +68,14 @@ sub create_db {
   $foreignkeyspragma->execute();
 
   my $sthrss = $dbh->prepare('CREATE TABLE IF NOT EXISTS rss (
-        feedname        VARCHAR(30) PRIMARY KEY NOT NULL,
+        f_handle        VARCHAR(30) PRIMARY KEY NOT NULL,
         url             TEXT UNIQUE);');
   $sthrss->execute();
 
   my $sthchans = $dbh->prepare('CREATE TABLE IF NOT EXISTS channels (
         f_handle        VARCHAR(30) NOT NULL,
         f_channel       VARCHAR(30) NOT NULL,
-        active          BOOLEAN,
-        FOREIGN KEY(f_handle) REFERENCES rss(feedname));');
+        FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE);');
   $sthchans->execute();
 
   my $sthfeeds = $dbh->prepare('CREATE TABLE IF NOT EXISTS feeds (
@@ -87,22 +86,19 @@ sub create_db {
         author                  VARCHAR(255),
         url                     TEXT UNIQUE,
         description             TEXT,
-        FOREIGN KEY(f_handle) REFERENCES rss(feedname));');
+        FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
   $sthfeeds->execute();
   $dbh->disconnect;
 
-  add_new_rss('laltrowiki', 
+  add_new_rss('laltrowiki',
               '#l_altro_mondo',
-              'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss',
-              1);
+              'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss';
   add_new_rss('lamerbot',
               '#l_altro_mondo',
-              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
-              1);
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss';
   add_new_rss('lamerbot',
               '#lamerbot',
-              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
-              1);
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss';
   # all done
 }
 
@@ -132,7 +128,7 @@ sub add_new_rss {
   my $add_to_rss_query = 'INSERT INTO rss VALUES (?, ?);'; # f_handle & url
 
   # f_handle, channel, active
-  my $add_to_channels_query = 'INSERT INTO channels VALUES (?, ?, ?);'; 
+  my $add_to_channels_query = 'INSERT INTO channels VALUES (?, ?);'; 
 
   # connect
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
