@@ -30,50 +30,76 @@ rss_fetch();
 
 =head2 create_db
 
-Create the master rss table if it doesn't exist.
+Create the db tables if they don't exist.
+
+    CREATE TABLE IF NOT EXISTS rss (
+            feedname            VARCHAR(30) PRIMARY KEY NOT NULL,
+            url         TEXT UNIQUE
+    );
+    
+    CREATE TABLE IF NOT EXISTS channels (
+            f_handle        VARCHAR(30) NOT NULL,
+            f_channel   VARCHAR(30) NOT NULL,
+            active              BOOLEAN,
+        FOREIGN KEY(f_handle) REFERENCES rss(feedname));
+    
+    CREATE TABLE IF NOT EXISTS feeds (
+            id                          INTEGER PRIMARY KEY,
+        date                    DATETIME,
+        f_handle                VARCHAR(30) NOT NULL,
+            title                       VARCHAR(255),
+            author                      VARCHAR(255),
+            url                 TEXT UNIQUE,
+        description             TEXT,
+        FOREIGN KEY(f_handle) REFERENCES rss(feedname)
+    );
+
+Additionally, add some sample rss
 
 =cut
 
 sub create_db {
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
 
-  my $create_meta_rss = "CREATE TABLE IF NOT EXISTS rss (
-        r_id    	INTEGER PRIMARY KEY,
-	date		DATE,
-	f_handle	VARCHAR(255),
-	f_channel	VARCHAR(30),
-        url     	TEXT,
-        active		BOOLEAN
-);";
-  my $sth = $dbh->prepare($create_meta_rss);
-  $sth->execute();
+  my $foreignkeyspragma = $dbh->prepare('PRAGMA foreign_keys = ON;');
+  $foreignkeyspragma->execute();
 
-  my $createtab = 
-	"CREATE TABLE IF NOT EXISTS feeds (
-        id          	INTEGER PRIMARY KEY,
-        feedname        VARCHAR(30),
-        date            DATETIME,
-        title	    	VARCHAR(255),
-        author		VARCHAR(255),
-	url	    	TEXT UNIQUE,
-	description	TEXT);";
-  my $sthfeeds = $dbh->prepare($createtab);
+  my $sthrss = $dbh->prepare('CREATE TABLE IF NOT EXISTS rss (
+        feedname        VARCHAR(30) PRIMARY KEY NOT NULL,
+        url             TEXT UNIQUE);');
+  $sthrss->execute();
+
+  my $sthchans = $dbh->prepare('CREATE TABLE IF NOT EXISTS channels (
+        f_handle        VARCHAR(30) NOT NULL,
+        f_channel       VARCHAR(30) NOT NULL,
+        active          BOOLEAN,
+        FOREIGN KEY(f_handle) REFERENCES rss(feedname));');
+  $sthchans->execute();
+
+  my $sthfeeds = $dbh->prepare('CREATE TABLE IF NOT EXISTS feeds (
+        id                      INTEGER PRIMARY KEY,
+        date                    DATETIME,
+        f_handle                VARCHAR(30) NOT NULL,
+        title                   VARCHAR(255),
+        author                  VARCHAR(255),
+        url                     TEXT UNIQUE,
+        description             TEXT,
+        FOREIGN KEY(f_handle) REFERENCES rss(feedname));');
   $sthfeeds->execute();
-
   $dbh->disconnect;
 
   add_new_rss('laltrowiki', 
-	      '#l_altro_mondo',
-	      'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss',
-	      1);
+              '#l_altro_mondo',
+              'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss',
+              1);
   add_new_rss('lamerbot',
-	      '#l_altro_mondo',
-	      'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
-	      1);
+              '#l_altro_mondo',
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
+              1);
   add_new_rss('lamerbot',
-	      '#lamerbot',
-	      'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
-	      1);
+              '#lamerbot',
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss',
+              1);
   # all done
 }
 
@@ -86,17 +112,39 @@ This function adds a new feed to watch.
 
 sub add_new_rss {
   my ($feedname, $channel, $url, $active) = @_;
+
+  # sanity check
+  return 0 unless ($feedname =~ m/^\w+$/s);
+
+  # normalize the active
+  if ($active) {
+    $active = 1;
+  } else {
+    $active = undef;
+  }
+
+
+
+  # our queries
+  my $add_to_rss_query = 'INSERT INTO rss VALUES (?, ?);'; # f_handle & url
+
+  # f_handle, channel, active
+  my $add_to_channels_query = 'INSERT INTO channels VALUES (?, ?, ?);'; 
+
+  # connect
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  return unless ($feedname =~ m/^\w+$/s);
-  # first the table to hold the data
-  # then update the rss table
-  my $populate_meta_rss = "INSERT INTO rss VALUES (NULL, DATE('NOW'), ?, ?, ?, ?)";
-  my $populate = $dbh->prepare($populate_meta_rss);
-  $populate->execute($feedname, $channel, $url, $active);
+
+  # do the 2 queries
+  my $rssq = $dbh->prepare($add_to_rss_query);
+  $rssq->execute($feedname, $url);
+
+  my $chanq = $dbh->prepare($add_to_channels_query);
+  $chanq->execute($feedname, $channel, $active);
+
+  # we should return the errors, but for now go without
   $dbh->disconnect;
+  return 1;
 }
-
-
 
 =head2 get_the_rss_to_fetch()
 
@@ -107,7 +155,7 @@ Query the db to see which urls we need to fetch
 
 sub get_the_rss_to_fetch {
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $sth = $dbh->prepare('SELECT DISTINCT url,f_handle FROM rss WHERE active=1;');
+  my $sth = $dbh->prepare('SELECT DISTINCT url, feedname FROM rss;');
   $sth->execute();
   my %rsses;
   while (my @data = $sth->fetchrow_array()) {
@@ -159,7 +207,7 @@ sub rss_fetch {
     my @outputfeed;
     unless ($feedname =~ m/^\w+$/s) {
       print "Warning: the name of the rss must be alphanumeric", 
-	" + underscore only!\n";
+        " + underscore only!\n";
       # no next!
       next;
     }
@@ -175,23 +223,23 @@ sub rss_fetch {
 
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
-	$dbh->prepare("INSERT INTO feeds VALUES (NULL, ?, DATETIME('NOW'), ?, ?, ?, ?)");
+        $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?, ?)");
       foreach my $item (@{$rss->{'items'}}) {
-	$sth->execute(
-		      $feedname,
-		      $item->{'title'},
-		      $item->{'author'},
-		      $item->{'link'},
-		      $item->{'description'});
-	unless ($sth->err) {
-	  # here we push the new feed in a multidimensional hash
-	  push @outputfeed,
-	    {'title' =>  $item->{'title'},
-	     'author' => $item->{'author'},
-	     'link' =>   $item->{'link'},
-	     'desc' =>   $item->{'description'} };
-	
-	}
+        $sth->execute(
+                      $feedname,
+                      $item->{'title'},
+                      $item->{'author'},
+                      $item->{'link'},
+                      $item->{'description'});
+        unless ($sth->err) {
+          # here we push the new feed in a multidimensional hash
+          push @outputfeed,
+            {'title' =>  $item->{'title'},
+             'author' => $item->{'author'},
+             'link' =>   $item->{'link'},
+             'desc' =>   $item->{'description'} };
+        
+        }
       } 
       $output{$feedname} = \@outputfeed;
     }
