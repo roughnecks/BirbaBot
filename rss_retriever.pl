@@ -287,7 +287,31 @@ sub make_tiny_url_metamark {
 
 sub dispatch_feeds {
   my $hashref = shift;
-  process_feeds($hashref);
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $processed_feeds = process_feeds($hashref);
+  my $sth = $dbh->prepare('SELECT f_channel FROM channels WHERE f_handle = ?');
+  my %output;
+
+  # for each $feedname provided by the rss processor, we find the
+  # destinations. We return an hash with #channel => [$news1, $news2]
+  # so the bot can loop over that and *finally* print the shit
+
+  foreach my $feedname (keys %$processed_feeds) {
+    $sth->execute($feedname);
+    while (my @destinations = $sth->fetchrow_array()) {
+      my $channel = $destinations[0];
+      $output{$channel} = [] unless exists $output{$channel};
+      my $stuff = $processed_feeds->{$feedname};
+      foreach my $news (@$stuff) {
+	push @{$output{$channel}}, $news;
+	print "To $channel: $channel :::", "$news", "\n";
+      }
+    }
+  }
+  $dbh->disconnect;
+  print Dumper(\%output);
+  return %output;
+  # now, for each feed, fo
 }
 
 
@@ -308,6 +332,7 @@ sub process_feeds {
 	next # wtf, no title?
       }
       if ($news->{'link'}) {
+	# ENABLE ME!
 	# $string .= "<" . make_tiny_url($news->{'link'}) . "> ";
 	$string .= "<" . $news->{'link'} . "> ";
       } else {
@@ -320,8 +345,8 @@ sub process_feeds {
     }
     $output{$feedname} = \@processed;
   }
-  print Dumper(\%output);
-  return %output;
+#  print Dumper(\%output);
+  return \%output;
 }
 
 
