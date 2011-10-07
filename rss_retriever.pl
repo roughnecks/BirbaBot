@@ -246,7 +246,7 @@ tinyurler on the net.
 
 sub make_tiny_url {
   my $url = shift;
-  print $url, "\n";
+#  print $url, "\n";
   my $ua = LWP::UserAgent->new(timeout => 10);
   $ua->agent( 'Mozilla' );
   my $response = $ua->request( POST 'http://api.x0.no/post/', ["u" => $url]);
@@ -287,7 +287,41 @@ sub make_tiny_url_metamark {
 
 sub dispatch_feeds {
   my $hashref = shift;
-  foreach my $feedname (keys %$hashref) {
-    print Dumper($hashref->{$feedname});
-  }
+  process_feeds($hashref);
 }
+
+
+sub process_feeds {
+  my $hashref = shift;
+  my %output;
+  foreach my $feedname (keys %$hashref) {
+    my @processed;
+    my $feedsref = $hashref->{$feedname};
+    my @feeds = splice(@$feedsref, 0, 5); # output just the last 5, OK?
+    # now loop over the feeds and create the string
+    while(@feeds) {
+      my $news = shift(@feeds);
+      my $string;
+      if ($news->{'title'}) {
+	$string .= $news->{'title'} . " ";
+      } else {
+	next # wtf, no title?
+      }
+      if ($news->{'link'}) {
+	$string .= make_tiny_url($news->{'link'}) . " ";
+      } else {
+	next # wtf, no link?
+      }
+      if ($news->{'author'}) {
+	$string .= "( " . $news->{'author'} . " )";
+      }
+      push @processed, $string;
+    }
+    $output{$feedname} = \@processed;
+  }
+  print Dumper(\%output);
+  return %output;
+}
+
+
+
