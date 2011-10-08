@@ -26,7 +26,7 @@ use XML::RSS;
 use LWP::UserAgent;
 use DBI;
 use BirbaBot::Shorten;
-
+# use Data::Dumper;
 
 =head2 rss_create_db($dbname);
 
@@ -191,13 +191,14 @@ sub rss_fetch {
       # no next!
       next;
     }
-    print "Fetching data for $feedname\n";
+#    print "Fetching data for $feedname\n";
     my $destfile = File::Spec->catfile($datadir, $feedname);
     my $response = $ua->mirror($urls{$feedname}, $destfile);
     # now, as far as I understand, the "mirror" response doesn't return
     # the content, which is actually stored in the file.
     # So I guess we either do 'get' request, or we open the file
     if ($response->is_success) {
+#      print "Parsing $destfile\n";
       my $rss = XML::RSS->new();
       $rss->parsefile($destfile);
       my %links;
@@ -221,6 +222,7 @@ sub rss_fetch {
         }
       } 
       $output{$feedname} = \@outputfeed;
+ #     print Dumper(\%links);
       my $syncdb = $dbh->prepare('SELECT id,url FROM feeds WHERE f_handle = ?;');
       my $cleandb = $dbh->prepare('DELETE FROM feeds WHERE id = ?');
       $syncdb->execute($feedname);
