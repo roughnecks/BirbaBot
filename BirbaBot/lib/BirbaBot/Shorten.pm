@@ -1,6 +1,6 @@
 # -*- mode: cperl -*-
 
-package BirbaBot;
+package BirbaBot::Shorten;
 
 use 5.010001;
 use strict;
@@ -14,12 +14,71 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw( );
+our @EXPORT_OK = qw(make_tiny_url);
 
 our $VERSION = '0.01';
 
+use LWP::UserAgent;
+use HTTP::Response;
+use HTTP::Request::Common;
 
-# Preloaded methods go here.
+my $goodurlre = qr!http://[\w\.\-]+/\w+!;
+
+=head2 make_tiny_url($long_url)
+
+This is the only function exported by this module. It takes an
+argument with the long url to shorten and return a shortened one,
+unless the online services are down or going nuts. If everything
+fails, return the long url.
+
+Urls with less than 40 characters are returned without furter
+processing.
+
+=cut
+
+sub make_tiny_url {
+  my $url = shift;
+  return $url unless ((length $url) > 40);
+#  print $url, "\n";
+  my $ua = LWP::UserAgent->new(timeout => 10);
+  $ua->agent( 'Mozilla' );
+  my $response = $ua->request( POST 'http://api.x0.no/post/', ["u" => $url]);
+  my $short; ;
+  if ($short = make_tiny_url_x ($ua, $url)) {
+    return $short
+  } elsif ($short = make_tiny_url_metamark( $ua, $url)) {
+    return $short
+  }
+  else {
+    return $url
+  }
+}
+
+sub make_tiny_url_x {
+  my ($ua, $url) = @_;
+  my $response = $ua->request( POST 'http://api.x0.no/post/', 
+			       ["u" => $url]);
+  #  print $response->content, "\n";
+  if ($response->is_success and $response->content =~ m!($goodurlre)!) {
+    return $1;
+  } 
+  else {
+    return 0;
+  };
+}
+
+sub make_tiny_url_metamark {
+  my ($ua, $url) = @_;
+  my $response = $ua->request( POST 'http://metamark.net/api/rest/simple',
+			       ["long_url" => $url]);
+  if ($response->is_success and $response->content =~ m!($goodurlre)!) {
+    return $1;
+  } 
+  else {
+    return 0;
+  }
+}
+
 
 1;
 
