@@ -275,7 +275,7 @@ sub process_feeds {
     # now loop over the feeds and create the string
     while(@feeds) {
       my $news = shift(@feeds);
-      my $string;
+      my $string = "$feedname:: ";
       if ($news->{'title'}) {
 	$string .= $news->{'title'} . " ";
       } else {
