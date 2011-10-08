@@ -283,8 +283,8 @@ sub process_feeds {
       }
       if ($news->{'link'}) {
 	# ENABLE ME!
-	# $string .= "<" . make_tiny_url($news->{'link'}) . "> ";
-	$string .= "<" . $news->{'link'} . "> ";
+	$string .= "<" . BirbaBot::Shorten::make_tiny_url($news->{'link'}) . "> ";
+	# $string .= "<" . $news->{'link'} . "> ";
       } else {
 	next # wtf, no link?
       }
