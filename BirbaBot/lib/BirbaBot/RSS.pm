@@ -33,25 +33,25 @@ use BirbaBot::Shorten;
 Create the db tables if they don't exist.
 
     CREATE TABLE IF NOT EXISTS rss (
-            feedname            VARCHAR(30) PRIMARY KEY NOT NULL,
-            url         TEXT UNIQUE
+        feedname                VARCHAR(30) PRIMARY KEY NOT NULL,
+        url                     TEXT UNIQUE
     );
     
     CREATE TABLE IF NOT EXISTS channels (
-            f_handle        VARCHAR(30) NOT NULL,
-            f_channel   VARCHAR(30) NOT NULL,
-            active              BOOLEAN,
-        FOREIGN KEY(f_handle) REFERENCES rss(feedname));
+        f_handle                VARCHAR(30) NOT NULL,
+        f_channel               VARCHAR(30) NOT NULL,
+        active                  BOOLEAN,
+        FOREIGN KEY(f_handle)   REFERENCES rss(feedname)
+    );
     
     CREATE TABLE IF NOT EXISTS feeds (
-            id                          INTEGER PRIMARY KEY,
+        id                      INTEGER PRIMARY KEY,
         date                    DATETIME,
         f_handle                VARCHAR(30) NOT NULL,
-            title                       VARCHAR(255),
-            author                      VARCHAR(255),
-            url                 TEXT UNIQUE,
-        description             TEXT,
-        FOREIGN KEY(f_handle) REFERENCES rss(feedname)
+        title                   VARCHAR(255),
+        author                  VARCHAR(255),
+        url                     TEXT UNIQUE NOT NULL,
+        FOREIGN KEY(f_handle)   REFERENCES rss(feedname)
     );
 
 =cut
@@ -80,7 +80,7 @@ sub rss_create_db {
         f_handle                VARCHAR(30) NOT NULL,
         title                   VARCHAR(255),
         author                  VARCHAR(255),
-        url                     TEXT UNIQUE,
+        url                     TEXT UNIQUE NOT NULL,
         FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
   $sthfeeds->execute();
   $dbh->disconnect;
