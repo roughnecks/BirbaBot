@@ -29,7 +29,7 @@ in rss abbiamo solo nome del feed, tipo slashdot e suo url.
 
 CREATE TABLE IF NOT EXISTS rss (
         f_handle   	VARCHAR(30) PRIMARY KEY NOT NULL,
-        url     	TEXT UNIQUE
+        url     	TEXT UNIQUE NOT NULL
 );
 
 
