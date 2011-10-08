@@ -200,11 +200,13 @@ sub rss_fetch {
     if ($response->is_success) {
       my $rss = XML::RSS->new();
       $rss->parsefile($destfile);
-
+      my %links;
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
         $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?)");
       foreach my $item (@{$rss->{'items'}}) {
+	# avoid doing another loop, and save the link
+	$links{$item->{'link'}} = 1;
         $sth->execute(
                       $feedname,
                       $item->{'title'},
@@ -219,6 +221,16 @@ sub rss_fetch {
         }
       } 
       $output{$feedname} = \@outputfeed;
+      my $syncdb = $dbh->prepare('SELECT id,url FROM feeds WHERE f_handle = ?;');
+      my $cleandb = $dbh->prepare('DELETE FROM feeds WHERE id = ?');
+      $syncdb->execute($feedname);
+      while (my @urls_in_db =  $syncdb->fetchrow_array()) {
+	my ($id, $url) = @urls_in_db;
+	unless ($links{$url}) {
+	  print "Removing $url from db of $feedname with id $id\n";
+	  cleandb->execute($id) ;
+	}
+      }
     }
   }
   $dbh->disconnect;
