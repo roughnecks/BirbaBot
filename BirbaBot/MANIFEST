@@ -1,0 +1,6 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/BirbaBot.t
+lib/BirbaBot.pm
