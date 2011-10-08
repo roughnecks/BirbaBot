@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS rss (
 CREATE TABLE IF NOT EXISTS channels (
         f_handle        VARCHAR(30) NOT NULL,
         f_channel       VARCHAR(30) NOT NULL,
-        FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE
+        FOREIGN KEY(f_handle) REFERENCES rss(f_handle)
 );
 
 CREATE TABLE IF NOT EXISTS feeds (
@@ -18,5 +18,5 @@ CREATE TABLE IF NOT EXISTS feeds (
         title                   VARCHAR(255),
         author                  VARCHAR(255),
         url                     TEXT UNIQUE NOT NULL,
-        FOREIGN KEY(f_handle) REFERENCES rss(f_handle)
+        FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE
 );
