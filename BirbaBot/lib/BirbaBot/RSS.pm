@@ -178,7 +178,7 @@ sub rss_fetch {
   my %urls = get_the_rss_to_fetch($dbname);
   my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
   $ua->agent('Mozilla' . $ua->_agent);
-  $ua->show_progress(1);
+#  $ua->show_progress(1);
 
   # here we open the db;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "", { PrintError=>0 });
