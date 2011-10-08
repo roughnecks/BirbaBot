@@ -18,6 +18,5 @@ CREATE TABLE IF NOT EXISTS feeds (
         title                   VARCHAR(255),
         author                  VARCHAR(255),
         url                     TEXT UNIQUE,
-        description             TEXT,
         FOREIGN KEY(f_handle) REFERENCES rss(f_handle)
 );

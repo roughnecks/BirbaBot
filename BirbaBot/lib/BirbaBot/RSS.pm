@@ -81,7 +81,6 @@ sub rss_create_db {
         title                   VARCHAR(255),
         author                  VARCHAR(255),
         url                     TEXT UNIQUE,
-        description             TEXT,
         FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
   $sthfeeds->execute();
   $dbh->disconnect;
@@ -105,7 +104,7 @@ sub rss_add_new {
   my $add_to_rss_query = 'INSERT INTO rss VALUES (?, ?);'; # f_handle & url
 
   # f_handle, channel, active
-  my $add_to_channels_query = 'INSERT INTO channels VALUES (?, ?);'; 
+  my $add_to_channels_query = 'INSERT INTO channels VALUES (?, ?);'; # f_handle & f_channel
 
   # connect
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
@@ -204,21 +203,19 @@ sub rss_fetch {
 
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
-        $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?, ?)");
+        $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?)");
       foreach my $item (@{$rss->{'items'}}) {
         $sth->execute(
                       $feedname,
                       $item->{'title'},
                       $item->{'author'},
-                      $item->{'link'},
-                      $item->{'description'});
+                      $item->{'link'});
         unless ($sth->err) {
           # here we push the new feed in a multidimensional hash
           push @outputfeed,
             {'title' =>  $item->{'title'},
              'author' => $item->{'author'},
-             'link' =>   $item->{'link'},
-             'desc' =>   $item->{'description'} };
+             'link' =>   $item->{'link'} };
         }
       } 
       $output{$feedname} = \@outputfeed;
