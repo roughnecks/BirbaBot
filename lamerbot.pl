@@ -144,7 +144,7 @@ sub rss_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $feeds = rss_get_my_feeds($dbname, $localdir);
   foreach my $channel (keys %$feeds) {
-    foreach my $feed (@{$feeds->$channel}) {
+    foreach my $feed (@{$feeds->{$channel}}) {
       $irc->yield( privmsg => $channel => $feed);
     }
   }
