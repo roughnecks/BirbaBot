@@ -230,7 +230,7 @@ sub rss_fetch {
 	my ($id, $url) = @urls_in_db;
 	unless ($links{$url}) {
 	  print "Removing $url from db of $feedname with id $id\n";
-	  cleandb->execute($id) ;
+	  $cleandb->execute($id) ;
 	}
       }
     }
