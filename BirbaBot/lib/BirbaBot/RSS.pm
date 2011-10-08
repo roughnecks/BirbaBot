@@ -50,7 +50,7 @@ Create the db tables if they don't exist.
         f_handle                VARCHAR(30) NOT NULL,
         title                   VARCHAR(255),
         author                  VARCHAR(255),
-        url                     TEXT UNIQUE,
+        url                     TEXT UNIQUE NOT NULL,
         FOREIGN KEY(f_handle)   REFERENCES rss(feedname)
     );
 
@@ -80,7 +80,7 @@ sub rss_create_db {
         f_handle                VARCHAR(30) NOT NULL,
         title                   VARCHAR(255),
         author                  VARCHAR(255),
-        url                     TEXT UNIQUE,
+        url                     TEXT UNIQUE NOT NULL,
         FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
   $sthfeeds->execute();
   $dbh->disconnect;
