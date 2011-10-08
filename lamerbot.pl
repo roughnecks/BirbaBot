@@ -9,7 +9,41 @@
 
 use strict;
 use warnings;
+
+use File::Spec;
+use File::Path;
 use Data::Dumper;
+use lib './BirbaBot/lib';
+use BirbaBot::RSS qw(rss_create_db
+		     rss_add_new
+		     rss_get_my_feeds
+		   );
+
+
+
+# initialize the db
+my $dbname = "rss.db";
+
+unless (-f $dbname) {
+  rss_create_db($dbname);
+  rss_add_new($dbname,
+	      'laltrowiki',
+              '#l_altro_mondo',
+              'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss');
+  rss_add_new($dbname,
+	      'lamerbot',
+              '#l_altro_mondo',
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
+  rss_add_new($dbname,
+	      'lamerbot',
+              '#lamerbot',
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
+
+}
+    
+# initialize the local storage
+my $localdir = File::Spec->catdir('data','rss');
+File::Path->make_path($localdir) unless (-d $localdir);
 
 my $config_file = $ARGV[0];
 my $debug = $ARGV[1];
@@ -54,7 +88,8 @@ my $irc = POE::Component::IRC->spawn(
 POE::Session->create(
 		     package_states => [
 					main => [qw(_default 
-						    _start 
+						    _start
+						    rss_sentinel
 						    irc_001
 						    irc_public)],
 				       ],
@@ -77,7 +112,7 @@ sub _start {
 }
 
 sub irc_001 {
-    my $sender = $_[SENDER];
+    my ($kernel, $sender) = @_[KERNEL, SENDER];
 
     # Since this is an irc_* event, we can get the component's object by
     # accessing the heap of the sender. Then we register and connect to the
@@ -88,6 +123,8 @@ sub irc_001 {
 
     # we join our channels
     $irc->yield( join => $_ ) for @channels;
+    # here we register the rss_sentinel
+    $kernel->delay_set("rss_sentinel", 10); 
     return;
 }
 
@@ -102,6 +139,19 @@ sub irc_public {
     }
     return;
 }
+
+sub rss_sentinel {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $feeds = rss_get_my_feeds($dbname, $localdir);
+  foreach my $channel (keys %$feeds) {
+    foreach my $feed (@{$feeds->$channel}) {
+      $irc->yield( privmsg => $channel => $feed);
+    }
+  }
+  # set the next loop
+  $kernel->delay_set("rss_sentinel", 60)
+}
+
 
 # We registered for all events, this will produce some debug info.
 sub _default {
@@ -162,6 +212,7 @@ sub read_config {
 Well, show the help and exit
 
 =cut
+
 
 
 sub show_help {
