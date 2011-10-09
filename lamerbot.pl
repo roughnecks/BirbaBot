@@ -19,6 +19,7 @@ use BirbaBot::RSS qw(rss_create_db
 		     rss_get_my_feeds
 		   );
 
+use BirbaBot::Geo;
 
 use POE;
 use POE::Component::Client::DNS;
@@ -95,7 +96,8 @@ POE::Session->create(
         main => [ qw(_start
 		     _default
 		     irc_001 
-		     irc_botcmd_slap 
+		     irc_botcmd_slap
+		     irc_botcmd_geoip
 		     irc_botcmd_lookup
 		     rss_sentinel
 		     dns_response) ],
@@ -107,12 +109,19 @@ $poe_kernel->run();
 ## just copy and pasted, ok?
 
 sub _start {
-    $irc->plugin_add('BotCommand', POE::Component::IRC::Plugin::BotCommand->new(
-        Commands => {
+    $irc->plugin_add('BotCommand', 
+		     POE::Component::IRC::Plugin::BotCommand->new(
+								  Commands => {
             slap   => 'Takes one argument: a nickname to slap.',
             lookup => 'Takes two arguments: a record type (optional), and a host.',
-        }
-    ));
+	    geoip => 'Takes one argument: an ip or a hostname to lookup',     
+		    },
+            In_channels => 1,
+ 	    In_private => 1,
+            Addressed => 0,
+            Prefix => "!",
+            Eat => 1,
+								 ));
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     return;
@@ -124,6 +133,14 @@ sub irc_botcmd_slap {
     $irc->yield(ctcp => $where, "ACTION slaps $arg");
     return;
 }
+
+sub irc_botcmd_geoip {
+    my $nick = (split /!/, $_[ARG0])[0];
+    my ($where, $arg) = @_[ARG1, ARG2];
+    $irc->yield(privmsg => $where => BirbaBot::Geo::geo_by_name_or_ip($arg));
+    return;
+}
+
 
 # non-blocking dns lookup
 sub irc_botcmd_lookup {
