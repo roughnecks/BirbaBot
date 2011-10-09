@@ -106,6 +106,7 @@ sub rss_add_new {
 
   # connect
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
 
   # do the 2 queries
   my $rssq = $dbh->prepare($add_to_rss_query);
@@ -118,6 +119,38 @@ sub rss_add_new {
   $dbh->disconnect;
   return 1;
 }
+
+=head2 rss_delete_feed($dbname, $feedname, $channel)
+
+Stop to output the feeds $feedname on channel $channel, using $dbname
+If the rss is not more watched, remove it from rss and feeds too.
+
+=cut 
+
+sub rss_delete_feed {
+  my ($dbname, $feedname, $channel) = @_;
+  # connect
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  
+  my $rss_del_query = "DELETE FROM channels WHERE f_handle = ? AND f_channel = ?;"
+  my $rss_del = $dbh->prepare($rss_del_query);
+  $rss_del->execute($feedname, $channel);
+  # now it's gone. Let's check if it's used.
+
+  my $rss_check = $dbh->prepare("SELECT * FROM channels WHERE f_handle = ?;");
+  $rss_check->execute($feedname);
+  # unless the query returns something, let's drop the feed
+  unless ($rss->fetchrow_array()) {
+    print "$feedname is not watched, removing from tables\n";
+    my $clean_feeds = $dbh->prepare("DELETE FROM feeds WHERE f_handle = ?;");
+    my $clean_rss = $dbh->prepare("DELETE FROM rss WHERE f_handle = ?;");
+    $clean_feeds->execute($feedname);
+    $clean_rss->execute($feedname);
+  }
+  $dbh->disconnect;
+}
+
 
 sub rss_get_my_feeds {
   my ($dbname, $datadir) = @_;
