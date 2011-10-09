@@ -20,6 +20,11 @@ use BirbaBot::RSS qw(rss_create_db
 		   );
 
 
+use POE;
+use POE::Component::Client::DNS;
+use POE::Component::IRC;
+use POE::Component::IRC::Plugin::BotCommand;
+
 
 # initialize the db
 my $dbname = "rss.db";
@@ -76,8 +81,6 @@ if ($debug) {
 
 ### starting POE stuff
 
-use POE qw(Component::IRC);
-
 my $irc = POE::Component::IRC->spawn(
 				     # TODO: before using this
 				     # directly would be better to
@@ -85,31 +88,79 @@ my $irc = POE::Component::IRC->spawn(
 				     %$configuration
 ) or die "WTF? $!\n";
 
-POE::Session->create(
-		     package_states => [
-					main => [qw(_default 
-						    _start
-						    rss_sentinel
-						    irc_001
-						    irc_public)],
-				       ],
-		     heap => {irc => $irc},
-		     );
-$poe_kernel->run();
+my $dns = POE::Component::Client::DNS->spawn();
 
+POE::Session->create(
+    package_states => [
+        main => [ qw(_start
+		     _default
+		     irc_001 
+		     irc_botcmd_slap 
+		     irc_botcmd_lookup
+		     rss_sentinel
+		     dns_response) ],
+    ],
+);
+
+$poe_kernel->run();
 
 ## just copy and pasted, ok?
 
 sub _start {
-    my $heap = $_[HEAP];
-
-    # retrieve our component's object from the heap where we stashed it
-    my $irc = $heap->{irc};
-
+    $irc->plugin_add('BotCommand', POE::Component::IRC::Plugin::BotCommand->new(
+        Commands => {
+            slap   => 'Takes one argument: a nickname to slap.',
+            lookup => 'Takes two arguments: a record type (optional), and a host.',
+        }
+    ));
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     return;
 }
+
+sub irc_botcmd_slap {
+    my $nick = (split /!/, $_[ARG0])[0];
+    my ($where, $arg) = @_[ARG1, ARG2];
+    $irc->yield(ctcp => $where, "ACTION slaps $arg");
+    return;
+}
+
+# non-blocking dns lookup
+sub irc_botcmd_lookup {
+    my $nick = (split /!/, $_[ARG0])[0];
+    my ($where, $arg) = @_[ARG1, ARG2];
+    my ($type, $host) = $arg =~ /^(?:(\w+) )?(\S+)/;
+
+    my $res = $dns->resolve(
+        event => 'dns_response',
+        host => $host,
+        type => $type,
+        context => {
+            where => $where,
+            nick  => $nick,
+        },
+    );
+    $poe_kernel->yield(dns_response => $res) if $res;
+    return;
+}
+
+sub dns_response {
+    my $res = $_[ARG0];
+    my @answers = map { $_->rdatastr } $res->{response}->answer() if $res->{response};
+
+    $irc->yield(
+        'notice',
+        $res->{context}->{where},
+        $res->{context}->{nick} . (@answers
+            ? ": @answers"
+            : ': no answers for "' . $res->{host} . '"')
+    );
+
+    return;
+}
+
+
+
 
 sub irc_001 {
     my ($kernel, $sender) = @_[KERNEL, SENDER];
