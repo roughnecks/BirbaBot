@@ -17,6 +17,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(rss_create_db
 		    rss_add_new
 		    rss_get_my_feeds
+		    rss_delete_feed
 		  );
 
 our $VERSION = '0.01';
