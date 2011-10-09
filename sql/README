@@ -1,0 +1,14 @@
+SQL DATABASE
+
+rss.sql is the file where we keep the main SCHEMA for the sqlite database
+So, first of all we import that on a new rss.db:
+
+sqlite3 rss.db < sql/rss.sql
+
+And, since we don't already have a function to add new rss feeds, we use another .sql file to add them manually
+A valid example is the sql/myfeeds.sql file, which we can modify and import after the main SCHEMA:
+
+sqlite3 rss.db < sql/myfeeds.sql
+
+Now we can start birbabot
+
