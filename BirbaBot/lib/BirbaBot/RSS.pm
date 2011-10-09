@@ -59,9 +59,7 @@ Create the db tables if they don't exist.
 sub rss_create_db {
   my $dbname = shift;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-
-  my $foreignkeyspragma = $dbh->prepare('PRAGMA foreign_keys = ON;');
-  $foreignkeyspragma->execute();
+  $dbh->do('PRAGMA foreign_keys = ON;');
 
   my $sthrss = $dbh->prepare('CREATE TABLE IF NOT EXISTS rss (
         f_handle        VARCHAR(30) PRIMARY KEY NOT NULL,
@@ -72,7 +70,7 @@ sub rss_create_db {
         f_handle        VARCHAR(30) NOT NULL,
         f_channel       VARCHAR(30) NOT NULL,
         CONSTRAINT f_hand-cha UNIQUE (f_handle,f_channel),
-        FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE);');
+        FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
   $sthchans->execute();
 
   my $sthfeeds = $dbh->prepare('CREATE TABLE IF NOT EXISTS feeds (
@@ -82,7 +80,7 @@ sub rss_create_db {
         title                   VARCHAR(255),
         author                  VARCHAR(255),
         url                     TEXT UNIQUE NOT NULL,
-        FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
+        FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE);');
   $sthfeeds->execute();
   $dbh->disconnect;
 }
