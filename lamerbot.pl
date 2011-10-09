@@ -11,11 +11,12 @@ use strict;
 use warnings;
 
 use File::Spec;
-use File::Path;
+use File::Path qw(make_path);
 use Data::Dumper;
 use lib './BirbaBot/lib';
 use BirbaBot::RSS qw(rss_create_db
 		     rss_add_new
+		     rss_delete_feed
 		     rss_get_my_feeds
 		   );
 
@@ -53,19 +54,14 @@ unless (-f $dbname) {
               '#l_altro_mondo',
               'http://rss.slashdot.org/Slashdot/slashdot');
   rss_add_new($dbname,
-	      'lamerbot',
-              '#l_altro_mondo',
-              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
-  rss_add_new($dbname,
-	      'lamerbot',
+	      'birbabot',
               '#lamerbot',
               'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
-
 }
     
 # initialize the local storage
 my $localdir = File::Spec->catdir('data','rss');
-File::Path->make_path($localdir) unless (-d $localdir);
+make_path($localdir) unless (-d $localdir);
 
 my $config_file = $ARGV[0];
 my $debug = $ARGV[1];
@@ -115,6 +111,7 @@ POE::Session->create(
 		     irc_botcmd_slap
 		     irc_botcmd_geoip
 		     irc_botcmd_lookup
+		     irc_botcmd_rss
 		     rss_sentinel
 		     dns_response) ],
     ],
@@ -130,7 +127,8 @@ sub _start {
 								  Commands => {
             slap   => 'Takes one argument: a nickname to slap.',
             lookup => 'Takes two arguments: a record type (optional), and a host.',
-	    geoip => 'Takes one argument: an ip or a hostname to lookup',     
+	    geoip => 'Takes one argument: an ip or a hostname to lookup',
+	    rss => 'RSS [ add | del ] <name> <url>: manage RSS subscriptions',
 		    },
             In_channels => 1,
  	    In_private => 1,
@@ -141,6 +139,33 @@ sub _start {
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     return;
+}
+
+sub bot_says {
+  my ($where, $what) = @_;
+  return unless ($where and $what);
+  $irc->yield(privmsg => $where => $what);
+  return;
+}
+
+
+sub irc_botcmd_rss {
+  my $nick = (split /!/, $_[ARG0])[0];
+  my ($where, $arg) = @_[ARG1, ARG2];
+  my @args = split / +/, $arg;
+  my ($action, $feed, $url) = @args;
+  if (($action eq 'add') &&
+      $feed && $url) {
+    rss_add_new($dbname, $feed, $where, $url);
+    bot_says($where, "$feed added!");
+  } elsif (($action eq 'del') && $feed) {
+    rss_delete_feed($dbname, $feed, $where);
+    bot_says("$feed trashed, boss!");
+  }
+  else {
+    bot_says($where, "Usage: rss add <feedname> <url>, or rss del <feedname>");
+    return;
+  }
 }
 
 sub irc_botcmd_slap {
@@ -156,7 +181,6 @@ sub irc_botcmd_geoip {
     $irc->yield(privmsg => $where => BirbaBot::Geo::geo_by_name_or_ip($arg));
     return;
 }
-
 
 # non-blocking dns lookup
 sub irc_botcmd_lookup {
