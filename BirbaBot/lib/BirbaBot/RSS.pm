@@ -69,6 +69,7 @@ sub rss_create_db {
   my $sthchans = $dbh->prepare('CREATE TABLE IF NOT EXISTS channels (
         f_handle        VARCHAR(30) NOT NULL,
         f_channel       VARCHAR(30) NOT NULL,
+        CONSTRAINT f_hand-cha UNIQUE (f_handle,f_channel),
         FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
   $sthchans->execute();
 

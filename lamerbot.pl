@@ -37,6 +37,22 @@ unless (-f $dbname) {
               '#l_altro_mondo',
               'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss');
   rss_add_new($dbname,
+	      'ansa',
+              '#l_altro_mondo',
+              'http://ansa.it/web/notizie/rubriche/topnews/topnews_rss.xml');
+  rss_add_new($dbname,
+	      'birbabot',
+              '#l_altro_mondo',
+              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
+  rss_add_new($dbname,
+	      'boingboing',
+              '#l_altro_mondo',
+              'http://feeds.boingboing.net/boingboing/iBag');
+  rss_add_new($dbname,
+	      'slashdot',
+              '#l_altro_mondo',
+              'http://rss.slashdot.org/Slashdot/slashdot');
+  rss_add_new($dbname,
 	      'lamerbot',
               '#l_altro_mondo',
               'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
