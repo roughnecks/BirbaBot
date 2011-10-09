@@ -6,3 +6,5 @@ libxml-rss-perl
 libwww-perl
 libcrypt-ssleay-perl
 libdbd-sqlite3-perl
+libgeo-ip-perl
+ 
