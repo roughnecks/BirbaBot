@@ -7,4 +7,5 @@ libwww-perl
 libcrypt-ssleay-perl
 libdbd-sqlite3-perl
 libgeo-ip-perl
- 
+geoip-database
+libpoe-component-client-dns-perl
