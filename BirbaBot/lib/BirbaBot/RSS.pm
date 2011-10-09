@@ -69,7 +69,7 @@ sub rss_create_db {
   my $sthchans = $dbh->prepare('CREATE TABLE IF NOT EXISTS channels (
         f_handle        VARCHAR(30) NOT NULL,
         f_channel       VARCHAR(30) NOT NULL,
-        CONSTRAINT f_hand-cha UNIQUE (f_handle,f_channel),
+        CONSTRAINT f_handcha UNIQUE (f_handle,f_channel),
         FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
   $sthchans->execute();
 
@@ -134,7 +134,7 @@ sub rss_delete_feed {
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
   
-  my $rss_del_query = "DELETE FROM channels WHERE f_handle = ? AND f_channel = ?;"
+  my $rss_del_query = "DELETE FROM channels WHERE f_handle = ? AND f_channel = ?;";
   my $rss_del = $dbh->prepare($rss_del_query);
   $rss_del->execute($feedname, $channel);
   # now it's gone. Let's check if it's used.
@@ -142,7 +142,7 @@ sub rss_delete_feed {
   my $rss_check = $dbh->prepare("SELECT * FROM channels WHERE f_handle = ?;");
   $rss_check->execute($feedname);
   # unless the query returns something, let's drop the feed
-  unless ($rss->fetchrow_array()) {
+  unless ($rss_check->fetchrow_array()) {
     print "$feedname is not watched, removing from tables\n";
     my $clean_feeds = $dbh->prepare("DELETE FROM feeds WHERE f_handle = ?;");
     my $clean_rss = $dbh->prepare("DELETE FROM rss WHERE f_handle = ?;");
