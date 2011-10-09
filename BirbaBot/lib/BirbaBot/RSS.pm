@@ -145,9 +145,7 @@ sub rss_delete_feed {
   # unless the query returns something, let's drop the feed
   unless ($rss_check->fetchrow_array()) {
     print "$feedname is not watched anymore, removing from tables\n";
-    my $clean_feeds = $dbh->prepare("DELETE FROM feeds WHERE f_handle = ?;");
     my $clean_rss = $dbh->prepare("DELETE FROM rss WHERE f_handle = ?;");
-    $clean_feeds->execute($feedname);
     $clean_rss->execute($feedname);
   }
   $dbh->disconnect;
