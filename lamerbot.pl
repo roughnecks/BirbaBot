@@ -135,6 +135,8 @@ sub _start {
             Addressed => 0,
             Prefix => "!",
             Eat => 1,
+            Ignore_unknown => 1,
+								  
 								 ));
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
