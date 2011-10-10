@@ -43,16 +43,17 @@ sub search_google {
   }
   my $googlesite = "http://ajax.googleapis.com/ajax/services/search/$type";
   my $jsonresponse = $ua->get($googlesite . "?q=" . uri_escape($query) . "&v=1.0");
-
-#  print Dumper($jsonresponse->content);
   
+  # here we check the success of the wget
+  unless ($jsonresponse->is_success) {
+    return "Huston, we have a problem... Google is not responding on http://ajax.googleapis.com/ajax/services/search/$type"}
+
+  # ... and here of the JSON parsing
   my $response = JSON::Any->jsonToObj($jsonresponse->content);
-  #  print Dumper($response);
-  if (($response->is_success) and 
-      ($response->{'responseStatus'} == 200)) {
+  if ($response->{'responseStatus'} == 200) {
     return google_process_results($response->{'responseData'}->{'results'});
   } else {
-    return "Huston, we have a problem... Google is not responding on http://ajax.googleapis.com/ajax/services/search/$type"
+    return "Huston, we have a problem... The APIs seems broken"
   }
 }
 
