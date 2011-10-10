@@ -16,6 +16,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(
 		     search_google
+		     google_translate
 		  );
 
 our $VERSION = '0.01';
@@ -35,7 +36,7 @@ $ua->timeout(5); # 5 seconds of timeout
 $ua->show_progress(1);
 
 sub google_translate {
-  my ($string, $from, $to);
+  my ($string, $from, $to) = @_;
   unless (($from =~ m/^\w+$/) and ($to =~ m/^\w+$/)) {
     return "Right example query: x it en here goes my text"
   }
