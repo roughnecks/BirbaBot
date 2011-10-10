@@ -35,8 +35,13 @@ $ua->timeout(5); # 5 seconds of timeout
 $ua->show_progress(1);
 
 sub search_google {
-  my $query = shift;
-  my $googlesite = "http://ajax.googleapis.com/ajax/services/search/web";
+  my ($query, $type) = @_;
+  unless (($type eq "web") or 
+	  ($type eq "images") or
+	  ($type eq "video")) {
+    return "Type unsupported"
+  }
+  my $googlesite = "http://ajax.googleapis.com/ajax/services/search/$type";
   my $jsonresponse = $ua->get($googlesite . "?q=" . uri_escape($query) . "&v=1.0");
 
 #  print Dumper($jsonresponse->content);
@@ -55,7 +60,7 @@ sub google_process_results {
     my $result = "";
     my $title =  $arrayref->[$c]->{'titleNoFormatting'};
     my $url = make_tiny_url($arrayref->[$c]->{'url'});
-    push @out, "$title <$url>";
+    push @out, "\x{0002}$title\x{000F} <$url>";
   }
   return join (" | ", @out);
 }

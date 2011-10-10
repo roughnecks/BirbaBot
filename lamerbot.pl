@@ -189,7 +189,7 @@ sub irc_botcmd_slap {
 
 sub irc_botcmd_g {
   my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_google($arg));
+  bot_says($where, search_google($arg, "web"));
 }
 
 sub irc_botcmd_geoip {
