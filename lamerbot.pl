@@ -133,7 +133,7 @@ sub _start {
             In_channels => 1,
  	    In_private => 1,
             Addressed => 0,
-            Prefix => "!",
+            Prefix => "@",
             Eat => 1,
             Ignore_unknown => 1,
 								  
@@ -161,8 +161,15 @@ sub irc_botcmd_rss {
     rss_add_new($dbname, $feed, $where, $url);
     bot_says($where, "$feed added!");
   } elsif (($action eq 'del') && $feed) {
-    rss_delete_feed($dbname, $feed, $where);
-    bot_says("$feed trashed, boss!");
+    my ($reply, $purged) = rss_delete_feed($dbname, $feed, $where);
+    if ($reply) {
+      bot_says($where, "$reply");
+      if ($purged) {
+	unlink File::Spec->catfile($localdir, $feed);
+      }
+    } else {
+      bot_says($where, "Problems deleting $feed");
+    }
   }
   else {
     bot_says($where, "Usage: rss add <feedname> <url>, or rss del <feedname>");
