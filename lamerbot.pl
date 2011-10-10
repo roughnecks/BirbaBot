@@ -19,8 +19,9 @@ use BirbaBot::RSS qw(rss_create_db
 		     rss_delete_feed
 		     rss_get_my_feeds
 		   );
-
 use BirbaBot::Geo;
+use BirbaBot::Searches qw(search_google);
+
 
 use POE;
 use POE::Component::Client::DNS;
@@ -112,6 +113,7 @@ POE::Session->create(
 		     irc_botcmd_geoip
 		     irc_botcmd_lookup
 		     irc_botcmd_rss
+		     irc_botcmd_g
 		     rss_sentinel
 		     dns_response) ],
     ],
@@ -129,6 +131,7 @@ sub _start {
             lookup => 'Takes two arguments: a record type (optional), and a host.',
 	    geoip => 'Takes one argument: an ip or a hostname to lookup',
 	    rss => 'RSS [ add | del ] <name> <url>: manage RSS subscriptions',
+            g => 'Do a google search'
 		    },
             In_channels => 1,
  	    In_private => 1,
@@ -182,6 +185,11 @@ sub irc_botcmd_slap {
     my ($where, $arg) = @_[ARG1, ARG2];
     $irc->yield(ctcp => $where, "ACTION slaps $arg");
     return;
+}
+
+sub irc_botcmd_g {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  bot_says($where, search_google($arg));
 }
 
 sub irc_botcmd_geoip {
