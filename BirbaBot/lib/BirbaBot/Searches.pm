@@ -48,8 +48,11 @@ sub search_google {
   
   my $response = JSON::Any->jsonToObj($jsonresponse->content);
   #  print Dumper($response);
-  if ($response->{'responseStatus'} == 200) {
+  if (($response->is_success) and 
+      ($response->{'responseStatus'} == 200)) {
     return google_process_results($response->{'responseData'}->{'results'});
+  } else {
+    return "Huston, we have a problem... Google is not responding on http://ajax.googleapis.com/ajax/services/search/$type"
   }
 }
 
