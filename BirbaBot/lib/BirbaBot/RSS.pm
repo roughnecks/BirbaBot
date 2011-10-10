@@ -137,6 +137,11 @@ sub rss_delete_feed {
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
   
+  my $check_del = $dbh->prepare("SELECT * FROM channels WHERE f_handle = ? AND f_channel = ?;");
+  $check_del->execute($feedname, $channel);
+  unless ($check_del->fetchrow_array()) {
+    return ("WTF, I'm not watching $feedname on $channel");
+  }
   my $rss_del_query = "DELETE FROM channels WHERE f_handle = ? AND f_channel = ?;";
   my $rss_del = $dbh->prepare($rss_del_query);
   $rss_del->execute($feedname, $channel);
