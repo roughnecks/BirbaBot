@@ -131,6 +131,8 @@ If the rss is not more watched, remove it from rss and feeds too.
 
 sub rss_delete_feed {
   my ($dbname, $feedname, $channel) = @_;
+  my $reply;
+  my $excode = 0;
   # connect
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
@@ -138,6 +140,11 @@ sub rss_delete_feed {
   my $rss_del_query = "DELETE FROM channels WHERE f_handle = ? AND f_channel = ?;";
   my $rss_del = $dbh->prepare($rss_del_query);
   $rss_del->execute($feedname, $channel);
+  if ($rss_del->err) {
+    return (0, 0); # failure
+  } else {
+    $reply = "Stopped watching $feedname on $channel";
+  }
   # now it's gone. Let's check if it's used.
 
   my $rss_check = $dbh->prepare("SELECT * FROM channels WHERE f_handle = ?;");
@@ -149,8 +156,11 @@ sub rss_delete_feed {
     my $clean_rss = $dbh->prepare("DELETE FROM rss WHERE f_handle = ?;");
     $clean_feeds->execute($feedname);
     $clean_rss->execute($feedname);
+    $reply .= " and purged";
+    $excode = 1;
   }
   $dbh->disconnect;
+  return ($reply, $excode);
 }
 
 
