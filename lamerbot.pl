@@ -114,6 +114,8 @@ POE::Session->create(
 		     irc_botcmd_lookup
 		     irc_botcmd_rss
 		     irc_botcmd_g
+		     irc_botcmd_gi
+		     irc_botcmd_gv
 		     rss_sentinel
 		     dns_response) ],
     ],
@@ -131,7 +133,10 @@ sub _start {
             lookup => 'Takes two arguments: a record type (optional), and a host.',
 	    geoip => 'Takes one argument: an ip or a hostname to lookup',
 	    rss => 'RSS [ add | del ] <name> <url>: manage RSS subscriptions',
-            g => 'Do a google search'
+            g => 'Do a google search',
+            gi => 'Do a google images search',
+            gv => 'Do a google video search',
+
 		    },
             In_channels => 1,
  	    In_private => 1,
@@ -191,6 +196,19 @@ sub irc_botcmd_g {
   my ($where, $arg) = @_[ARG1, ARG2];
   bot_says($where, search_google($arg, "web"));
 }
+
+sub irc_botcmd_gi {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  bot_says($where, search_google($arg, "images"));
+}
+
+sub irc_botcmd_gv {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  bot_says($where, search_google($arg, "video"));
+}
+
+
+
 
 sub irc_botcmd_geoip {
     my $nick = (split /!/, $_[ARG0])[0];
