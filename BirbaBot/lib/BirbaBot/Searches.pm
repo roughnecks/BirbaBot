@@ -34,6 +34,24 @@ my $ua = LWP::UserAgent->new;
 $ua->timeout(5); # 5 seconds of timeout
 $ua->show_progress(1);
 
+sub google_translate {
+  my ($string, $from, $to);
+  unless (($from =~ m/^\w+$/) and ($to =~ m/^\w+$/)) {
+    return "Right example query: x it en here goes my text"
+  }
+  # first, build the url
+  
+  my $target  = "http://ajax.googleapis.com/ajax/services/language/translate" .
+    "?v=1.0&q=" . uri_escape($string) . "&langpair=${from}|${to}";
+  my ($result, $excode) = google_json_get_and_check($target);
+  if ($excode) {
+     return "Huston, we have a problem... The APIs seems broken"
+   } else {
+     return $result->{'translatedText'}
+   }
+}
+
+
 sub search_google {
   my ($query, $type) = @_;
   unless (($type eq "web") or 
@@ -41,21 +59,35 @@ sub search_google {
 	  ($type eq "video")) {
     return "Type unsupported"
   }
-  my $googlesite = "http://ajax.googleapis.com/ajax/services/search/$type";
-  my $jsonresponse = $ua->get($googlesite . "?q=" . uri_escape($query) . "&v=1.0");
-  
-  # here we check the success of the wget
-  unless ($jsonresponse->is_success) {
-    return "Huston, we have a problem... Google is not responding on http://ajax.googleapis.com/ajax/services/search/$type"}
-
-  # ... and here of the JSON parsing
-  my $response = JSON::Any->jsonToObj($jsonresponse->content);
-  if ($response->{'responseStatus'} == 200) {
-    return google_process_results($response->{'responseData'}->{'results'});
-  } else {
-    return "Huston, we have a problem... The APIs seems broken"
-  }
+  my $target = "http://ajax.googleapis.com/ajax/services/search/" . $type .
+    "?q=" . uri_escape($query) . "&v=1.0";
+  my ($result, $excode) = google_json_get_and_check($target);
+  if ($excode) {
+     return "Huston, we have a problem... The APIs seems broken"
+   } else {
+     return google_process_results($result->{'results'})
+   }
 }
+
+
+sub google_json_get_and_check {
+  my $url = shift;
+  my $jsonresponse = $ua->get($url);
+  unless ($jsonresponse->is_success) {
+    return ("Huston, we have a problem... Google is not responding on $url", 1);
+  }
+  my $response = JSON::Any->jsonToObj($jsonresponse->content);
+  if (($response->{'responseStatus'} == 200) and 
+      ($response->{'responseData'})) {
+    return $response->{'responseData'}
+  }
+   else {
+     print Dumper($response);
+     return ("Huston, we have a problem... The APIs seems broken", 1);
+   }
+}
+
+
 
 sub google_process_results {
   my $arrayref = shift;
