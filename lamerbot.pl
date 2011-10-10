@@ -20,7 +20,9 @@ use BirbaBot::RSS qw(rss_create_db
 		     rss_get_my_feeds
 		   );
 use BirbaBot::Geo;
-use BirbaBot::Searches qw(search_google);
+use BirbaBot::Searches qw(search_google
+			  google_translate
+			);
 
 
 use POE;
@@ -116,6 +118,7 @@ POE::Session->create(
 		     irc_botcmd_g
 		     irc_botcmd_gi
 		     irc_botcmd_gv
+		     irc_botcmd_x
 		     rss_sentinel
 		     dns_response) ],
     ],
@@ -136,7 +139,7 @@ sub _start {
             g => 'Do a google search',
             gi => 'Do a google images search',
             gv => 'Do a google video search',
-
+            x => 'Translate the text with, for example, x en it this is a test',
 		    },
             In_channels => 1,
  	    In_private => 1,
@@ -206,6 +209,16 @@ sub irc_botcmd_gv {
   my ($where, $arg) = @_[ARG1, ARG2];
   bot_says($where, search_google($arg, "video"));
 }
+
+sub irc_botcmd_x {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  if ($arg =~ m/^\s*([a-z]{2,3})\s+([a-z]{2,3})\s+(.*)\s*$/) {
+    bot_says($where, google_translate($3, $1, $2));
+  } else {
+    bot_says($where, "Example: x hr it govno");
+  }
+}
+
 
 
 
