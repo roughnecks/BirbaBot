@@ -35,6 +35,8 @@ use POE::Component::IRC::Plugin::BotCommand;
 # initialize the db
 my $dbname = "rss.db";
 
+my $reconnect_delay = 500;
+
 unless (-f $dbname) {
   rss_create_db($dbname);
   rss_add_new($dbname,
@@ -112,6 +114,7 @@ POE::Session->create(
         main => [ qw(_start
 		     _default
 		     irc_001 
+		     irc_disconnected
 		     irc_botcmd_slap
 		     irc_botcmd_geoip
 		     irc_botcmd_lookup
@@ -156,6 +159,7 @@ sub _start {
     $irc->yield( connect => { } );
     return;
 }
+
 
 sub bot_says {
   my ($where, $what) = @_;
@@ -270,7 +274,12 @@ sub dns_response {
     return;
 }
 
-
+sub irc_disconnected {
+  print "Reconnecting in $reconnect_delay seconds\n";
+  # we better sleep here, so we don't spam events which are not going to happen
+  sleep $reconnect_delay;
+  $irc->yield( connect => { });
+}
 
 
 sub irc_001 {
