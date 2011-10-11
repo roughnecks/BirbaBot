@@ -77,7 +77,7 @@ sub search_imdb {
       push @output, "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. ${bbold}http://imdb.com/title/$imdb->{ID}$ebold";
     } else {
       my $scrapedtitle = $arrayref->[0];
-      $scrapedtitle =~ s/&(\w+|#x[0-9]+);/ /g;
+      $scrapedtitle =~ s/&(\w+|#x[0-9a-zA-Z]+);/ /g; # to fix
       push @output, "$scrapedtitle ${bbold}${url}${ebold}";
     }
   }
