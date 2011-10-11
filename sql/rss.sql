@@ -34,3 +34,9 @@ query per pescare gli ultimi 5 feed per ansa
 
 SELECT f_handle,title,url FROM feeds WHERE f_handle='ansa' ORDER BY id DESC LIMIT 5;
 
+SELECT '
+query per listare i feed seguiti in canale
+';
+
+SELECT f_handle FROM channels WHERE f_channel='#canale';
+
