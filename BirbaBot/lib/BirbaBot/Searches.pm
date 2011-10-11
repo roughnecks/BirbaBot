@@ -47,43 +47,68 @@ must be at the end), do a refined search.
 
 =cut
 
+
 sub search_imdb {
   my $string = shift;
   return "Query imdb about what?" unless $string;
-  my $year;
-  my $title;
-
-  # search for the year 
-  if ($string =~ m/(.+)\s+([0-9]{4})\s*$/) {
-    $title = $1;
-    $year = $2;
-  } else {
-    $title = $string;
-  };
-
-  # build the url
-  my $target = "http://www.imdbapi.com/?" . "t=" . uri_escape($title);
-  if ($year) { $target .= "&y=" . $year; };
-
-  # wget it
-  my $json = $ua->get($target);
-  return "wget $target failed, sorry" unless $json->is_success;
-  
+  $string =~ s/\s+$//;
+  # first, we query the imdb.com site, and give the first 3
+  # results. Then we query the api to get the informations. It the api
+  # fails, at least we give title and url.
+  my $query = uri_escape($string);
+  my $imdbresult = $ua->get("http://www.imdb.com/find?s=all&q=$query");
+  my @queryids = imdb_scan_for_titles($imdbresult->content);
+  undef $imdbresult;
+  my @output;
+  while (@queryids) {
+    my $arrayref = shift(@queryids);
+    push @output, imdb_query_api($arrayref->[1]);
+  }
+  return join ("$bbold | $ebold", @output);
   # parse the json
+  # check if we have all the fields
+
+}
+
+sub imdb_scan_for_titles {
+  my $htmlshit = shift;
+  $htmlshit =~ s/\r?\n/ /gs;
+  my @results;
+  my $counter = 0;
+  while ($htmlshit =~ m!<a\s+href="/title/(tt[0-9]+)/".*?>([^><]+?)</a>!g) {
+    unless ($results[$#results] and ($1 eq $results[$#results]->[1])) {
+      push @results, [$2, $1]; # $title, $url
+      $counter++;
+    }
+    last if ($counter == 3);
+  }
+  print Dumper(\@results);
+  return @results;
+}
+
+# internal. Query the api for movie's data. If it fails, just return the imdb url
+
+sub imdb_query_api {
+  my $id = shift;
+  my $target = "http://www.imdbapi.com/?i=$id";
+  my $json = $ua->get($target);
+  # if it fails, return only the url
+  my $imdburl = "http://imdb.com/title/$id";
+  return $imdburl unless $json->is_success;
   my $imdb = JSON::Any->jsonToObj($json->content);
   unless (($imdb->{'Response'}) && ($imdb->{'Response'} eq 'True')) {
-    return "$target failed us"
+    return "$imdburl"
   }
-
-  # check if we have all the fields
   my @required = qw(ID Title Year Director Actors Rating Genre Plot);
   foreach my $key (@required) {
     unless ($imdb->{$key}) {
       $imdb->{$key} = "N/A";
     }
   }
-  return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Plot: $imdb->{Plot}. $bbold<http://imdb.com/title/$imdb->{ID}>$ebold";
+  return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. $bbold<http://imdb.com/title/$imdb->{ID}>$ebold";
 }
+
+
 
 
 =head2 google_translate($string, $from, $to)
