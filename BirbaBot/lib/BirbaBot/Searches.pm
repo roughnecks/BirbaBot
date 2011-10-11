@@ -76,7 +76,9 @@ sub search_imdb {
     if ($imdb) {
       push @output, "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. ${bbold}http://imdb.com/title/$imdb->{ID}$ebold";
     } else {
-      push @output, "$arrayref->[0] ${bbold}${url}${ebold}";
+      my $scrapedtitle = $arrayref->[0];
+      $scrapedtitle =~ s/&(\w+|#x[0-9]);/ /g;
+      push @output, "$scrapedtitle ${bbold}${url}${ebold}";
     }
   }
   return join (" || ", @output);
