@@ -58,7 +58,7 @@ sub search_imdb {
     if ($imdb) {
       return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. $imdb->{Plot}";
     } else {
-      return "Sorry, the api failed us for id $1"
+      return "Sorry, the api failed us! Go to  ${bbold}http://imdb.com/title/$1${ebold}"
     }
   }
   
@@ -76,7 +76,7 @@ sub search_imdb {
     if ($imdb) {
       push @output, "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. ${bbold}http://imdb.com/title/$imdb->{ID}$ebold";
     } else {
-      push @output, $url;
+      push @output, "$arrayref->[0] ${bbold}${url}${ebold}";
     }
   }
   return join (" || ", @output);
