@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS definitions (
 	bar2			TEXT,
 	bar4			TEXT,
 	bar5			TEXT,
-	FOREIGN KEY(foo) REFERENCES factoids(key) ON DELETE CASCADE
+	FOREIGN KEY(foo) REFERENCES factoids(id) ON DELETE CASCADE
 );
