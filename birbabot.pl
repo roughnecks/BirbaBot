@@ -22,6 +22,7 @@ use BirbaBot::RSS qw(rss_create_db
 use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
 			  google_translate
+			  search_imdb
 			);
 
 
@@ -119,6 +120,7 @@ POE::Session->create(
 		     irc_botcmd_gi
 		     irc_botcmd_gv
 		     irc_botcmd_x
+		     irc_botcmd_imdb
 		     rss_sentinel
 		     dns_response) ],
     ],
@@ -140,6 +142,7 @@ sub _start {
             gi => 'Do a google images search',
             gv => 'Do a google video search',
             x => 'Translate the text with, for example, x en it this is a test',
+            imdb => 'Query the Internet Movie Database. If you want to specify a year, put it at the end',
 		    },
             In_channels => 1,
  	    In_private => 1,
@@ -220,7 +223,10 @@ sub irc_botcmd_x {
 }
 
 
-
+sub irc_botcmd_imdb {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  bot_says($where, search_imdb($arg));
+}
 
 
 sub irc_botcmd_geoip {

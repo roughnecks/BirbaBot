@@ -17,6 +17,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
 		     search_google
 		     google_translate
+		     search_imdb
 		  );
 
 our $VERSION = '0.01';
@@ -35,8 +36,69 @@ my $ua = LWP::UserAgent->new;
 $ua->timeout(5); # 5 seconds of timeout
 $ua->show_progress(1);
 
+my $bbold = "\x{0002}";
+my $ebold = "\x{000F}";
+
+
+=head2 search_imdb($string)
+
+Query http://www.imdbapi.com/ for a movie. If year is attached (which
+must be at the end), do a refined search.
+
+=cut
+
+sub search_imdb {
+  my $string = shift;
+  return "Query imdb about what?" unless $string;
+  my $year;
+  my $title;
+
+  # search for the year 
+  if ($string =~ m/(.+)\s+([0-9]{4})\s*$/) {
+    $title = $1;
+    $year = $2;
+  } else {
+    $title = $string;
+  };
+
+  # build the url
+  my $target = "http://www.imdbapi.com/?" . "t=" . uri_escape($title);
+  if ($year) { $target .= "&y=" . $year; };
+
+  # wget it
+  my $json = $ua->get($target);
+  return "wget $target failed, sorry" unless $json->is_success;
+  
+  # parse the json
+  my $imdb = JSON::Any->jsonToObj($json->content);
+  unless (($imdb->{'Response'}) && ($imdb->{'Response'} eq 'True')) {
+    return "$target failed us"
+  }
+
+  # check if we have all the fields
+  my @required = qw(ID Title Year Director Actors Rating Genre Plot);
+  foreach my $key (@required) {
+    unless ($imdb->{$key}) {
+      $imdb->{$key} = "N/A";
+    }
+  }
+  return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Plot: $imdb->{Plot}. $bbold<http://imdb.com/title/$imdb->{ID}>$ebold";
+}
+
+
+=head2 google_translate($string, $from, $to)
+
+Query http://ajax.googleapis.com/ajax/services/language/translate for
+a $string to translatate from language code $from to language code
+$to.
+
+=cut
+
+
 sub google_translate {
   my ($string, $from, $to) = @_;
+  return "Missing paramenters" unless ($string and $from and $to);
+
   unless (($from =~ m/^\w+$/) and ($to =~ m/^\w+$/)) {
     return "Right example query: x it en here goes my text"
   }
@@ -52,6 +114,12 @@ sub google_translate {
    }
 }
 
+=head2 search_google($query, $type)
+
+Query http://ajax.googleapis.com/ajax/services/search/$tupe for string $query, where $query must be one of the following: "web", "images" or "video". Self-explaining, I guess.
+
+=cut
+
 
 sub search_google {
   my ($query, $type) = @_;
@@ -60,6 +128,8 @@ sub search_google {
 	  ($type eq "video")) {
     return "Type unsupported"
   }
+  return "Search what?" unless $query;
+
   my $target = "http://ajax.googleapis.com/ajax/services/search/" . $type .
     "?q=" . uri_escape($query) . "&v=1.0";
   my ($result, $excode) = google_json_get_and_check($target);
@@ -70,7 +140,7 @@ sub search_google {
    }
 }
 
-
+# internal to process the json shit
 sub google_json_get_and_check {
   my $url = shift;
   my $jsonresponse = $ua->get($url);
@@ -89,6 +159,7 @@ sub google_json_get_and_check {
 }
 
 
+# internal to process the hash returned by google_json_get_and_check
 
 sub google_process_results {
   my $arrayref = shift;
@@ -97,11 +168,10 @@ sub google_process_results {
     my $result = "";
     my $title =  $arrayref->[$c]->{'titleNoFormatting'};
     my $url = make_tiny_url($arrayref->[$c]->{'url'});
-    push @out, "\x{0002}$title\x{000F} <$url>";
+    push @out, "${bbold}${title}${ebold} <$url>";
   }
   return join (" | ", @out);
 }
-
 
 
 1;
