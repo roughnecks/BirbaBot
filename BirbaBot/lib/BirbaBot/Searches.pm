@@ -52,19 +52,34 @@ sub search_imdb {
   my $string = shift;
   return "Query imdb about what?" unless $string;
   $string =~ s/\s+$//;
+  # first, we check the input string, and see if it's an imdb url or id
+  if ($string =~ m/(tt[0-9]{3,})/) {
+    my ($url, $imdb) = imdb_query_api($1);
+    if ($imdb) {
+      return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. $imdb->{Plot}";
+    } else {
+      return "Sorry, the api failed us for id $1"
+    }
+  }
+  
   # first, we query the imdb.com site, and give the first 3
   # results. Then we query the api to get the informations. It the api
   # fails, at least we give title and url.
   my $query = uri_escape($string);
   my $imdbresult = $ua->get("http://www.imdb.com/find?s=all&q=$query");
   my @queryids = imdb_scan_for_titles($imdbresult->content);
-  undef $imdbresult;
+  undef $imdbresult;   # free the memory now
   my @output;
   while (@queryids) {
     my $arrayref = shift(@queryids);
-    push @output, imdb_query_api($arrayref->[1]);
+    my ($url, $imdb) = imdb_query_api($arrayref->[1]);
+    if ($imdb) {
+      push @output, "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. ${bbold}http://imdb.com/title/$imdb->{ID}$ebold";
+    } else {
+      push @output, $url;
+    }
   }
-  return join ("$bbold | $ebold", @output);
+  return join (" || ", @output);
   # parse the json
   # check if we have all the fields
 
@@ -97,7 +112,7 @@ sub imdb_query_api {
   return $imdburl unless $json->is_success;
   my $imdb = JSON::Any->jsonToObj($json->content);
   unless (($imdb->{'Response'}) && ($imdb->{'Response'} eq 'True')) {
-    return "$imdburl"
+    return $imdburl
   }
   my @required = qw(ID Title Year Director Actors Rating Genre Plot);
   foreach my $key (@required) {
@@ -105,7 +120,7 @@ sub imdb_query_api {
       $imdb->{$key} = "N/A";
     }
   }
-  return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. $bbold<http://imdb.com/title/$imdb->{ID}>$ebold";
+  return ($imdburl, $imdb); 
 }
 
 
