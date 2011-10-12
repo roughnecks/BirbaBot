@@ -24,8 +24,7 @@ our @EXPORT_OK = qw(rss_create_db
 
 our $VERSION = '0.01';
 
-
-use XML::RSS;
+use XML::Feed;
 use LWP::UserAgent;
 use DBI;
 use BirbaBot::Shorten;
@@ -111,11 +110,9 @@ sub rss_add_new {
   return 0 unless ($feedname =~ m/^\w+$/s);
 
   # then test if the $url is really an url and parsable
-  my $wget = $ua->get($url);
-  return "Cannot retrieve $url" unless $wget->is_success;
-  my $rss = XML::RSS->new();
-  my $rssfeed = $rss->parse($wget->content);
-  my $feedtitle = $rssfeed->channel->{title};
+  my $rssfeed = XML::Feed->parse(URI->new($url))
+    or return "$url doesn't look like an RSS";
+  my $feedtitle = $rssfeed->title;
   return "$url doesn't look like an RSS" unless $feedtitle;
 
   # our queries
@@ -260,30 +257,31 @@ sub rss_fetch {
     # the content, which is actually stored in the file.
     # So I guess we either do 'get' request, or we open the file
     if ($response->is_success) {
-#      print "Parsing $destfile\n";
-      my $rss = XML::RSS->new();
-      $rss->parsefile($destfile);
+      print "Parsing $destfile\n";
+      my $rss = XML::Feed->parse($destfile);
       my %links;
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
         $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?)");
-      foreach my $item (@{$rss->{'items'}}) {
+      foreach my $item ($rss->entries) {
 	# avoid doing another loop, and save the link
-	$links{$item->{'link'}} = 1;
-	my $feed_item_title = $item->{'title'};
+	my $feed_item_title = $item->title;
+	my $feed_item_author = $item->author;
+	my $feed_item_link = $item->link;
+	$links{$feed_item_link} = 1;
 	#strip the tags
 	$feed_item_title =~ s/<.+?>//g;
         $sth->execute(
                       $feedname,
                       $feed_item_title,
-                      $item->{'author'},
-                      $item->{'link'});
+                      $feed_item_author,
+                      $feed_item_link);
         unless ($sth->err) {
           # here we push the new feed in a multidimensional hash
           push @outputfeed,
-            {'title' =>  $item->{'title'},
-             'author' => $item->{'author'},
-             'link' =>   $item->{'link'} };
+            {'title' =>  $feed_item_title,
+             'author' => $feed_item_author,
+             'link' =>   $feed_item_link};
         }
       } 
       $output{$feedname} = \@outputfeed;
