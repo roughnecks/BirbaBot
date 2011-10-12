@@ -162,13 +162,13 @@ sub irc_botcmd_rss {
   my ($action, $feed, $url) = @args;
   if (($action eq 'add') &&
       $feed && $url) {
-    rss_add_new($dbname, $feed, $where, $url);
-    bot_says($where, "$feed added!");
+    my $reply = rss_add_new($dbname, $feed, $where, $url);
+    bot_says($where, "$reply");
   }
   elsif (($action eq 'del') && $feed) {
     my ($reply, $purged) = rss_delete_feed($dbname, $feed, $where);
     if ($reply) {
-      bot_says($where, "$reply");
+      bot_says($where, $reply);
       if ($purged) {
 	unlink File::Spec->catfile($localdir, $feed);
       }
