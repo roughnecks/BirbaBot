@@ -18,6 +18,8 @@ our @EXPORT_OK = qw(rss_create_db
 		    rss_add_new
 		    rss_get_my_feeds
 		    rss_delete_feed
+		    rss_list
+		    rss_give_latest
 		  );
 
 our $VERSION = '0.01';
@@ -27,7 +29,7 @@ use XML::RSS;
 use LWP::UserAgent;
 use DBI;
 use BirbaBot::Shorten;
-# use Data::Dumper;
+use Data::Dumper;
 
 =head2 rss_create_db($dbname);
 
@@ -354,6 +356,60 @@ sub process_feeds {
   }
   return \%output;
 }
+
+=head2 rss_give_latest($dbname, $feed)
+
+Query the DB $dbname for the latest RSS feeds tagged $feed. Return an
+array of replies. If $feed is not provided, just list the latest 5
+feeds. If you need more, get a newsreader, ok?
+
+=cut
+
+
+sub rss_give_latest {
+  my ($dbname, $feed) = @_;
+  my @list;
+  
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+
+  # prepare the query
+  my $query;
+  if ($feed) {
+    $query = $dbh->prepare("SELECT title, url, date, f_handle FROM feeds WHERE f_handle = ? ORDER BY id DESC LIMIT 5;");
+    $query->execute($feed);
+  } 
+  else {
+    $query = $dbh->prepare("SELECT title, url, date, f_handle FROM feeds ORDER BY id DESC LIMIT 5;");
+    $query->execute;
+  }
+  
+  # do it and store the string in @list;
+  while (my @data = $query->fetchrow_array()) {
+    my $string = $data[0] . " " . BirbaBot::Shorten::make_tiny_url($data[1]) . " " . "(" . $data[2] . " " . $data[3] .  ")";
+    push @list, $string;
+  }
+  # disconnect
+  $dbh->disconnect;
+  return @list;
+}
+
+sub rss_list {
+  my ($dbname, $channel) = @_;
+  my @watched;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  
+  my $query = $dbh->prepare("SELECT f_handle FROM channels WHERE f_channel = ? ;");
+  $query->execute($channel);
+  while (my @data = $query->fetchrow_array()) {
+    push @watched, $data[0];
+  }
+  $dbh->disconnect;
+  print Dumper(\@watched);
+  return join(" ", @watched);
+}
+
 
 1;
 

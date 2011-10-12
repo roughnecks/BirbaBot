@@ -18,6 +18,8 @@ use BirbaBot::RSS qw(rss_create_db
 		     rss_add_new
 		     rss_delete_feed
 		     rss_get_my_feeds
+		     rss_give_latest
+		     rss_list
 		   );
 use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
@@ -40,29 +42,13 @@ my $reconnect_delay = 500;
 unless (-f $dbname) {
   rss_create_db($dbname);
   rss_add_new($dbname,
-	      'laltrowiki',
-              '#l_altro_mondo',
-              'http://laltromondo.dynalias.net/~iki/recentchanges/index.rss');
-  rss_add_new($dbname,
-	      'ansa',
-              '#l_altro_mondo',
-              'http://ansa.it/web/notizie/rubriche/topnews/topnews_rss.xml');
-  rss_add_new($dbname,
-	      'birbabot',
-              '#l_altro_mondo',
-              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
-  rss_add_new($dbname,
-	      'boingboing',
-              '#l_altro_mondo',
-              'http://feeds.boingboing.net/boingboing/iBag');
-  rss_add_new($dbname,
 	      'slashdot',
-              '#l_altro_mondo',
+              '#lamerbot',
               'http://rss.slashdot.org/Slashdot/slashdot');
   rss_add_new($dbname,
 	      'birbabot',
               '#lamerbot',
-              'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=rss');
+              'http://laltromondo.dynalias.net/gitweb/?p=birbabot.git;a=rss');
 }
     
 # initialize the local storage
@@ -178,7 +164,8 @@ sub irc_botcmd_rss {
       $feed && $url) {
     rss_add_new($dbname, $feed, $where, $url);
     bot_says($where, "$feed added!");
-  } elsif (($action eq 'del') && $feed) {
+  }
+  elsif (($action eq 'del') && $feed) {
     my ($reply, $purged) = rss_delete_feed($dbname, $feed, $where);
     if ($reply) {
       bot_says($where, "$reply");
@@ -187,6 +174,18 @@ sub irc_botcmd_rss {
       }
     } else {
       bot_says($where, "Problems deleting $feed");
+    }
+  }
+  elsif ($action eq 'list') {
+    my $reply = rss_list($dbname, $where);
+    print "The reply is $reply;";
+    bot_says($where, $reply);
+  }
+  elsif ($action eq 'show') {
+    my @replies = rss_give_latest($dbname, $feed);
+    print Dumper(\@replies);
+    foreach my $line (@replies) {
+      bot_says($where, $line);
     }
   }
   else {
