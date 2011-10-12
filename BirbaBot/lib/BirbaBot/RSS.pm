@@ -417,7 +417,8 @@ sub rss_list {
   my $query = $dbh->prepare("SELECT rss.f_handle, rss.url FROM rss INNER JOIN channels ON rss.f_handle = channels.f_handle WHERE f_channel = ?;");
   $query->execute($channel);
   while (my @data = $query->fetchrow_array()) {
-    push @watched, $data[0];
+    my $reply = $data[0] . "(" . $data[1] . ")";
+    push @watched, $reply;
   }
   $dbh->disconnect;
   print Dumper(\@watched);
