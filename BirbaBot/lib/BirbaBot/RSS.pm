@@ -267,9 +267,12 @@ sub rss_fetch {
       foreach my $item (@{$rss->{'items'}}) {
 	# avoid doing another loop, and save the link
 	$links{$item->{'link'}} = 1;
+	my $feed_item_title = $item->{'title'};
+	#strip the tags
+	$feed_item_title =~ s/<.+?>//g;
         $sth->execute(
                       $feedname,
-                      $item->{'title'},
+                      $feed_item_title,
                       $item->{'author'},
                       $item->{'link'});
         unless ($sth->err) {
