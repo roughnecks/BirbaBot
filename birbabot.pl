@@ -172,10 +172,6 @@ sub bot_says {
   return
 }
   
-  
-
-  return;
-}
 
 
 sub irc_botcmd_rss {
