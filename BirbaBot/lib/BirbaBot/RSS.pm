@@ -35,6 +35,9 @@ my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
 $ua->agent('Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.16) Gecko/20110929 Iceweasel/3.5.16 (like Firefox/3.5.16)');
 $ua->show_progress(1);
 
+my $bbold = "\x{0002}";
+my $ebold = "\x{000F}";
+
 
 =head2 rss_create_db($dbname);
 
@@ -417,7 +420,7 @@ sub rss_list {
   my $query = $dbh->prepare("SELECT rss.f_handle, rss.url FROM rss INNER JOIN channels ON rss.f_handle = channels.f_handle WHERE f_channel = ?;");
   $query->execute($channel);
   while (my @data = $query->fetchrow_array()) {
-    my $reply = $data[0] . " (" . $data[1] . ")";
+    my $reply = $bbold . $data[0] . $ebold . " (" . $data[1] . ")";
     push @watched, $reply;
   }
   $dbh->disconnect;
