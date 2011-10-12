@@ -158,7 +158,7 @@ sub bot_says {
     while (@tokens) {
       my $string = shift(@tokens);
       my $len = length($string);
-      my $oldstringleng = lenght($output[$#output]);
+      my $oldstringleng = length($output[$#output]);
       if (($len + $oldstringleng) < 400) {
 	$output[$#output] .= " $string";
       } else {
