@@ -126,7 +126,7 @@ sub _start {
             slap   => 'Takes one argument: a nickname to slap.',
             lookup => 'Takes two arguments: a record type like MX, AAAA (optional), and a host.',
 	    geoip => 'Takes one argument: an ip or a hostname to lookup.',
-	    rss => 'RSS [ add | del ] <name> <url>: manage RSS subscriptions.',
+	    rss => 'Manage RSS subscriptions: RSS [ add | del ] <name> <url> - RSS show [ name ] - RSS list [ #channel ]',
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a google images search.',
             gv => 'Do a google video search.',
