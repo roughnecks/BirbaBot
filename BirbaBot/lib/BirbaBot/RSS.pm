@@ -345,7 +345,7 @@ sub process_feeds {
   foreach my $feedname (keys %$hashref) {
     my @processed;
     my $feedsref = $hashref->{$feedname};
-    my @feeds = splice(@$feedsref, 0, 5); # output just the last 5, OK?
+    my @feeds = reverse (splice(@$feedsref, 0, 5)); # output just the last 5, OK?
     # now loop over the feeds and create the string
     while(@feeds) {
       my $news = shift(@feeds);
