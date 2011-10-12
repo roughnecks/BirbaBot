@@ -31,6 +31,11 @@ use DBI;
 use BirbaBot::Shorten;
 use Data::Dumper;
 
+my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
+$ua->agent('Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.16) Gecko/20110929 Iceweasel/3.5.16 (like Firefox/3.5.16)');
+$ua->show_progress(1);
+
+
 =head2 rss_create_db($dbname);
 
 Create the db tables if they don't exist.
@@ -102,6 +107,14 @@ sub rss_add_new {
   # sanity check
   return 0 unless ($feedname =~ m/^\w+$/s);
 
+  # then test if the $url is really an url and parsable
+  my $wget = $ua->get($url);
+  return "Cannot retrieve $url" unless $wget->is_success;
+  my $rss = XML::RSS->new();
+  my $rssfeed = $rss->parse($wget->content);
+  my $feedtitle = $rssfeed->channel->{title};
+  return "$url doesn't look like an RSS" unless $feedtitle;
+
   # our queries
   my $add_to_rss_query = 'INSERT INTO rss VALUES (?, ?);'; # f_handle & url
 
@@ -121,7 +134,8 @@ sub rss_add_new {
 
   # we should return the errors, but for now go without
   $dbh->disconnect;
-  return 1;
+  
+  return "Added $feedtitle ($url) as $feedname";
 }
 
 =head2 rss_delete_feed($dbname, $feedname, $channel)
@@ -223,9 +237,6 @@ sub rss_fetch {
   # initialize the user agent
   my %output;
   my %urls = get_the_rss_to_fetch($dbname);
-  my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
-  $ua->agent('Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.16) Gecko/20110929 Iceweasel/3.5.16 (like Firefox/3.5.16)');
-  $ua->show_progress(1);
 
   # here we open the db;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "", { PrintError=>0 });
@@ -256,9 +267,12 @@ sub rss_fetch {
       foreach my $item (@{$rss->{'items'}}) {
 	# avoid doing another loop, and save the link
 	$links{$item->{'link'}} = 1;
+	my $feed_item_title = $item->{'title'};
+	#strip the tags
+	$feed_item_title =~ s/<.+?>//g;
         $sth->execute(
                       $feedname,
-                      $item->{'title'},
+                      $feed_item_title,
                       $item->{'author'},
                       $item->{'link'});
         unless ($sth->err) {
