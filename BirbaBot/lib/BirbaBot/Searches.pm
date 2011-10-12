@@ -33,7 +33,7 @@ use URI::Escape;
 # use Data::Dumper;
 
 my $ua = LWP::UserAgent->new;
-$ua->timeout(5); # 5 seconds of timeout
+$ua->timeout(10); # 5 seconds of timeout
 $ua->show_progress(1);
 
 my $bbold = "\x{0002}";
