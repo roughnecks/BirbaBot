@@ -154,13 +154,13 @@ sub bot_says {
     $irc->yield(privmsg => $where => $what);
   } else {
     my @output = ("");
-    my @tokens = split (/ /, $what);
+    my @tokens = split (/ +/, $what);
     while (@tokens) {
       my $string = shift(@tokens);
       my $len = length($string);
       my $oldstringleng = lenght($output[$#output]);
       if (($len + $oldstringleng) < 400) {
-	$output[$#output] .= $len;
+	$output[$#output] .= " $string";
       } else {
 	push @output, $string;
       }
