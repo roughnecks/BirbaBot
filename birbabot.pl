@@ -26,7 +26,7 @@ use BirbaBot::Searches qw(search_google
 			  google_translate
 			  search_imdb
 			);
-
+use BirbaBot::Infos qw(kw_add kw_query kw_remove);
 
 use POE;
 use POE::Component::Client::DNS;
@@ -101,6 +101,7 @@ POE::Session->create(
 		     _default
 		     irc_001 
 		     irc_disconnected
+		     irc_botcmd_kw
 		     irc_botcmd_slap
 		     irc_botcmd_geoip
 		     irc_botcmd_lookup
@@ -110,6 +111,7 @@ POE::Session->create(
 		     irc_botcmd_gv
 		     irc_botcmd_x
 		     irc_botcmd_imdb
+		     irc_public
 		     rss_sentinel
 		     dns_response) ],
     ],
@@ -130,6 +132,7 @@ sub _start {
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a google images search.',
             gv => 'Do a google video search.',
+            kw => 'Manage the keywords: kw foo is bar; kw forget foo',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
             imdb => 'Query the Internet Movie Database. If you want to specify a year, put it at the end. Optionally takes one argument, an id or link.',
 		    },
@@ -244,6 +247,16 @@ sub irc_botcmd_x {
   }
 }
 
+sub irc_botcmd_kw {
+  my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
+  print "$who, $where, $arg";
+  if ($arg =~ m/^\s*([^\s]+)\s+is/)  {
+    bot_says($where, kw_add($arg));
+  } elsif ($arg =~ m/^\s*forget/) {
+    bot_says($where, kw_remove($arg));
+  }
+}
+
 
 sub irc_botcmd_imdb {
   my ($where, $arg) = @_[ARG1, ARG2];
@@ -325,6 +338,9 @@ sub irc_public {
     if ( my ($rot13) = $what =~ /^rot13 (.+)/ ) {
         $rot13 =~ tr[a-zA-Z][n-za-mN-ZA-M];
         $irc->yield( privmsg => $channel => "$nick: $rot13" );
+    }
+    if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
+      bot_says($channel, kw_query($1)) 
     }
     return;
 }
