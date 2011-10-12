@@ -414,7 +414,7 @@ sub rss_list {
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
   
-  my $query = $dbh->prepare("SELECT * FROM rss INNER JOIN channels ON rss.f_handle = channels.f_handle WHERE f_channel = ?;");
+  my $query = $dbh->prepare("SELECT rss.f_handle, rss.url FROM rss INNER JOIN channels ON rss.f_handle = channels.f_handle WHERE f_channel = ?;");
   $query->execute($channel);
   while (my @data = $query->fetchrow_array()) {
     push @watched, $data[0];
