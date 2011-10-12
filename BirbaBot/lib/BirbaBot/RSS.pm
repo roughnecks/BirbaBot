@@ -349,7 +349,7 @@ sub process_feeds {
     # now loop over the feeds and create the string
     while(@feeds) {
       my $news = shift(@feeds);
-      my $string = $bbold . '{{' . $feedname . '}}' . $ebold;
+      my $string = $bbold . $feedname . "::" . $ebold . " ";
       if ($news->{'title'}) {
 	$string .= $news->{'title'} . " ";
       } else {
