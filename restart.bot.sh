@@ -11,8 +11,6 @@ botdir=$(dirname $0)
 if [ ! -f "$botdir/birba.pid" ]; then
     cd $botdir
     exec perl birbabot.pl >> birba.log 2>&1
-else
-    echo "$botdir/birba.pid found"
 fi
 
 pid=$(cat $botdir/birba.pid)
