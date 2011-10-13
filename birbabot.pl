@@ -33,6 +33,12 @@ use POE::Component::Client::DNS;
 use POE::Component::IRC;
 use POE::Component::IRC::Plugin::BotCommand;
 
+# before starting, create a pid file
+
+open (my $fh, ">", "birba.pid");
+print $fh $$;
+close $fh;
+undef $fh;
 
 # initialize the db
 my $dbname = "rss.db";
