@@ -134,7 +134,7 @@ sub _start {
             gv => 'Do a google video search.',
             kw => 'Manage the keywords: kw foo is bar; kw forget foo',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
-            imdb => 'Query the Internet Movie Database. If you want to specify a year, put it at the end. Optionally takes one argument, an id or link.',
+            imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 		    },
             In_channels => 1,
  	    In_private => 1,
