@@ -1,0 +1,5 @@
+* BirbaBot
+
+** TODO Mask + regexp authentication
+** TODO Delete each keywords definitions separately
+** TODO other things i don't remember
