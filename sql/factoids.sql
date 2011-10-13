@@ -63,3 +63,11 @@ mentre per cancellare tutto faremo "kw blah forget", senza parametri e la query 
 DELETE FROM factoids WHERE key='test';
 
 SELECT * FROM factoids;
+
+SELECT '
+adesso ti fo un discorso a braccio sui nick multipli, owner dei factoids e cancellazioni: il succo è, "mi pare tutto inutile se non si ha a disposizione un sistema di autenticazione basato sulle maschere": questo perché....mettiamo che tu setti un fattoide poi esci dalla chat; entra pincopallino e cambia nick in melmoth, poi cancella il fattoide tuo...e il bot non batte ciglio perché come siamo messi adesso più che il nick non riesce a guardare...
+dunque, siccome si era già detto che l auth sul botolo crea problemi di sicurezza, perché non lasciare tutto aperto? Oppure, ci sto pensando ora, magari se uno aggiorna bar2/bar3 potrebbe venir messo il suo nick nella colonna nick, sovrascrivendo l originale, cosicché almeno si sa chi ha fatto cosa per ultimo. Solo in questo modo uno potrebbe cancellare tutto il fattoide per intero e via andare, non rimarrebe traccia...mumble  Ci vorrebbe un nick2 per gli update, mentre chi ha inizializzato il fattoide con la prima definizione rimane in nick e magari per cancellare bisogna che tu sia nick, il proprietario...ma rifiniamo nella storia di sopra del cambio nick senza avere autorizzazioni basate sulla maschera o password.
+Ultima ideona..e se per cancellare i fattoidi servisse inserire una specie di password, magari configurabile nel file di conf, che conoscono solo gli admin? il forget key verrebbe dato in query e via... tipo forget blah pwd... comunque non sono convinto, me pare una mezza porcaria.
+BOH!
+';
+
