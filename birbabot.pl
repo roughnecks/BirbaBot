@@ -257,10 +257,10 @@ sub irc_botcmd_kw {
   my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
   print "$who, $where, $arg";
   if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.*)\s*$/)  {
-    bot_says($where, kw_new($dbname, $who, $1, $2));
+    bot_says($where, kw_add($dbname, $who, $1, $2));
   } 
   elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.*)\s*$/)  {
-    bot_says($where, kw_add($dbname, $who, $1, $2));
+    bot_says($where, kw_new($dbname, $who, $1, $2));
   } 
   elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*(\w+)\s*$/) {
     bot_says($where, kw_remove($dbname, $who, $1, $2));
@@ -350,7 +350,7 @@ sub irc_public {
         $irc->yield( privmsg => $channel => "$nick: $rot13" );
     }
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
-      bot_says($channel, kw_query($1)) 
+      bot_says($channel, kw_query($dbname, $1)) 
     }
     return;
 }

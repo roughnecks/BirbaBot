@@ -22,45 +22,76 @@ sub kw_new {
   my ($dbname, $who, $key, $value) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
-  my $query = $dbh->prepare("INSERT INTO factoids (nick, key, bar1) VALUES ('?', '?', '?');"); #nick, key, value1
-  $query->execute($key, $value, $who);
-  $db->disconnect;
-  return "Adding @_ not implemented"
+  $dbh->do('CREATE TABLE IF NOT EXISTS factoids (
+        id                      INTEGER PRIMARY KEY,
+	nick			VARCHAR(30),
+        key	                VARCHAR(30) UNIQUE NOT NULL,
+	bar1			TEXT NOT NULL,
+	bar2			TEXT,
+	bar3			TEXT);');
+
+
+  my $query = $dbh->prepare("INSERT INTO factoids (nick, key, bar1) VALUES (?, ?, ?);"); #nick, key, value1
+  $query->execute($who, $key, $value);
+  my $reply;
+  if ($query->err) {
+    my $errorcode = $query->err;
+    if ($errorcode ==  19) {
+      $reply = "I couldn't insert $value, $key already present"
+    } else {
+      $reply = "Unknow db error, returned $errorcode"
+    }
+  } else {
+    $reply = "Okki"
+  }
+  $dbh->disconnect;
+  return $reply;
 }
 
 sub kw_add {
   my ($dbname, $who, $key, $value) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
-  my $query = $dbh->prepare("UPDATE factoids SET bar2 = CASE WHEN bar2 IS NULL THEN '?' WHEN bar2 IS NOT NULL THEN (SELECT bar2 FROM factoids where key = '?') END, bar3 = CASE WHEN bar2 IS NOT NULL AND bar3 IS NULL THEN '?' WHEN bar2 IS NULL THEN (SELECT bar3 FROM factoids where key = '?') WHEN bar3 IS NOT NULL THEN (SELECT bar3 FROM factoids where key = '?') END WHERE key='test';"); #bar2, bar3, key
-  $query->execute($key, $value, $who);
-  $db->disconnect;
-  return "Adding @_ not implemented"
+  my $query = $dbh->prepare("UPDATE factoids SET bar2 = CASE WHEN bar2 IS NULL THEN ? WHEN bar2 IS NOT NULL THEN (SELECT bar2 FROM factoids where key = ?) END, bar3 = CASE WHEN bar2 IS NOT NULL AND bar3 IS NULL THEN ? WHEN bar2 IS NULL THEN (SELECT bar3 FROM factoids where key = ?) WHEN bar3 IS NOT NULL THEN (SELECT bar3 FROM factoids where key = ?) END WHERE key = ?;"); #bar2, bar3, key
+  $query->execute($value, $key, $value, $key, $key, $key);
+  $dbh->disconnect;
+  return "Added $value to $key"
 }
 
 sub kw_remove {
   my ($dbname, $who, $key, $password) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
-  my $query = $dbh->prepare("DELETE FROM factoids WHERE key='?';"); #key
-  $query->execute($key, $value, $who);
-  $db->disconnect;
-  return "Remove for @_ not implemented"
+  my $query = $dbh->prepare("DELETE FROM factoids WHERE key=?;"); #key
+  $query->execute($key);
+  $dbh->disconnect;
+  return "Removed $key";
 }
 
 sub kw_query {
-  my ($dbname, $who, $key, $value) = @_;
+  my ($dbname, $key) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
-  my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key='?';"); #key
-  $query->execute($key, $value, $who);
+  my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
+  $query->execute($key);
   # here we get the results
+  my @out;
+
   while (my @data = $query->fetchrow_array()) {
     # here we process
-    print @data;
+    return "Dunno that" unless @data;
+    foreach my $result (@data) {
+      if ($result) {
+	push @out, $result 
+      }
+    }
   }
-  $db->disconnect;
-  return "Quering for @_ not implemented"
+  $dbh->disconnect;
+  if (@out) { 
+    return join(", or ", @out)
+  } else {
+    return 
+  }
 }
 
 1;
