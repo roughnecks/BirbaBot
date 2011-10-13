@@ -6,19 +6,24 @@ fi
 
 botdir=$(dirname $0)
 
+
+
 if [ ! -f "$botdir/birba.pid" ]; then
-    exec perl $botdir/birbabot.pl >> birba.log 2>&1
+    cd $botdir
+    exec perl birbabot.pl >> birba.log 2>&1
+else
+    echo "$botdir/birba.pid found"
 fi
 
 pid=$(cat $botdir/birba.pid)
 logfile=$botdir/birba.log
 
-
 if kill -0 $pid > /dev/null 2>&1 ; then 
     exit
 else
+    cd $botdir
     echo -n $(date) >> birba.log
     echo "Bot restarted by $0" >> birba.log
-    perl $botdir/birbabot.pl $1 >> birba.log 2>&1 &
+    perl birbabot.pl $1 >> birba.log 2>&1 &
     exit 0
 fi
