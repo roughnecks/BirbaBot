@@ -26,7 +26,7 @@ use BirbaBot::Searches qw(search_google
 			  google_translate
 			  search_imdb
 			);
-use BirbaBot::Infos qw(kw_add kw_query kw_remove);
+use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove);
 
 use POE;
 use POE::Component::Client::DNS;
@@ -250,10 +250,14 @@ sub irc_botcmd_x {
 sub irc_botcmd_kw {
   my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
   print "$who, $where, $arg";
-  if ($arg =~ m/^\s*([^\s]+)\s+is/)  {
-    bot_says($where, kw_add($arg));
-  } elsif ($arg =~ m/^\s*forget/) {
-    bot_says($where, kw_remove($arg));
+  if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.*)\s*$/)  {
+    bot_says($where, kw_new($dbname, $who, $1, $2));
+  } 
+  elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.*)\s*$/)  {
+    bot_says($where, kw_add($dbname, $who, $1, $2));
+  } 
+  elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*(\w+)\s*$/) {
+    bot_says($where, kw_remove($dbname, $who, $1, $2));
   }
 }
 
