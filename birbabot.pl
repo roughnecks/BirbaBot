@@ -344,13 +344,11 @@ sub irc_public {
     my $channel = $where->[0];
     print print_timestamp(), "$nick said $what in $channel\n";
 
-
-    if ( my ($rot13) = $what =~ /^rot13 (.+)/ ) {
-        $rot13 =~ tr[a-zA-Z][n-za-mN-ZA-M];
-        $irc->yield( privmsg => $channel => "$nick: $rot13" );
-    }
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
       bot_says($channel, kw_query($dbname, $1)) 
+    }
+    elsif (($what =~ /\?$/) and (int(rand(6)) == 1) {
+      bot_says($channel, "RTFM!");
     }
 #    if ($what eq "hi") {
 #      if (check_if_admin($who)) {
