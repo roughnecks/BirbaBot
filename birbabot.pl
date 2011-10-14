@@ -45,6 +45,20 @@ my $dbname = "rss.db";
 
 my $reconnect_delay = 500;
 
+my %serverconfig = (
+		    'nick' => 'Birba',
+		    'ircname' => "Birba the Bot",
+		    'server' => "irc.syrolnet.org",
+		    'port' => 7000,
+		    'usessl' => 1,
+		   );
+
+my %botconfig = (
+		 'channels' => "#lamerbot",
+		 'botprefix' => "@",
+		);
+
+
 unless (-f $dbname) {
   rss_create_db($dbname);
   rss_add_new($dbname,
@@ -67,37 +81,19 @@ my $debug = $ARGV[1];
 show_help() unless $config_file;
 
 ### configuration checking 
+override_defaults(\%serverconfig, read_config($config_file));
+override_defaults(\%botconfig, read_config($config_file));
 
-my $configuration = read_config($config_file);
+print "Bot options: ", Dumper(\%botconfig),
+  "Server options: ", Dumper(\%serverconfig);
 
-print Dumper($configuration) if $debug;
+my @channels = split(/ *, */, $botconfig{'channels'});
 
-my $nick = $configuration->{'nick'};
-my $ircname = $configuration->{'ircname'};
-my $server = $configuration->{'server'};
-
-show_help("Missing configuration options\n") 
-  unless ($configuration->{nick} and
-	$configuration->{ircname} and 
-	$configuration->{server});
-
-my @channels = split(/ *, */, $configuration->{'channels'});
-
-
-if ($debug) {
-  print "Connecting to $server with nick $nick and ircname $ircname, ",
-    "joining channels ", 
-      join(" and ", @channels), "\n";
-}
 
 ### starting POE stuff
 
-my $irc = POE::Component::IRC->spawn(
-				     # TODO: before using this
-				     # directly would be better to
-				     # clean it up, ok?
-				     %$configuration
-) or die "WTF? $!\n";
+my $irc = POE::Component::IRC->spawn(%serverconfig) 
+  or die "WTF? $!\n";
 
 my $dns = POE::Component::Client::DNS->spawn();
 
@@ -145,7 +141,7 @@ sub _start {
             In_channels => 1,
  	    In_private => 1,
             Addressed => 0,
-            Prefix => "@",
+            Prefix => $botconfig{'botprefix'},
             Eat => 1,
             Ignore_unknown => 1,
 								  
@@ -415,7 +411,7 @@ sub read_config {
       my $value = $2;
       $value =~ s/^"//;
       $value =~ s/"$//;
-      if ($key && $value) {
+      if ($key && (defined $value)) {
 	$config{$key} = $value;
       }
     }
@@ -423,6 +419,17 @@ sub read_config {
   close $fh;
   return \%config;
 }
+
+sub override_defaults {
+  # here we modify the values via reference on the fly
+  my ($default, $fromfile) = @_;
+  foreach my $key (keys(%$default)) {
+    if (exists $fromfile->{$key}) {
+      $default->{$key} = $fromfile->{$key};
+    }
+  }
+}
+
 
 =head2 show_help
 
