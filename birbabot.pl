@@ -347,6 +347,10 @@ sub irc_public {
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
       bot_says($channel, kw_query($dbname, lc($1))) 
     }
+    elsif ($what =~ /((ah){2,})/i) {
+      bot_says($channel, "AHAHAHAHAHAH!")
+    }
+
 #     elsif (($what =~ /\?$/) and (int(rand(6)) == 1)) {
 #       bot_says($channel, "RTFM!");
 #     }
