@@ -255,13 +255,13 @@ sub irc_botcmd_kw {
   my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
   print print_timestamp(), "$who, $where, $arg\n";
   if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.*)\s*$/)  {
-    bot_says($where, kw_add($dbname, $who, $1, $2));
+    bot_says($where, kw_add($dbname, $who, lc($1), $2));
   } 
   elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.*)\s*$/)  {
-    bot_says($where, kw_new($dbname, $who, $1, $2));
+    bot_says($where, kw_new($dbname, $who, lc($1), $2));
   } 
   elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*(\w+)\s*$/) {
-    bot_says($where, kw_remove($dbname, $who, $1, $2));
+    bot_says($where, kw_remove($dbname, $who, lc($1), $2));
   }
 }
 
@@ -345,7 +345,7 @@ sub irc_public {
     print print_timestamp(), "$nick said $what in $channel\n";
 
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
-      bot_says($channel, kw_query($dbname, $1)) 
+      bot_says($channel, kw_query($dbname, lc($1))) 
     }
     elsif (($what =~ /\?$/) and (int(rand(6)) == 1)) {
       bot_says($channel, "RTFM!");
