@@ -56,6 +56,7 @@ my %serverconfig = (
 my %botconfig = (
 		 'channels' => "#lamerbot",
 		 'botprefix' => "@",
+		 'rsspolltime' => 600, # default to 10 minutes
 		);
 
 
@@ -362,7 +363,7 @@ sub rss_sentinel {
   }
   print "done!\n";
   # set the next loop
-  $kernel->delay_set("rss_sentinel", 869) # now fetch every ~15 minutes
+  $kernel->delay_set("rss_sentinel", $botconfig{rsspolltime})
 }
 
 
