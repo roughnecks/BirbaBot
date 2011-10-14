@@ -50,6 +50,7 @@ my $reconnect_delay = 500;
 my %serverconfig = (
 		    'nick' => 'Birba',
 		    'ircname' => "Birba the Bot",
+		    'username' => 'birbabot',
 		    'server' => "irc.syrolnet.org",
 		    'port' => 7000,
 		    'usessl' => 1,
