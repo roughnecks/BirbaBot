@@ -153,6 +153,7 @@ sub _start {
 sub bot_says {
   my ($where, $what) = @_;
   return unless ($where and $what);
+  print print_timestamp(), "I'm gonna say $what on $where\n";
   if (length($what) < 400) {
     $irc->yield(privmsg => $where => $what);
   } else {
@@ -200,12 +201,10 @@ sub irc_botcmd_rss {
   }
   elsif ($action eq 'list') {
     my $reply = rss_list($dbname, $where);
-    print "The reply is $reply;";
     bot_says($where, $reply);
   }
   elsif ($action eq 'show') {
     my @replies = rss_give_latest($dbname, $feed);
-    print Dumper(\@replies);
     foreach my $line (@replies) {
       bot_says($where, $line);
     }
@@ -249,7 +248,7 @@ sub irc_botcmd_x {
 
 sub irc_botcmd_kw {
   my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
-  print "$who, $where, $arg";
+  print print_timestamp(), "$who, $where, $arg\n";
   if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.*)\s*$/)  {
     bot_says($where, kw_add($dbname, $who, $1, $2));
   } 
@@ -310,7 +309,7 @@ sub dns_response {
 }
 
 sub irc_disconnected {
-  print "Reconnecting in $reconnect_delay seconds\n";
+  print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
   # we better sleep here, so we don't spam events which are not going to happen
   sleep $reconnect_delay;
   $irc->yield( connect => { });
@@ -325,7 +324,7 @@ sub irc_001 {
     # specified server.
     my $irc = $sender->get_heap();
 
-    print "Connected to ", $irc->server_name(), "\n";
+    print print_timestamp(), "Connected to ", $irc->server_name(), "\n";
 
     # we join our channels
     $irc->yield( join => $_ ) for @channels;
@@ -338,6 +337,8 @@ sub irc_public {
     my ($sender, $who, $where, $what) = @_[SENDER, ARG0 .. ARG2];
     my $nick = ( split /!/, $who )[0];
     my $channel = $where->[0];
+    print print_timestamp(), "$nick said $what in $channel\n";
+
 
     if ( my ($rot13) = $what =~ /^rot13 (.+)/ ) {
         $rot13 =~ tr[a-zA-Z][n-za-mN-ZA-M];
@@ -351,7 +352,7 @@ sub irc_public {
 
 sub rss_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
-  print "Starting fetching RSS...";
+  print print_timestamp(), "Starting fetching RSS...";
   my $feeds = rss_get_my_feeds($dbname, $localdir);
   foreach my $channel (keys %$feeds) {
     foreach my $feed (@{$feeds->{$channel}}) {
@@ -377,11 +378,14 @@ sub _default {
             push ( @output, "'$arg'" );
         }
     }
-    print join ' ', @output, "\n";
+    print print_timestamp(), join ' ', @output, "\n";
     return 0;
 }
 
-
+sub print_timestamp {
+    my $time = localtime();
+    return "[$time] "
+}
 
 exit;
 
