@@ -14,7 +14,8 @@ use File::Spec;
 use File::Path qw(make_path);
 use Data::Dumper;
 use lib './BirbaBot/lib';
-use BirbaBot::RSS qw(rss_create_db
+use BirbaBot qw(create_bot_db);
+use BirbaBot::RSS qw(
 		     rss_add_new
 		     rss_delete_feed
 		     rss_get_my_feeds
@@ -60,17 +61,9 @@ my %botconfig = (
 		);
 
 
-unless (-f $dbname) {
-  rss_create_db($dbname);
-  rss_add_new($dbname,
-	      'slashdot',
-              '#lamerbot',
-              'http://rss.slashdot.org/Slashdot/slashdot');
-  rss_add_new($dbname,
-	      'birbabot',
-              '#lamerbot',
-              'http://laltromondo.dynalias.net/gitweb/?p=birbabot.git;a=rss');
-}
+# when we start, we check if we have all the tables.  By no means this
+# guarantees that the tables are correct. Devs, I'm looking at you
+create_bot_db($dbname) or die "Errors while updating db tables";
     
 # initialize the local storage
 my $localdir = File::Spec->catdir('data','rss');

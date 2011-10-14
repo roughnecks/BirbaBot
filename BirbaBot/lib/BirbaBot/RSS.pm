@@ -14,7 +14,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw(rss_create_db
+our @EXPORT_OK = qw(
 		    rss_add_new
 		    rss_get_my_feeds
 		    rss_delete_feed
@@ -37,63 +37,6 @@ $ua->show_progress(1);
 my $bbold = "\x{0002}";
 my $ebold = "\x{000F}";
 
-
-=head2 rss_create_db($dbname);
-
-Create the db tables if they don't exist.
-
-    CREATE TABLE IF NOT EXISTS rss (
-        feedname                VARCHAR(30) PRIMARY KEY NOT NULL,
-        url                     TEXT UNIQUE
-    );
-    
-    CREATE TABLE IF NOT EXISTS channels (
-        f_handle                VARCHAR(30) NOT NULL,
-        f_channel               VARCHAR(30) NOT NULL,
-        active                  BOOLEAN,
-        FOREIGN KEY(f_handle)   REFERENCES rss(feedname)
-    );
-    
-    CREATE TABLE IF NOT EXISTS feeds (
-        id                      INTEGER PRIMARY KEY,
-        date                    DATETIME,
-        f_handle                VARCHAR(30) NOT NULL,
-        title                   VARCHAR(255),
-        author                  VARCHAR(255),
-        url                     TEXT UNIQUE NOT NULL,
-        FOREIGN KEY(f_handle)   REFERENCES rss(feedname)
-    );
-
-=cut
-
-sub rss_create_db {
-  my $dbname = shift;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
-
-  my $sthrss = $dbh->prepare('CREATE TABLE IF NOT EXISTS rss (
-        f_handle        VARCHAR(30) PRIMARY KEY NOT NULL,
-        url             TEXT UNIQUE);');
-  $sthrss->execute();
-
-  my $sthchans = $dbh->prepare('CREATE TABLE IF NOT EXISTS channels (
-        f_handle        VARCHAR(30) NOT NULL,
-        f_channel       VARCHAR(30) NOT NULL,
-        CONSTRAINT f_handcha UNIQUE (f_handle,f_channel),
-        FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
-  $sthchans->execute();
-
-  my $sthfeeds = $dbh->prepare('CREATE TABLE IF NOT EXISTS feeds (
-        id                      INTEGER PRIMARY KEY,
-        date                    DATETIME,
-        f_handle                VARCHAR(30) NOT NULL,
-        title                   VARCHAR(255),
-        author                  VARCHAR(255),
-        url                     TEXT UNIQUE NOT NULL,
-        FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE);');
-  $sthfeeds->execute();
-  $dbh->disconnect;
-}
 
 =head2 add_new_rss($dbname, $feedname, $channel, $url)
 

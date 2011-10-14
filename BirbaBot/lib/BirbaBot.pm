@@ -14,9 +14,55 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw( );
+our @EXPORT_OK = qw(create_bot_db);
 
 our $VERSION = '0.01';
+
+=head2 create_bot_db($dbname);
+
+Create the bot database tables 
+
+=cut
+
+sub create_bot_db {
+  my $dbname = shift;
+  return 0 unless $dbname;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","") or 
+    return 0;
+
+  $dbh->do('PRAGMA foreign_keys = ON;');
+
+  $dbh->do('CREATE TABLE IF NOT EXISTS rss (
+            f_handle        VARCHAR(30) PRIMARY KEY NOT NULL,
+            url             TEXT UNIQUE);');
+
+  $dbh->do ('CREATE TABLE IF NOT EXISTS channels (
+             f_handle        VARCHAR(30) NOT NULL,
+             f_channel       VARCHAR(30) NOT NULL,
+             CONSTRAINT f_handcha UNIQUE (f_handle,f_channel),
+             FOREIGN KEY(f_handle) REFERENCES rss(f_handle));');
+
+  $dbh->do('CREATE TABLE IF NOT EXISTS feeds (
+            id                      INTEGER PRIMARY KEY,
+            date                    DATETIME,
+            f_handle                VARCHAR(30) NOT NULL,
+            title                   VARCHAR(255),
+            author                  VARCHAR(255),
+            url                     TEXT UNIQUE NOT NULL,
+            FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE);');
+
+  $dbh->do('CREATE TABLE IF NOT EXISTS factoids (
+            id                      INTEGER PRIMARY KEY,
+            nick                    VARCHAR(30),
+            key                     VARCHAR(30) UNIQUE NOT NULL,
+            bar1                    TEXT NOT NULL,
+            bar2                    TEXT,
+            bar3                    TEXT);');
+  $dbh->disconnect;
+  return 1;
+}
+
+
 
 
 # Preloaded methods go here.

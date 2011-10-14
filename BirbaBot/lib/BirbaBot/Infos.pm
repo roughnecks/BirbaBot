@@ -22,14 +22,6 @@ sub kw_new {
   my ($dbname, $who, $key, $value) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
-  $dbh->do('CREATE TABLE IF NOT EXISTS factoids (
-        id                      INTEGER PRIMARY KEY,
-	nick			VARCHAR(30),
-        key	                VARCHAR(30) UNIQUE NOT NULL,
-	bar1			TEXT NOT NULL,
-	bar2			TEXT,
-	bar3			TEXT);');
-
 
   my $query = $dbh->prepare("INSERT INTO factoids (nick, key, bar1) VALUES (?, ?, ?);"); #nick, key, value1
   $query->execute($who, $key, $value);
