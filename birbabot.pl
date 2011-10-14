@@ -44,7 +44,6 @@ close $fh;
 undef $fh;
 
 # initialize the db
-my $dbname = "rss.db";
 
 my $reconnect_delay = 500;
 
@@ -60,13 +59,9 @@ my %botconfig = (
 		 'channels' => "#lamerbot",
 		 'botprefix' => "@",
 		 'rsspolltime' => 600, # default to 10 minutes
+		 'dbname' => "bot.db",
 		);
 
-
-# when we start, we check if we have all the tables.  By no means this
-# guarantees that the tables are correct. Devs, I'm looking at you
-create_bot_db($dbname) or die "Errors while updating db tables";
-    
 # initialize the local storage
 my $localdir = File::Spec->catdir('data','rss');
 make_path($localdir) unless (-d $localdir);
@@ -83,7 +78,14 @@ override_defaults(\%botconfig, read_config($config_file));
 print "Bot options: ", Dumper(\%botconfig),
   "Server options: ", Dumper(\%serverconfig);
 
+my $dbname = $botconfig{'dbname'};
+
 my @channels = split(/ *, */, $botconfig{'channels'});
+
+# when we start, we check if we have all the tables.  By no means this
+# guarantees that the tables are correct. Devs, I'm looking at you
+create_bot_db($dbname) or die "Errors while updating db tables";
+
 
 
 ### starting POE stuff
