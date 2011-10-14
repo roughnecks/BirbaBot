@@ -61,6 +61,7 @@ my %botconfig = (
 		 'botprefix' => "@",
 		 'rsspolltime' => 600, # default to 10 minutes
 		 'dbname' => "bot.db",
+		 'admins' => 'nobody!nobody@nowhere',
 		);
 
 # initialize the local storage
@@ -82,6 +83,9 @@ print "Bot options: ", Dumper(\%botconfig),
 my $dbname = $botconfig{'dbname'};
 
 my @channels = split(/ *, */, $botconfig{'channels'});
+
+# build the regexp of the admins
+my @adminregexps = process_admin_list($botconfig{'admins'});
 
 # when we start, we check if we have all the tables.  By no means this
 # guarantees that the tables are correct. Devs, I'm looking at you
@@ -348,6 +352,13 @@ sub irc_public {
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
       bot_says($channel, kw_query($dbname, $1)) 
     }
+#    if ($what eq "hi") {
+#      if (check_if_admin($who)) {
+#	bot_says($where, "Hello my master");
+#      } else {
+#	bot_says($where, "And who the hell are you?");
+#      }
+#    }
     return;
 }
 
@@ -387,6 +398,34 @@ sub print_timestamp {
     my $time = localtime();
     return "[$time] "
 }
+
+sub process_admin_list {
+  my @masks = split(/\s*,\s*/, shift);
+  my @regexp;
+  foreach my $mask (@masks) {
+    # first, we check nick, username, host. The *!*@* form is required
+    if ($mask =~ m/(.+)!(.+)@(.+)/) {
+      $mask =~ s/(\W)/\\$1/g;	# escape everything which is not a \w
+      $mask =~ s/\\\*/.*?/g;	# unescape the *
+      push @regexp, qr/^$mask$/;
+    } else {
+      print "Invalid mask $mask, must be in *!*@* form"
+    }
+  }
+  print Dumper(\@regexp);
+  return @regexp;
+}
+
+sub check_if_admin {
+  my $mask = shift;
+  foreach my $regexp (@adminregexps) {
+    if ($mask =~ m/$regexp/) {
+      return 1
+    }
+  }
+  return 0;
+}
+
 
 exit;
 
