@@ -178,6 +178,7 @@ So the next step is to dispatch the feed to the relative channels
 
 sub rss_fetch {
   my ($dbname, $datadir) = @_;
+  $| = 1;
   # initialize the user agent
   my %output;
   my %urls = get_the_rss_to_fetch($dbname);
@@ -201,7 +202,8 @@ sub rss_fetch {
     # the content, which is actually stored in the file.
     # So I guess we either do 'get' request, or we open the file
     if ($response->is_success) {
-      print "Parsing $destfile\n";
+      my $btime = localtime();
+      print "Parsing $destfile on $btime\n";
       my $rss = XML::Feed->parse($destfile);
       my %links;
       # create a table to hold the data, if doesn't exist yet.
@@ -237,9 +239,12 @@ sub rss_fetch {
              'author' => $feed_item_author,
              'link' =>   $out_link};
         }
-      } 
+      }
       $output{$feedname} = \@outputfeed;
+      my $endtime  = localtime();
+      print "Parsing and insertions in $feedname finished on $endtime";
  #     print Dumper(\%links);
+      print "Starting db cleaning...";
       my $syncdb = $dbh->prepare('SELECT id,url FROM feeds WHERE f_handle = ?;');
       my $cleandb = $dbh->prepare('DELETE FROM feeds WHERE id = ?');
       $syncdb->execute($feedname);
@@ -250,9 +255,12 @@ sub rss_fetch {
 	  $cleandb->execute($id) ;
 	}
       }
+      my $ftime = localtime();
+      print "Done on $ftime\n"
     }
   }
   $dbh->disconnect;
+  print "RSS fetching and parsing done\n";
   return \%output;
 }
 
