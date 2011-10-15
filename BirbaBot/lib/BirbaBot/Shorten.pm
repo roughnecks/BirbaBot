@@ -39,11 +39,12 @@ processing.
 sub make_tiny_url {
   my $url = shift;
   return $url unless ((length $url) > 40);
+  print "Requesting tinyurl for $url\n";
 #  print $url, "\n";
   my $ua = LWP::UserAgent->new(timeout => 10);
   $ua->agent( 'Mozilla' );
   my $response = $ua->request( POST 'http://api.x0.no/post/', ["u" => $url]);
-  my $short; ;
+  my $short;
   if ($short = make_tiny_url_x ($ua, $url)) {
     return $short
   } elsif ($short = make_tiny_url_metamark( $ua, $url)) {
