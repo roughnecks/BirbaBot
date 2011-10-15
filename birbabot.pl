@@ -370,14 +370,14 @@ sub irc_public {
 
 sub rss_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
-  print print_timestamp(), "Starting fetching RSS...";
+  print print_timestamp(), "Starting fetching RSS...\n";
   my $feeds = rss_get_my_feeds($dbname, $localdir);
   foreach my $channel (keys %$feeds) {
     foreach my $feed (@{$feeds->{$channel}}) {
       $irc->yield( privmsg => $channel => $feed);
     }
   }
-  print "done!\n";
+  print print_timestamp(), "done!\n";
   # set the next loop
   $kernel->delay_set("rss_sentinel", $botconfig{rsspolltime})
 }
