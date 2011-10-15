@@ -51,6 +51,7 @@ sub create_bot_db {
             title                   VARCHAR(255),
             author                  VARCHAR(255),
             url                     TEXT UNIQUE NOT NULL,
+            tiny                    VARCHAR(60),
             FOREIGN KEY(f_handle) REFERENCES rss(f_handle) ON DELETE CASCADE);');
 
   $dbh->do('CREATE TABLE IF NOT EXISTS factoids (
