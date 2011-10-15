@@ -184,7 +184,7 @@ sub rss_fetch {
   my %urls = get_the_rss_to_fetch($dbname);
 
   # here we open the db;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "", { PrintError=>0 });
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "");
 
   # and here we start the routineca
   foreach my $feedname (keys %urls) {
@@ -205,15 +205,28 @@ sub rss_fetch {
       my $btime = localtime();
       print "Parsing $destfile on $btime\n";
       my $rss = XML::Feed->parse($destfile);
-      my %links;
-      # create a table to hold the data, if doesn't exist yet.
+      my %linksinrss;
       my $sth = 
         $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?, ?)");
+      my %alreadyfetchedurls;
+      my $existingquery = $dbh->prepare("SELECT url FROM feeds WHERE f_handle = ?");
+      $existingquery->execute($feedname);
+      while (my @presenturls = $existingquery->fetchrow_array()) {
+	my $link = $presenturls[0];
+#	print $link, " is present\n";
+	$alreadyfetchedurls{$link} = 1;
+      }
+      #      print Dumper(\%alreadyfetchedurls);
+      ## start looping over RSS
       foreach my $item ($rss->entries) {
 	# avoid doing another loop, and save the link
+	my $feed_item_link = $item->link;
+	$linksinrss{$feed_item_link} = 1;
+	if ($alreadyfetchedurls{$feed_item_link}) {
+	  next
+	};
 	my $feed_item_title = $item->title;
 	my $feed_item_author = $item->author;
-	my $feed_item_link = $item->link;
 	my $feed_item_tinyurl = BirbaBot::Shorten::make_tiny_url($feed_item_link);
 	my $out_link;
 	if ($feed_item_link eq $feed_item_tinyurl) {
@@ -222,7 +235,6 @@ sub rss_fetch {
 	} else {
 	  $out_link = $feed_item_tinyurl;
 	}
-	$links{$feed_item_link} = 1;
 	#strip the tags
 	$feed_item_title =~ s/<.+?>//g;
         $sth->execute(
@@ -243,14 +255,14 @@ sub rss_fetch {
       $output{$feedname} = \@outputfeed;
       my $endtime  = localtime();
       print "Parsing and insertions in $feedname finished on $endtime";
- #     print Dumper(\%links);
+ #     print Dumper(\%linksinrss);
       print "Starting db cleaning...";
       my $syncdb = $dbh->prepare('SELECT id,url FROM feeds WHERE f_handle = ?;');
       my $cleandb = $dbh->prepare('DELETE FROM feeds WHERE id = ?');
       $syncdb->execute($feedname);
       while (my @urls_in_db =  $syncdb->fetchrow_array()) {
 	my ($id, $url) = @urls_in_db;
-	unless ($links{$url}) {
+	unless ($linksinrss{$url}) {
 	  print "Removing $url from db of $feedname with id $id\n";
 	  $cleandb->execute($id) ;
 	}
