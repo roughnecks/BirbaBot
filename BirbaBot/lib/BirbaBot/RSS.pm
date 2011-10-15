@@ -185,7 +185,9 @@ sub rss_fetch {
 
   # here we open the db;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "", { PrintError=>0 });
-
+  my $existingquery = $dbh->prepare("SELECT url FROM feeds WHERE f_handle = ?");
+  my $sth = 
+        $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?, ?)");
   # and here we start the routineca
   foreach my $feedname (keys %urls) {
     my @outputfeed;
@@ -202,18 +204,27 @@ sub rss_fetch {
     # the content, which is actually stored in the file.
     # So I guess we either do 'get' request, or we open the file
     if ($response->is_success) {
-      my $btime = localtime();
-      print "Parsing $destfile on $btime\n";
+# debug      
+#      my $btime = localtime();
+#      print "Parsing $destfile on $btime\n";
       my $rss = XML::Feed->parse($destfile);
+#      my $ptime = localtime();
+#      print "End XML::Feed parsing on $ptime\n";
       my %links;
-      # create a table to hold the data, if doesn't exist yet.
-      my $sth = 
-        $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?, ?)");
+      
+      my %alreadyfetchedurls;
+      $existingquery->execute($feedname);
+      while (my @presenturls = $existingquery->fetchrow_array()) {
+	$alreadyfetchedurls{$presenturls[0]} = 1;
+      }
+      
+      ## start looping over RSS
       foreach my $item ($rss->entries) {
 	# avoid doing another loop, and save the link
+	my $feed_item_link = $item->link;
+	next if exists $alreadyfetchedurls{$feed_item_link};
 	my $feed_item_title = $item->title;
 	my $feed_item_author = $item->author;
-	my $feed_item_link = $item->link;
 	my $feed_item_tinyurl = BirbaBot::Shorten::make_tiny_url($feed_item_link);
 	my $out_link;
 	if ($feed_item_link eq $feed_item_tinyurl) {
@@ -240,11 +251,14 @@ sub rss_fetch {
              'link' =>   $out_link};
         }
       }
+
+      ## end looping over RSS
+
       $output{$feedname} = \@outputfeed;
-      my $endtime  = localtime();
-      print "Parsing and insertions in $feedname finished on $endtime";
+#      my $endtime  = localtime();
+#      print "Parsing and insertions in $feedname finished on $endtime";
  #     print Dumper(\%links);
-      print "Starting db cleaning...";
+#      print "Starting db cleaning...";
       my $syncdb = $dbh->prepare('SELECT id,url FROM feeds WHERE f_handle = ?;');
       my $cleandb = $dbh->prepare('DELETE FROM feeds WHERE id = ?');
       $syncdb->execute($feedname);
@@ -255,12 +269,12 @@ sub rss_fetch {
 	  $cleandb->execute($id) ;
 	}
       }
-      my $ftime = localtime();
-      print "Done on $ftime\n"
+#      my $ftime = localtime();
+#      print "Done on $ftime\n"
     }
   }
   $dbh->disconnect;
-  print "RSS fetching and parsing done\n";
+#  print "RSS fetching and parsing done\n";
   return \%output;
 }
 
@@ -390,7 +404,7 @@ sub rss_list {
     push @watched, $reply;
   }
   $dbh->disconnect;
-  print Dumper(\@watched);
+#  print Dumper(\@watched);
   return join(" ", @watched);
 }
 
