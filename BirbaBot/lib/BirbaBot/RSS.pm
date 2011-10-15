@@ -205,12 +205,20 @@ sub rss_fetch {
       my %links;
       # create a table to hold the data, if doesn't exist yet.
       my $sth = 
-        $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?)");
+        $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?, ?)");
       foreach my $item ($rss->entries) {
 	# avoid doing another loop, and save the link
 	my $feed_item_title = $item->title;
 	my $feed_item_author = $item->author;
 	my $feed_item_link = $item->link;
+	my $feed_item_tinyurl = BirbaBot::Shorten::make_tiny_url($feed_item_link);
+	my $out_link;
+	if ($feed_item_link eq $feed_item_tinyurl) {
+	  $feed_item_tinyurl = undef;
+	  $out_link = $feed_item_link;
+	} else {
+	  $out_link = $feed_item_tinyurl;
+	}
 	$links{$feed_item_link} = 1;
 	#strip the tags
 	$feed_item_title =~ s/<.+?>//g;
@@ -218,13 +226,15 @@ sub rss_fetch {
                       $feedname,
                       $feed_item_title,
                       $feed_item_author,
-                      $feed_item_link);
+                      $feed_item_link,
+                      $feed_item_tinyurl
+		     );
         unless ($sth->err) {
           # here we push the new feed in a multidimensional hash
           push @outputfeed,
             {'title' =>  $feed_item_title,
              'author' => $feed_item_author,
-             'link' =>   $feed_item_link};
+             'link' =>   $out_link};
         }
       } 
       $output{$feedname} = \@outputfeed;
@@ -300,7 +310,7 @@ sub process_feeds {
       }
       if ($news->{'link'}) {
 	# ENABLE ME!
-	$string .= "<" . BirbaBot::Shorten::make_tiny_url($news->{'link'}) . "> ";
+	$string .= "<" . $news->{'link'} . "> ";
 	# $string .= "<" . $news->{'link'} . "> ";
       } else {
 	next # wtf, no link?
@@ -334,17 +344,23 @@ sub rss_give_latest {
   # prepare the query
   my $query;
   if ($feed) {
-    $query = $dbh->prepare("SELECT title, url, date, f_handle FROM feeds WHERE f_handle = ? ORDER BY id DESC LIMIT 5;");
+    $query = $dbh->prepare("SELECT title, url, date, f_handle, tiny FROM feeds WHERE f_handle = ? ORDER BY id DESC LIMIT 5;");
     $query->execute($feed);
   } 
   else {
-    $query = $dbh->prepare("SELECT title, url, date, f_handle FROM feeds ORDER BY id DESC LIMIT 5;");
+    $query = $dbh->prepare("SELECT title, url, date, f_handle, tiny FROM feeds ORDER BY id DESC LIMIT 5;");
     $query->execute;
   }
   
   # do it and store the string in @list;
   while (my @data = $query->fetchrow_array()) {
-    my $string = $data[0] . " " . BirbaBot::Shorten::make_tiny_url($data[1]) . " " . "(" . $data[2] . " " . $data[3] .  ")";
+    my $url;
+    if ($data[4]) {
+      $url = $data[4];
+    } else {
+      $url = $data[1];
+    }
+    my $string = $data[0] . " " . $url . " " . "(" . $data[2] . " " . $data[3] .  ")";
     push @list, $string;
   }
   # disconnect
