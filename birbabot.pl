@@ -36,6 +36,8 @@ use POE::Component::Client::DNS;
 use POE::Component::IRC;
 use POE::Component::IRC::Plugin::BotCommand;
 
+$| = 1; # turn buffering off
+
 # before starting, create a pid file
 
 open (my $fh, ">", "birba.pid");
