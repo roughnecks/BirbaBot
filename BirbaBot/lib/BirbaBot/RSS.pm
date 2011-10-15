@@ -20,6 +20,7 @@ our @EXPORT_OK = qw(
 		    rss_delete_feed
 		    rss_list
 		    rss_give_latest
+		    rss_clean_unused_feeds
 		  );
 
 our $VERSION = '0.01';
@@ -383,6 +384,32 @@ sub rss_list {
   $dbh->disconnect;
   print Dumper(\@watched);
   return join(" ", @watched);
+}
+
+sub rss_clean_unused_feeds {
+  my ($dbname, $channels) = @_;
+  my %joinchan;
+  foreach my $chan (@$channels) {
+    $joinchan{$chan} = 1;
+  }
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  my $query = $dbh->prepare('SELECT f_handle,f_channel FROM channels');
+  $query->execute();
+  my @to_delete;
+  while (my @data = $query->fetchrow_array()) {
+    my $feed = $data[0];
+    my $channel = $data[1];
+    unless (exists $joinchan{$channel}) {
+      push @to_delete, [$feed, $channel];
+    }
+  }
+  $dbh->disconnect;
+  foreach my $delete (@to_delete) {
+    print "Deleting ",  $delete->[0], " on ", $delete->[1], 
+      " because we are not joining it\n";
+    rss_delete_feed($dbname, $delete->[0], $delete->[1]);
+  }
 }
 
 

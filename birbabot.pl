@@ -23,6 +23,7 @@ use BirbaBot::RSS qw(
 		     rss_get_my_feeds
 		     rss_give_latest
 		     rss_list
+		     rss_clean_unused_feeds
 		   );
 use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
@@ -93,7 +94,8 @@ my @adminregexps = process_admin_list($botconfig{'admins'});
 # guarantees that the tables are correct. Devs, I'm looking at you
 create_bot_db($dbname) or die "Errors while updating db tables";
 
-
+# be sure that the feeds are in the channels we join
+rss_clean_unused_feeds($dbname, \@channels);
 
 ### starting POE stuff
 
