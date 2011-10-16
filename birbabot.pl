@@ -167,7 +167,7 @@ sub _start {
             gi => 'Do a google images search.',
             gv => 'Do a google video search.',
             seen => 'Search a user',
-            todo => 'add something to the channel TODO; todo [add | done | list | rearrange]',
+            todo => 'add something to the channel TODO; todo [add "foo" | done #id | rearrange]',
             done => 'delete something to the channel TODO; done #id ',
 
             kw => 'Manage the keywords: kw foo is bar; kw forget foo',
