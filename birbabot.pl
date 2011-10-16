@@ -449,7 +449,11 @@ sub irc_botcmd_seen {
     my $date = localtime $seen->{l_irc($target)}->[USER_DATE];
     my $msg = $seen->{l_irc($target)}->[USER_MSG];
     $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");
-  } else {
+  } elsif ($irc->is_channel_member($channel, $target)) {
+    $irc->yield(privmsg => $channel,
+		"$nick: $target is here, but $target didn't say a word, AFAIK");
+  }
+  else {
     $irc->yield(privmsg => $channel, "$nick: I haven't seen $target");
   }
 }
