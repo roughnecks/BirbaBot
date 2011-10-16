@@ -67,6 +67,17 @@ sub search_imdb {
   # fails, at least we give title and url.
   my $query = uri_escape($string);
   my $imdbresult = $ua->get("http://www.imdb.com/find?s=all&q=$query");
+  return ("imdb.com is not reponding properly ") unless $imdbresult->is_success;
+
+  if ($imdbresult->base =~ m!/title/(tt[0-9]{3,})!) {
+    my ($url, $imdb) = imdb_query_api($1);
+    if ($imdb) {
+      return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. ${bbold}http://imdb.com/title/$imdb->{ID}$ebold $imdb->{Plot}";
+    } else {
+      return "Sorry, the api failed us! Go to  ${bbold}http://imdb.com/title/$1${ebold}"
+    }
+  }
+
   my @queryids = imdb_scan_for_titles($imdbresult->content);
   undef $imdbresult;   # free the memory now
   my @output;
