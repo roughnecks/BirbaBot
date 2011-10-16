@@ -317,33 +317,39 @@ sub irc_botcmd_todo {
     bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
     return
   }
-  my @commands_args = split(/\s+/, $arg);
-  my $task = shift(@commands_args);
+   my @commands_args;
+  if ($arg) {
+    @commands_args = split(/\s+/, $arg);
+  }
+  my $task = "none";
+  if (@commands_args) {
+    $task = shift(@commands_args);
+  }
   my $todo;
   if (@commands_args) {
     $todo = join " ", @commands_args;
   }
   if ($task eq "list") {
-    bot_says(todo_list($dbname, $chan));
+    bot_says($chan, todo_list($dbname, $chan));
   } 
   elsif ($task eq "add") {
-    bot_says(todo_add($dbname, $chan, $todo))
+    bot_says($chan, todo_add($dbname, $chan, $todo))
   }
   elsif (($task eq "del") or 
 	 ($task eq "delete") or
 	 ($task eq "remove") or
 	 ($task eq "done")) {
     if ($todo =~ m/^([0-9]+)$/) {
-      bot_says(todo_remove($dbname, $chan, $1));      
+      bot_says($chan, todo_remove($dbname, $chan, $1));      
     } else {
-      bot_says("Give the numeric index to delete the todo")
+      bot_says($chan, "Give the numeric index to delete the todo")
     }
   }
   elsif ($task eq "rearrange") {
-    bot_says(todo_rearrange($chan))
+    bot_says($chan, todo_rearrange($chan))
   }
   else {
-    bot_says(todo_list($dbname, $chan));
+    bot_says($chan, todo_list($dbname, $chan));
   }
   return
 }
