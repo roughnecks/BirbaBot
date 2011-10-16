@@ -313,7 +313,10 @@ sub irc_botcmd_geoip {
 sub irc_botcmd_todo {
   my ($who, $chan, $arg) = @_[ARG0, ARG1, ARG2];
   my $nick = (split /!/, $_[ARG0])[0];
-  unless ($irc->is_channel_operator($chan, $nick)) {
+#  bot_says($chan, $irc->nick_channel_modes($chan, $nick));
+  unless (($irc->is_channel_operator($chan, $nick)) or 
+	  ($irc->nick_channel_modes($chan, $nick) =~ m/[aoq]/))
+    {
     bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
     return
   }
