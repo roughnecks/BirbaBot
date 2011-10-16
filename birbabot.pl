@@ -34,8 +34,22 @@ use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove);
 
 use POE;
 use POE::Component::Client::DNS;
-use POE::Component::IRC;
+use POE::Component::IRC::Common qw(parse_user l_irc);
+use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
+use Storable;
+
+use constant {
+  USER_DATE     => 0,
+  USER_MSG      => 1,
+  DATA_FILE     => 'seen',
+  SAVE_INTERVAL => 20 * 60, # save state every 20 mins
+};
+
+my $seen = { };
+$seen = retrieve(DATA_FILE) if -s DATA_FILE;
+
+
 
 $| = 1; # turn buffering off
 
@@ -99,7 +113,7 @@ rss_clean_unused_feeds($dbname, \@channels);
 
 ### starting POE stuff
 
-my $irc = POE::Component::IRC->spawn(%serverconfig) 
+my $irc = POE::Component::IRC::State->spawn(%serverconfig) 
   or die "WTF? $!\n";
 
 my $dns = POE::Component::Client::DNS->spawn();
@@ -110,6 +124,7 @@ POE::Session->create(
 		     _default
 		     irc_001 
 		     irc_disconnected
+		     irc_botcmd_seen
 		     irc_botcmd_kw
 		     irc_botcmd_slap
 		     irc_botcmd_geoip
@@ -121,6 +136,11 @@ POE::Session->create(
 		     irc_botcmd_x
 		     irc_botcmd_imdb
 		     irc_public
+                    irc_join
+                    irc_part
+                    irc_quit
+		    save
+                    irc_ctcp_action
 		     rss_sentinel
 		     dns_response) ],
     ],
@@ -131,6 +151,7 @@ $poe_kernel->run();
 ## just copy and pasted, ok?
 
 sub _start {
+    my ($kernel) = $_[KERNEL];
     $irc->plugin_add('BotCommand', 
 		     POE::Component::IRC::Plugin::BotCommand->new(
 								  Commands => {
@@ -141,6 +162,7 @@ sub _start {
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a google images search.',
             gv => 'Do a google video search.',
+            seen => 'Search a user',
             kw => 'Manage the keywords: kw foo is bar; kw forget foo',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
@@ -155,6 +177,7 @@ sub _start {
 								 ));
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
+    $kernel->delay_set('save', SAVE_INTERVAL);
     return;
 }
 
@@ -342,19 +365,63 @@ sub irc_001 {
     return;
 }
 
+sub save {
+    my $kernel = $_[KERNEL];
+    warn "storing\n";
+    store($seen, DATA_FILE) or die "Can't save state";
+    $kernel->delay_set('save', SAVE_INTERVAL);
+}
+
+sub irc_ctcp_action {
+    my $nick = parse_user($_[ARG0]);
+    my $chan = $_[ARG1]->[0];
+    my $text = $_[ARG2];
+
+    add_nick($nick, "on $chan doing: * $nick $text");
+}
+
+sub irc_join {
+    my $nick = parse_user($_[ARG0]);
+    my $chan = $_[ARG1];
+
+    add_nick($nick, "joining $chan");
+}
+
+sub irc_part {
+    my $nick = parse_user($_[ARG0]);
+    my $chan = $_[ARG1];
+    my $text = $_[ARG2];
+
+    my $msg = 'parting $chan';
+    $msg .= " with message '$text'" if defined $text;
+
+    add_nick($nick, $msg);
+}
+
+sub irc_quit {
+  my $nick = parse_user($_[ARG0]);
+  my $text = $_[ARG1];
+
+  my $msg = 'quitting';
+  $msg .= " with message '$text'" if defined $text;
+
+  add_nick($nick, $msg);
+}
+
+
+
 sub irc_public {
     my ($sender, $who, $where, $what) = @_[SENDER, ARG0 .. ARG2];
     my $nick = ( split /!/, $who )[0];
     my $channel = $where->[0];
     print print_timestamp(), "$nick said $what in $channel\n";
-
+    add_nick($nick, "on $channel saying: $what");
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
       bot_says($channel, kw_query($dbname, lc($1))) 
     }
     elsif ($what =~ /((AH){2,})/) {
       bot_says($channel, "AHAHAHAHAHAH!")
     }
-
 #     elsif (($what =~ /\?$/) and (int(rand(6)) == 1)) {
 #       bot_says($channel, "RTFM!");
 #     }
@@ -367,6 +434,27 @@ sub irc_public {
 #    }
     return;
 }
+
+sub add_nick {
+  my ($nick, $msg) = @_;
+  $seen->{l_irc($nick)} = [time, $msg];
+}
+
+sub irc_botcmd_seen {
+  my ($heap, $nick, $channel, $target) = @_[HEAP, ARG0..$#_];
+  $nick = parse_user($nick);
+  $target =~ s/\s+//g;
+  print "processing seen command\n";
+  if ($seen->{l_irc($target)}) {
+    my $date = localtime $seen->{l_irc($target)}->[USER_DATE];
+    my $msg = $seen->{l_irc($target)}->[USER_MSG];
+    $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");
+  } else {
+    $irc->yield(privmsg => $channel, "$nick: I haven't seen $target");
+  }
+}
+
+
 
 sub rss_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
