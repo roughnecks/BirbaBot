@@ -61,6 +61,12 @@ sub create_bot_db {
             bar1                    TEXT NOT NULL,
             bar2                    TEXT,
             bar3                    TEXT);');
+
+  $dbh->do('CREATE TABLE IF NOT EXISTS todo (
+            id      INTEGER,
+            chan    VARCHAR(30),
+            todo    TEXT);');
+
   $dbh->disconnect;
   return 1;
 }
