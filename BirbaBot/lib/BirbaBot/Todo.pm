@@ -91,11 +91,26 @@ Return the new list of todo.
 =cut
 
 sub todo_rearrange {
-  my ($dbname, $channel);
-  return "Not implemented, yet"; 
+  my ($dbname, $channel) = @_;
+  my @new;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  # first, we extract all the fields 
+  my $query = $dbh->prepare("SELECT todo FROM todo WHERE chan = ?");
+  $query->execute($channel);
+  while (my @data = $query->fetchrow_array()) {
+    push @new, $data[0];
+  }
+  my $cleaning = $dbh->prepare("DELETE FROM todo WHERE chan = ?");
+  $cleaning->execute($channel);
+
+  my $insert = $dbh->prepare("INSERT INTO todo VALUES (?, ?, ?);");
+  my $id = 1;
+  while (@new) {
+    my $todo = shift(@new);
+    $insert->execute($id, $channel, $todo);
+    $id++;
+  }
+  return todo_list($dbname, $channel);
 }
-
-
-
 
 1;

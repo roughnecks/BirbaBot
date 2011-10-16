@@ -349,7 +349,7 @@ sub irc_botcmd_todo {
     }
   }
   elsif ($task eq "rearrange") {
-    bot_says($chan, todo_rearrange($chan))
+    bot_says($chan, todo_rearrange($dbname, $chan))
   }
   else {
     bot_says($chan, todo_list($dbname, $chan));
