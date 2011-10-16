@@ -50,10 +50,19 @@ sub todo_remove {
   my ($dbname, $channel, $id) = @_;
   return unless ($dbname && $channel && $id);
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $test = $dbh->prepare("SELECT id FROM todo WHERE chan = ? AND id = ?;");
+  $test->execute($channel, $id);
+  unless ($test->fetchrow_array()) {
+    return "No todo to mark as done";
+  }
   my $query = $dbh->prepare("DELETE FROM todo WHERE chan = ? AND id = ?;");
   $query->execute($channel, $id);
+  my $reply = "Deleted todo with id $id from $channel"; 
+  if ($query->err) {
+    $reply = "Something went wrong. Or *you* are a lamer, or *I* am drunk"
+  }
   $dbh->disconnect;
-  return "Deleted todo with id $id from $channel"; 
+  return $reply
 }
 
 

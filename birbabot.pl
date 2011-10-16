@@ -128,6 +128,7 @@ POE::Session->create(
 		     irc_disconnected
 		     irc_botcmd_seen
 		     irc_botcmd_todo
+		     irc_botcmd_done
 		     irc_botcmd_kw
 		     irc_botcmd_slap
 		     irc_botcmd_geoip
@@ -167,6 +168,8 @@ sub _start {
             gv => 'Do a google video search.',
             seen => 'Search a user',
             todo => 'add something to the channel TODO; todo [add | done | list | rearrange]',
+            done => 'delete something to the channel TODO; done #id ',
+
             kw => 'Manage the keywords: kw foo is bar; kw forget foo',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
@@ -308,6 +311,24 @@ sub irc_botcmd_geoip {
     my ($where, $arg) = @_[ARG1, ARG2];
     $irc->yield(privmsg => $where => BirbaBot::Geo::geo_by_name_or_ip($arg));
     return;
+}
+
+sub irc_botcmd_done {
+  my ($who, $chan, $arg) = @_[ARG0, ARG1, ARG2];
+  my $nick = (split /!/, $_[ARG0])[0];
+  #  bot_says($chan, $irc->nick_channel_modes($chan, $nick));
+  unless (($irc->is_channel_operator($chan, $nick)) or 
+	  ($irc->nick_channel_modes($chan, $nick) =~ m/[aoq]/))
+    {
+      bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
+      return
+    }
+  if ($arg =~ m/^([0-9]+)$/) {
+    bot_says($chan, todo_remove($dbname, $chan, $1));      
+  } else {
+    bot_says($chan, "Give the numeric index to delete the todo")
+  }
+  return;
 }
 
 sub irc_botcmd_todo {
