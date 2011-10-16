@@ -14,7 +14,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw(todo_add todo_remove todo_rearrange);
+our @EXPORT_OK = qw(todo_add todo_remove todo_list todo_rearrange);
 
 our $VERSION = '0.01';
 
@@ -64,7 +64,7 @@ Return the new list of todo.
 
 =cut
 
-sub todo_remove {
+sub todo_rearrange {
   my ($dbname, $channel);
   return "Not implemented, yet"; 
 }

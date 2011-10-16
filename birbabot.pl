@@ -31,6 +31,8 @@ use BirbaBot::Searches qw(search_google
 			  search_imdb
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove);
+use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
+
 
 use POE;
 use POE::Component::Client::DNS;
@@ -125,6 +127,7 @@ POE::Session->create(
 		     irc_001 
 		     irc_disconnected
 		     irc_botcmd_seen
+		     irc_botcmd_todo
 		     irc_botcmd_kw
 		     irc_botcmd_slap
 		     irc_botcmd_geoip
@@ -163,6 +166,7 @@ sub _start {
             gi => 'Do a google images search.',
             gv => 'Do a google video search.',
             seen => 'Search a user',
+            todo => 'add something to the channel TODO; todo [add | done | list | rearrange]',
             kw => 'Manage the keywords: kw foo is bar; kw forget foo',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
@@ -305,6 +309,45 @@ sub irc_botcmd_geoip {
     $irc->yield(privmsg => $where => BirbaBot::Geo::geo_by_name_or_ip($arg));
     return;
 }
+
+sub irc_botcmd_todo {
+  my ($who, $chan, $arg) = @_[ARG0, ARG1, ARG2];
+  my $nick = (split /!/, $_[ARG0])[0];
+  unless ($irc->is_channel_operator($chan, $nick)) {
+    bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
+    return
+  }
+  my @commands_args = split(/\s+/, $arg);
+  my $task = shift(@commands_args);
+  my $todo;
+  if (@commands_args) {
+    $todo = join " ", @commands_args;
+  }
+  if ($task eq "list") {
+    bot_says(todo_list($dbname, $chan));
+  } 
+  elsif ($task eq "add") {
+    bot_says(todo_add($dbname, $chan, $todo))
+  }
+  elsif (($task eq "del") or 
+	 ($task eq "delete") or
+	 ($task eq "remove") or
+	 ($task eq "done")) {
+    if ($todo =~ m/^([0-9]+)$/) {
+      bot_says(todo_remove($dbname, $chan, $1));      
+    } else {
+      bot_says("Give the numeric index to delete the todo")
+    }
+  }
+  elsif ($task eq "rearrange") {
+    bot_says(todo_rearrange($chan))
+  }
+  else {
+    bot_says(todo_list($dbname, $chan));
+  }
+  return
+}
+
 
 # non-blocking dns lookup
 sub irc_botcmd_lookup {
