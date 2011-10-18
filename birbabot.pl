@@ -222,6 +222,15 @@ sub irc_botcmd_rss {
   my ($where, $arg) = @_[ARG1, ARG2];
   my @args = split / +/, $arg;
   my ($action, $feed, $url) = @args;
+  if ($action eq 'list') {
+    my $reply = rss_list($dbname, $where);
+    bot_says($where, $reply);
+    return;
+  }
+  unless (check_if_op($where, $nick)) {
+    bot_says($where, "You need to be a channel operator to manage the RSS, sorry");
+    return;
+  }
   if (($action eq 'add') &&
       $feed && $url) {
     my $reply = rss_add_new($dbname, $feed, $where, $url);
@@ -237,10 +246,6 @@ sub irc_botcmd_rss {
     } else {
       bot_says($where, "Problems deleting $feed");
     }
-  }
-  elsif ($action eq 'list') {
-    my $reply = rss_list($dbname, $where);
-    bot_says($where, $reply);
   }
   elsif ($action eq 'show') {
     my @replies = rss_give_latest($dbname, $feed);
