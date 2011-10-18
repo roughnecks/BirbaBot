@@ -170,7 +170,7 @@ sub _start {
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
 
-            kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo',
+            kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 		    },
