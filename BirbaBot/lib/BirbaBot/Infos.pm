@@ -123,7 +123,7 @@ sub kw_list {
     push @out, $data[0]
   }
   $dbh->disconnect;
-  my $output = "I know the following facts: " . join(", ", @out);
+  my $output = "I know the following facts: " . join(", ", sort(@out));
   return $output;
 }
 
