@@ -70,7 +70,7 @@ sub create_bot_db {
   $dbh->do('CREATE TABLE IF NOT EXISTS notes (
             date         VARCHAR(150),
             sender       VARCHAR(30),
-            receiver     VARCHAR(30) NOT NULL,
+            recipient    VARCHAR(30) NOT NULL,
             message      TEXT NOT NULL);');
 
   $dbh->disconnect;
