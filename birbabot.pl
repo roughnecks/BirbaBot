@@ -320,12 +320,10 @@ sub irc_botcmd_done {
   my ($who, $chan, $arg) = @_[ARG0, ARG1, ARG2];
   my $nick = (split /!/, $_[ARG0])[0];
   #  bot_says($chan, $irc->nick_channel_modes($chan, $nick));
-  unless (($irc->is_channel_operator($chan, $nick)) or 
-	  ($irc->nick_channel_modes($chan, $nick) =~ m/[aoq]/))
-    {
-      bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
-      return
-    }
+  unless (check_if_op($chan, $nick)) {
+    bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
+    return
+  }
   if ($arg =~ m/^([0-9]+)$/) {
     bot_says($chan, todo_remove($dbname, $chan, $1));      
   } else {
@@ -598,6 +596,17 @@ sub check_if_admin {
     }
   }
   return 0;
+}
+
+sub check_if_op {
+  my ($chan, $nick) = @_;
+  if (($irc->is_channel_operator($chan, $nick)) or 
+      ($irc->nick_channel_modes($chan, $nick) =~ m/[aoq]/)) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
 }
 
 
