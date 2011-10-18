@@ -32,6 +32,7 @@ use BirbaBot::Searches qw(search_google
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
+use BirbaBot::Notes qw(notes_add notes_give);
 
 
 use POE;
@@ -127,6 +128,7 @@ POE::Session->create(
 		     irc_001 
 		     irc_disconnected
 		     irc_botcmd_seen
+		     irc_botcmd_notes
 		     irc_botcmd_todo
 		     irc_botcmd_done
 		     irc_botcmd_kw
@@ -167,6 +169,7 @@ sub _start {
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
             seen => 'Search for a user: seen <nick>',
+            notes => 'Send a note to a user: notes <nick> <message>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
 
@@ -240,7 +243,7 @@ sub irc_botcmd_rss {
     my ($reply, $purged) = rss_delete_feed($dbname, $feed, $where);
     if ($reply) {
       bot_says($where, $reply);
-      if ($purged) {
+      if ($purged && ($feed =~ m/^\w+$/)) {
 	unlink File::Spec->catfile($localdir, $feed);
       }
     } else {
@@ -265,6 +268,19 @@ sub irc_botcmd_slap {
     $irc->yield(ctcp => $where, "ACTION slaps $arg");
     return;
 }
+
+sub irc_botcmd_notes {
+    my $nick = (split /!/, $_[ARG0])[0];
+    my ($where, $arg) = @_[ARG1, ARG2];
+    if ($arg =~ m/\s*([^\s]+)\s+(.+)\s*$/) {
+      bot_says($where, notes_add($dbname, $nick, $1, $2))
+    }
+    else {
+      bot_says($where, "Uh? Try notes nick here goes the message")
+    }
+    return;
+}
+
 
 sub irc_botcmd_g {
   my ($where, $arg) = @_[ARG1, ARG2];
@@ -316,6 +332,7 @@ sub irc_botcmd_kw {
     bot_says($where, kw_list($dbname));
   }
 }
+
 
 
 sub irc_botcmd_imdb {
@@ -472,8 +489,11 @@ sub irc_ctcp_action {
 sub irc_join {
     my $nick = parse_user($_[ARG0]);
     my $chan = $_[ARG1];
-
+    my $notes = notes_give($dbname, $nick);
     add_nick($nick, "joining $chan");
+    if ($notes) {
+      bot_says($chan, $notes);
+    }
 }
 
 sub irc_part {
