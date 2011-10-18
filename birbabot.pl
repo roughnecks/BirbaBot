@@ -30,7 +30,7 @@ use BirbaBot::Searches qw(search_google
 			  google_translate
 			  search_imdb
 			);
-use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list);
+use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
 
 
@@ -299,8 +299,18 @@ sub irc_botcmd_kw {
   elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.*)\s*$/)  {
     bot_says($where, kw_new($dbname, $who, lc($1), $2));
   } 
-  elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*(\w+)\s*$/) {
-    bot_says($where, kw_remove($dbname, $who, lc($1), $2));
+  elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*$/) {
+    my $key = lc($1);
+    if (check_if_admin($who)) {
+      bot_says($where, kw_remove($dbname, $who, $key));
+      return;
+    } else {
+      bot_says($where, "You're not a bot admin, sorry, I can't do that");
+      return;
+    }
+  }
+  elsif ($arg =~ m/^\s*delete\s*([^\s]+)\s+([23])\s*$/) {
+    bot_says($where, kw_delete_item($dbname, $1, $2));
   }
   else {
     bot_says($where, kw_list($dbname));

@@ -14,7 +14,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list);
+our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item);
 
 our $VERSION = '0.01';
 
@@ -51,13 +51,38 @@ sub kw_add {
 }
 
 sub kw_remove {
-  my ($dbname, $who, $key, $password) = @_;
+  my ($dbname, $who, $key) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
   my $query = $dbh->prepare("DELETE FROM factoids WHERE key=?;"); #key
   $query->execute($key);
   $dbh->disconnect;
-  return "Removed $key";
+  return "I completely forgot $key";
+}
+
+sub kw_delete_item {
+  my ($dbname, $key, $position) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  my $check;
+  if ($position == 2) {
+    $check = $dbh->prepare("SELECT bar2 FROM factoids WHERE key = ? ;");
+  } elsif ($position == 3) {
+    $check = $dbh->prepare("SELECT bar3 FROM factoids WHERE key = ? ;");
+  }
+  $check->execute($key);
+  my $value = ($check->fetchrow_array())[0];
+  return "I don't have any definition of $key on the $position slot" unless $value;
+
+  my $query;
+  if ($position == 2) {
+    $query = $dbh->prepare("UPDATE factoids SET bar2 = NULL WHERE key = ? ;");
+  } elsif ($position == 3) {
+    $query = $dbh->prepare("UPDATE factoids SET bar3 = NULL WHERE key = ? ;");
+  }
+  $query->execute($key);
+  $dbh->disconnect;
+  return "I forgot that $key is $value";
 }
 
 sub kw_query {
