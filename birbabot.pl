@@ -30,7 +30,7 @@ use BirbaBot::Searches qw(search_google
 			  google_translate
 			  search_imdb
 			);
-use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove);
+use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
 
 
@@ -296,6 +296,9 @@ sub irc_botcmd_kw {
   } 
   elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*(\w+)\s*$/) {
     bot_says($where, kw_remove($dbname, $who, lc($1), $2));
+  }
+  else {
+    bot_says($where, kw_list($dbname));
   }
 }
 
