@@ -128,7 +128,7 @@ POE::Session->create(
 		     irc_001 
 		     irc_disconnected
 		     irc_botcmd_seen
-		     irc_botcmd_notes
+		     irc_botcmd_note
 		     irc_botcmd_todo
 		     irc_botcmd_done
 		     irc_botcmd_kw
@@ -169,7 +169,7 @@ sub _start {
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
             seen => 'Search for a user: seen <nick>',
-            notes => 'Send a note to a user: notes <nick> <message>',
+            note => 'Send a note to a user: note <nick> <message>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
 
@@ -269,14 +269,14 @@ sub irc_botcmd_slap {
     return;
 }
 
-sub irc_botcmd_notes {
+sub irc_botcmd_note {
     my $nick = (split /!/, $_[ARG0])[0];
     my ($where, $arg) = @_[ARG1, ARG2];
     if ($arg =~ m/\s*([^\s]+)\s+(.+)\s*$/) {
       bot_says($where, notes_add($dbname, $nick, $1, $2))
     }
     else {
-      bot_says($where, "Uh? Try notes nick here goes the message")
+      bot_says($where, "Uh? Try note nick here goes the message")
     }
     return;
 }
