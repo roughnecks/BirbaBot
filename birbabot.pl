@@ -489,10 +489,10 @@ sub irc_ctcp_action {
 sub irc_join {
     my $nick = parse_user($_[ARG0]);
     my $chan = $_[ARG1];
-    my $notes = notes_give($dbname, $nick);
+    my @notes = notes_give($dbname, $nick);
     add_nick($nick, "joining $chan");
-    if ($notes) {
-      bot_says($chan, $notes);
+    while (@notes) {
+      bot_says($nick, shift(@notes));
     }
 }
 
