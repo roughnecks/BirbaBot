@@ -230,6 +230,14 @@ sub irc_botcmd_rss {
     bot_says($where, $reply);
     return;
   }
+  elsif ($action eq 'show') {
+    my @replies = rss_give_latest($dbname, $feed);
+    foreach my $line (@replies) {
+      bot_says($where, $line);
+    }
+    return;
+  }
+
   unless (check_if_op($where, $nick)) {
     bot_says($where, "You need to be a channel operator to manage the RSS, sorry");
     return;
@@ -248,12 +256,6 @@ sub irc_botcmd_rss {
       }
     } else {
       bot_says($where, "Problems deleting $feed");
-    }
-  }
-  elsif ($action eq 'show') {
-    my @replies = rss_give_latest($dbname, $feed);
-    foreach my $line (@replies) {
-      bot_says($where, $line);
     }
   }
   else {
