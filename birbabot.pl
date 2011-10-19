@@ -456,8 +456,23 @@ sub irc_botcmd_todo {
 sub irc_botcmd_lookup {
     my $nick = (split /!/, $_[ARG0])[0];
     my ($where, $arg) = @_[ARG1, ARG2];
+    if ($arg =~ m/(([0-9]{1,3}\.){3}([0-9]{1,3}))/) {
+      my $ip = $1;
+      # this is from `man perlsec` so it has to be safe
+      die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+      if ($pid) {           # parent
+	while (<KID>) {
+	  bot_says($where, $_);
+	}
+	close KID;
+	return;
+      } else {
+	# this is the external process, forking. It never returns
+	exec 'host', $ip or die "Can't exec host: $!";
+      }
+    }
     my ($type, $host) = $arg =~ /^(?:(\w+) )?(\S+)/;
-
+    return unless $host;
     my $res = $dns->resolve(
         event => 'dns_response',
         host => $host,
