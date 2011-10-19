@@ -127,6 +127,7 @@ POE::Session->create(
 		     _default
 		     irc_001 
 		     irc_disconnected
+		     irc_botcmd_math
 		     irc_botcmd_seen
 		     irc_botcmd_note
 		     irc_botcmd_todo
@@ -168,6 +169,7 @@ sub _start {
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
+            math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
             note => 'Send a note to a user: note <nick> <message>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
@@ -218,6 +220,42 @@ sub bot_says {
   return
 }
   
+sub irc_botcmd_math {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  if ($arg =~ m/^\s*(-?[\d\.]+)\s*([\*\+\-\/\%])\s*(-?[\d.]+)\s*$/) {
+    my $first = $1;
+    my $op = $2;
+    my $last = $3;
+    my $result;
+
+    if (($last == 0) && (($op eq "/") or ($op eq "%"))) {
+      bot_says($where, "Illegal division by 0");
+      return;
+    }
+
+    if ($op eq '+') {
+      $result = $first + $last;
+    }
+    elsif ($op eq '-') {
+      $result = $first - $last;
+    }
+    elsif ($op eq '*') {
+      $result = $first * $last;
+    }
+    elsif ($op eq '/') {
+      $result = $first / $last;
+    }
+    elsif ($op eq '%') {
+      $result = $first % $last;
+    }
+    bot_says($where, $result);
+  }
+  else {
+    bot_says($where, "uh?");
+  }
+  return
+}
+
 
 
 sub irc_botcmd_rss {
