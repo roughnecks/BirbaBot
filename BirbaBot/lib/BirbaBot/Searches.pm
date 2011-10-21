@@ -18,6 +18,7 @@ our @EXPORT_OK = qw(
 		     search_google
 		     google_translate
 		     search_imdb
+		     search_bash
 		  );
 
 our $VERSION = '0.01';
@@ -25,6 +26,8 @@ our $VERSION = '0.01';
 use LWP::UserAgent;
 use HTTP::Response;
 use HTTP::Request::Common;
+use Encode;
+use HTML::Parser;
 
 use JSON::Any;
 use BirbaBot::Shorten qw(make_tiny_url);
@@ -225,6 +228,70 @@ sub google_process_results {
   }
   return join (" | ", @out);
 }
+
+
+sub search_bash {
+  my $response = $ua->get("http://bash.org/?random");
+
+  my $rawtext = $response->decoded_content();
+
+  my $inquote = 0;
+  my $quotecount = 0;
+  my @quotes;
+  my $inbashid = 0;
+  HTML::Parser->new(api_version => 3,
+		    handlers    => [start => [ sub {
+						 my ($tag, $attr) = @_;
+						 if ($tag &&
+						     ($tag eq 'p') &&
+						     $attr->{class} &&
+						     ($attr->{class} eq 'qt')) {
+						   $inquote++;
+						 } elsif (
+							  $tag &&
+							  ($tag eq 'p') &&
+							  $attr->{class} &&
+							  ($attr->{class} eq 'quote')) 
+						   {
+						     $inbashid++;
+						   }
+					       }, "tagname, attr"],
+				    end   => [ sub {my $tag = shift;
+						    if (($inquote) && ($tag eq 'p')) {
+						      $inquote--;
+						      $quotecount++;
+						    }
+						    elsif (($inbashid) && ($tag eq 'p')) {
+						      $inbashid--;
+						    }
+						  }, "tagname"],
+				    text  => [ sub {
+						 my $line = shift;
+						 chomp $line;
+						 if ($inquote) {
+						   $quotes[$quotecount] .=
+						     encode("utf-8", $line) . "\n";
+						 } elsif ($inbashid) {
+						   if ($line =~ m/(#\d+)/) {
+						     $quotes[$quotecount] .= 
+						       $bbold .
+							 "[" . $1 . "]" . 
+							   $ebold . " ";
+						   }
+						 }
+					       }, "dtext"],
+				   ],
+		    empty_element_tags => 1,
+		    marked_sections => 1,
+		    unbroken_text => 0,
+		    ignore_elements => ['script', 'style'],
+		   )->parse($rawtext) || return "Something went wrong: $!\n";;
+  return $quotes[0];
+}
+
+
+
+
 
 
 1;

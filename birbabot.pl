@@ -29,6 +29,7 @@ use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
 			  google_translate
 			  search_imdb
+			  search_bash
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
@@ -127,6 +128,7 @@ POE::Session->create(
 		     _default
 		     irc_001 
 		     irc_disconnected
+		     irc_botcmd_bash
 		     irc_botcmd_math
 		     irc_botcmd_seen
 		     irc_botcmd_note
@@ -169,6 +171,7 @@ sub _start {
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
+            bash => 'Get a random quote from bash.org',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
             note => 'Send a note to a user: note <nick> <message>',
@@ -256,7 +259,12 @@ sub irc_botcmd_math {
   return
 }
 
-
+sub irc_botcmd_bash {
+  my $where = $_[ARG1];
+  foreach my $line (split("\n", search_bash())) {
+    bot_says($where, $line);
+  }
+}
 
 sub irc_botcmd_rss {
   my $nick = (split /!/, $_[ARG0])[0];
