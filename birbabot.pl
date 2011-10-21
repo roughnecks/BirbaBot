@@ -31,7 +31,7 @@ use BirbaBot::Searches qw(search_google
 			  search_imdb
 			  search_bash
 			);
-use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item);
+use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
 use BirbaBot::Notes qw(notes_add notes_give);
 
@@ -129,6 +129,7 @@ POE::Session->create(
 		     irc_001 
 		     irc_disconnected
 		     irc_botcmd_bash
+		     irc_botcmd_karma
 		     irc_botcmd_math
 		     irc_botcmd_seen
 		     irc_botcmd_note
@@ -172,6 +173,7 @@ sub _start {
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
             bash => 'Get a random quote from bash.org',
+            karma => 'Get the karma of a user',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
             note => 'Send a note to a user: note <nick> <message>',
@@ -223,6 +225,19 @@ sub bot_says {
   return
 }
   
+sub irc_botcmd_karma {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  $arg =~ s/\s*//g;
+  if ($arg) {
+    bot_says($where, karma_manage($dbname, $arg));
+    return;
+  } else {
+    bot_says($where, karma_manage($dbname));
+  }
+}
+
+
+
 sub irc_botcmd_math {
   my ($where, $arg) = @_[ARG1, ARG2];
   if ($arg =~ m/^\s*(-?[\d\.]+)\s*([\*\+\-\/\%])\s*(-?[\d.]+)\s*$/) {
@@ -593,6 +608,19 @@ sub irc_public {
     }
     elsif ($what =~ /((AH){2,})/) {
       bot_says($channel, "AHAHAHAHAHAH!")
+    }
+    elsif ($what =~ /^\s*([^\s]+)(\+\+|--)\s*$/) {
+      my $karmanick = $1;
+      my $karmaaction = $2;
+      if ($karmanick eq $nick) {
+	bot_says($channel, "You're cheating, moron!");
+      } 
+      elsif (! $irc->is_channel_member($channel, $karmanick)) {
+	print "$karmanick is not here, skipping\n";
+      }
+      else {
+	bot_says($channel, karma_manage($dbname, $karmanick, $karmaaction));
+      }
     }
 #     elsif (($what =~ /\?$/) and (int(rand(6)) == 1)) {
 #       bot_says($channel, "RTFM!");

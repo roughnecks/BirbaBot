@@ -5,6 +5,8 @@ package BirbaBot::Infos;
 use 5.010001;
 use strict;
 use warnings;
+use DBI;
+
 
 require Exporter;
 
@@ -14,7 +16,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item);
+our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 
 our $VERSION = '0.01';
 
@@ -127,5 +129,67 @@ sub kw_list {
   return $output;
 }
 
+sub karma_manage {
+  my ($dbname, $nick, $action) = @_;
+  print "arguments for karma_manage: ", join(':', @_), "\n";
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  unless ($nick) {
+    my @reply;
+    my $query = $dbh->prepare('SELECT nick, level FROM karma');
+    $query->execute();
+    while (my @data = $query->fetchrow_array()) {
+      push @reply, $data[0] . " => " . $data[1];
+    }
+    $dbh->disconnect;
+    print "disconnected db";
+    return join(", ", @reply);
+  }
+  unless ($action) {
+    my $query = $dbh->prepare('SELECT level FROM karma WHERE nick = ?;');
+    $query->execute($nick);
+    my $reply ;
+    while (my @data = $query->fetchrow_array()) {
+      $reply = $nick . " has karma " . $data[0];
+    }
+    $dbh->disconnect;
+    print "disconnected db";
+    if ($reply) {
+      return $reply;
+    } else {
+      return "No karma for $nick";
+    }
+  }
+
+  my $oldkarma = $dbh->prepare('SELECT nick,level,last FROM karma WHERE nick = ?;');
+  $oldkarma->execute($nick);
+  my ($queriednick, $level, $lastupdate)  = $oldkarma->fetchrow_array();
+  $oldkarma->finish();
+
+  unless($queriednick) {
+    my $insert = $dbh->prepare('INSERT INTO karma (nick, last, level) VALUES ( ?, ?, ?);');
+    $insert->execute($nick, 0, 0);
+    $level = 0;
+    $lastupdate = 0;
+  }
+
+  my $currenttime = time();
+  if (($currenttime - $lastupdate) < 60) {
+    $dbh->disconnect;
+    return "Karma for $nick updated less then one minute ago";
+  }
+  
+  my $updatevalue = $dbh->prepare('UPDATE karma SET level = ?,last = ? where nick = ?;');
+  
+  if ($action eq '++') {
+    $level++;
+  } elsif ($action eq '--') {
+    $level--;
+  }
+  
+  $updatevalue->execute($level, $currenttime, $nick);
+  $dbh->disconnect;
+  return "Karma for $nick is now $level";
+}
 
 1;
