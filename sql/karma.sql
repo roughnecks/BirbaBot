@@ -4,8 +4,10 @@ CREATE TABLE IF NOT EXISTS karma (
        level	INTEGER
 );
 
-SELECT level FROM karma WHERE nick = ?;
+INSERT INTO karma (nick, last, level) VALUES ( ?, ?, ?);
 
-UPDATE karma SET level = ? where nick = ?;
+SELECT level,last FROM karma WHERE nick = ?;
+
+UPDATE karma,last SET level = ?,last = ? where nick = ?;
 
 

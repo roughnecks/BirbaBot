@@ -73,6 +73,11 @@ sub create_bot_db {
             recipient    VARCHAR(30) NOT NULL,
             message      TEXT NOT NULL);');
 
+  $dbh->do('CREATE TABLE IF NOT EXISTS karma (
+            nick         VARCHAR(30) UNIQUE,
+            last         BIGINT,
+            level        INTEGER);');
+
   $dbh->disconnect;
   return 1;
 }
