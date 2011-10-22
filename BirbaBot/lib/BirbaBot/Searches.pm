@@ -19,6 +19,7 @@ our @EXPORT_OK = qw(
 		     google_translate
 		     search_imdb
 		     search_bash
+		     search_urban
 		  );
 
 our $VERSION = '0.01';
@@ -234,7 +235,6 @@ sub search_bash {
   my $response = $ua->get("http://bash.org/?random");
 
   my $rawtext = $response->decoded_content();
-
   my $inquote = 0;
   my $quotecount = 0;
   my @quotes;
@@ -289,7 +289,113 @@ sub search_bash {
   return $quotes[0];
 }
 
+sub search_urban {
+  my $query = shift;
+  my $results = process_urban($query);
+  my $outstring;
+  my $counter = 1;
+#  print Dumper($results);
+  while (@$results && ($counter < 6))  {
+    my $res = shift(@$results);
+    $outstring .= $bbold . $counter . "." . $ebold . " " .  $res->{'term'} . " " .
+      $res->{'definition'} . " " . $res->{'example'} . "; ";
+    $counter++;
+  }
+  if ($outstring) {
+    return $outstring;
+  } else {
+    return "No results found";
+  }
+}
 
+
+sub process_urban {
+  my $baseurl = 'http://www.urbandictionary.com/define.php?term=';
+  my $query = shift;
+  my $response = $ua->get($baseurl . uri_escape($query));
+  return [] unless $response->is_success;
+  my $rawtext = $response->decoded_content();
+  $rawtext =~ s/\n/ /gs;
+  $rawtext =~ s/\r/ /gs;
+  $rawtext =~ s/  +/ /gs;
+  my $in_entry;
+  my $in_definition;
+  my $in_example;
+  my $counter = -1;
+  my @output;
+
+  HTML::Parser->new(
+		    api_version => 3,
+		    handlers    => [
+		    start => [ sub {
+				 my ($tag, $attr) = @_;
+				 if ($tag &&
+				     ($tag eq 'td') &&
+				     $attr->{class} &&
+				     ($attr->{class} eq 'word')) {
+				   $in_entry = $tag;
+				   $counter++;
+				   $output[$counter] = {'term' => "",
+							'definition' => "",
+							'example' => "",
+						       };
+#				   print "start word $tag $counter\n";
+				 } 
+				 elsif (
+					  $tag &&
+					  ($tag eq 'div') &&
+					  $attr->{class} &&
+					  ($attr->{class} eq 'definition')) 
+				   {
+				     $in_definition = $tag;
+				     print "start $tag def\n";
+				   }
+				 elsif (
+					$tag &&
+					($tag eq 'div') &&
+					$attr->{class} &&
+					($attr->{class} eq 'example'))
+				   {
+				     $in_example = $tag;
+#				     print "start $tag example\n";
+				   }
+			       }, "tagname, attr"],
+		    end   => [ sub {my $tag = shift;
+				    if (($in_entry) && ($tag eq $in_entry)) {
+				      $in_entry = 0;
+#				      print "\nend $tag entry\n";
+				    }
+				    elsif (($in_definition) && ($tag eq $in_definition)) {
+				      $in_definition = 0;
+#				      print "\nend $tag def\n";
+				    }
+				    elsif (($in_example) && ($tag eq $in_example)) {
+				      $in_example = 0;
+#				      print "\nend $tag example\n";
+				    }
+				  }, "tagname"],
+		    text  => [ sub {
+				 my $line = shift;
+				 chomp $line;
+				 if ($in_entry) {
+				   $output[$counter]->{'term'} .=  encode("utf-8", $line);
+#				   print $line;
+				 } elsif ($in_definition) {
+				   $output[$counter]->{'definition'} .=  encode("utf-8", $line);
+#				   print $line;
+				 } elsif ($in_example) {
+				   $output[$counter]->{'example'} .=  encode("utf-8", $line);
+#				   print $line;
+				 }
+			       }, "dtext"],
+		   ],
+		    empty_element_tags => 1,
+		    marked_sections => 1,
+		    unbroken_text => 1,
+		    ignore_elements => ['script', 'style'],
+		   )->parse($rawtext) || return "Something went wrong: $!\n";;
+  return \@output;
+}
 
 
 

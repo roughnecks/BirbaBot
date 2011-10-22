@@ -30,6 +30,7 @@ use BirbaBot::Searches qw(search_google
 			  google_translate
 			  search_imdb
 			  search_bash
+			  search_urban
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
@@ -129,6 +130,7 @@ POE::Session->create(
 		     irc_001 
 		     irc_disconnected
 		     irc_botcmd_bash
+		     irc_botcmd_urban
 		     irc_botcmd_karma
 		     irc_botcmd_math
 		     irc_botcmd_seen
@@ -173,6 +175,7 @@ sub _start {
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
             bash => 'Get a random quote from bash.org',
+            urban => 'Get definitions from the urban dictionary',
             karma => 'Get the karma of a user',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
@@ -280,6 +283,13 @@ sub irc_botcmd_bash {
     bot_says($where, $line);
   }
 }
+
+sub irc_botcmd_urban {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  bot_says($where, search_urban($arg));
+}
+
+
 
 sub irc_botcmd_rss {
   my $nick = (split /!/, $_[ARG0])[0];
