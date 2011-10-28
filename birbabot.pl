@@ -269,6 +269,9 @@ sub irc_botcmd_math {
     elsif ($op eq '%') {
       $result = $first % $last;
     }
+    if ($result == 0) {
+      $result = "0 ";
+    }
     bot_says($where, $result);
   }
   else {
