@@ -297,7 +297,7 @@ sub search_urban {
 #  print Dumper($results);
   while (@$results && ($counter < 6))  {
     my $res = shift(@$results);
-    $outstring .= $bbold . $counter . "." . $ebold . " " .  $res->{'term'} . " " .
+    $outstring .= $bbold . $counter . "." . " " .  $res->{'term'} . $ebold . " " .
       $res->{'definition'} . " " . $res->{'example'} . "; ";
     $counter++;
   }
