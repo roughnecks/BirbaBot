@@ -341,7 +341,12 @@ sub irc_botcmd_rss {
 sub irc_botcmd_slap {
     my $nick = (split /!/, $_[ARG0])[0];
     my ($where, $arg) = @_[ARG1, ARG2];
-    $irc->yield(ctcp => $where, "ACTION slaps $arg");
+    my $botnick = $irc->nick_name;
+    if ($arg =~ m/\Q$botnick\E/) {
+      $irc->yield(ctcp => $where, "ACTION slaps $nick");
+    } else {
+      $irc->yield(ctcp => $where, "ACTION slaps $arg");
+    }
     return;
 }
 
