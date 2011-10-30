@@ -402,7 +402,7 @@ sub irc_botcmd_kw {
     }
   }
   elsif ($arg =~ m/^\s*delete\s*([^\s]+)\s+([23])\s*$/) {
-    bot_says($where, kw_delete_item($dbname, $1, $2));
+    bot_says($where, kw_delete_item($dbname, lc($1), $2));
   }
   else {
     bot_says($where, kw_list($dbname));
