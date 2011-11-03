@@ -197,14 +197,24 @@ sub rss_fetch {
     }
 #    print "Fetching data for $feedname\n";
     my $destfile = File::Spec->catfile($datadir, $feedname);
-    my $response = $ua->mirror($urls{$feedname}, $destfile);
+    my $response;
+    eval { 
+      $response = $ua->mirror($urls{$feedname}, $destfile);
+    };
+    print $@ if $@;
+    next if $@;
     # now, as far as I understand, the "mirror" response doesn't return
     # the content, which is actually stored in the file.
     # So I guess we either do 'get' request, or we open the file
     if ($response->is_success) {
       my $btime = localtime();
       print "Parsing $destfile on $btime\n";
-      my $rss = XML::Feed->parse($destfile);
+      my $rss;
+      eval {
+	$rss = XML::Feed->parse($destfile);
+      };
+      print $@ if $@;
+      next if $@;
       my %linksinrss;
       my $sth = 
         $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?, ?)");
