@@ -205,7 +205,7 @@ sub _start {
 sub bot_says {
   my ($where, $what) = @_;
   return unless ($where and $what);
-  print print_timestamp(), "I'm gonna say $what on $where\n";
+#  print print_timestamp(), "I'm gonna say $what on $where\n";
   if (length($what) < 400) {
     $irc->yield(privmsg => $where => $what);
   } else {
@@ -619,7 +619,7 @@ sub irc_public {
     my ($sender, $who, $where, $what) = @_[SENDER, ARG0 .. ARG2];
     my $nick = ( split /!/, $who )[0];
     my $channel = $where->[0];
-    print print_timestamp(), "$nick said $what in $channel\n";
+#    print print_timestamp(), "$nick said $what in $channel\n";
     add_nick($nick, "on $channel saying: $what");
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
       bot_says($channel, kw_query($dbname, lc($1))) 
