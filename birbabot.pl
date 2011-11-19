@@ -626,6 +626,10 @@ sub irc_public {
     my $channel = $where->[0];
 #    print print_timestamp(), "$nick said $what in $channel\n";
     add_nick($nick, "on $channel saying: $what");
+
+    my ($auth, $spiterror) = check_if_fucker($sender, $who, $where, $what);
+    return unless $auth;
+
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
       bot_says($channel, kw_query($dbname, lc($1))) 
     }
