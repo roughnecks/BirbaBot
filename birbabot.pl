@@ -84,6 +84,7 @@ my %botconfig = (
 		 'rsspolltime' => 600, # default to 10 minutes
 		 'dbname' => "bot.db",
 		 'admins' => 'nobody!nobody@nowhere',
+		 'fuckers' => 'fucker1,fucker2',
 		);
 
 # initialize the local storage
@@ -108,6 +109,8 @@ my @channels = split(/ *, */, $botconfig{'channels'});
 
 # build the regexp of the admins
 my @adminregexps = process_admin_list($botconfig{'admins'});
+
+my @fuckers = split(/ *, */, $botconfig{'fuckers'});
 
 # when we start, we check if we have all the tables.  By no means this
 # guarantees that the tables are correct. Devs, I'm looking at you
@@ -188,6 +191,8 @@ sub _start {
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 		    },
             In_channels => 1,
+	    Auth_sub => \&check_if_fucker,
+	    Ignore_unauthorized => 1,
  	    In_private => 1,
             Addressed => 0,
             Prefix => $botconfig{'botprefix'},
@@ -753,6 +758,17 @@ sub check_if_op {
   }
 }
 
+sub check_if_fucker {
+  my ($object, $nick, $place, $command, $args) = @_;
+#  print "Authorization for $nick";
+  foreach my $pattern (@fuckers) {
+    if ($nick =~ m/\Q$pattern\E/i) {
+#      print "$nick match $pattern?";
+      return 0, [];
+    }
+  }
+  return 1;
+}
 
 exit;
 
