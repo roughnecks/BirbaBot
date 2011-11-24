@@ -34,11 +34,16 @@ use JSON::Any;
 use BirbaBot::Shorten qw(make_tiny_url);
 use Data::Dumper;
 use URI::Escape;
+
+use WWW::Babelfish;
+
 # use Data::Dumper;
 
 my $ua = LWP::UserAgent->new;
 $ua->timeout(10); # 5 seconds of timeout
 $ua->show_progress(1);
+$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
+
 
 my $bbold = "\x{0002}";
 my $ebold = "\x{000F}";
@@ -151,23 +156,43 @@ $to.
 
 =cut
 
+my %langtab = (
+	       "nl" => "Dutch",
+	       "en" => "English",
+	       "fr" => "French",
+	       "de" => "German",
+	       "it" => "Italian",
+	       "ru" => "Russian",
+	       "es" => "Spanish"
+	       );
 
 sub google_translate {
   my ($string, $from, $to) = @_;
+  my $babelfish = 
   return "Missing paramenters" unless ($string and $from and $to);
-
   unless (($from =~ m/^\w+$/) and ($to =~ m/^\w+$/)) {
     return "Right example query: x it en here goes my text"
   }
-  # first, build the url
+  my $froml = $langtab{$from};
+  my $tol = $langtab{$to};
+
+  my $babelfish = new WWW::Babelfish(service => 'Yahoo', 
+				     agent => 'Mozilla/8.0');
+
+  return "Language pair not supported" unless ($froml && $tol);
+  $string .= "\n\n";
+
+  return "Service unavailable" unless defined $babelfish;
   
-  my $target  = "http://ajax.googleapis.com/ajax/services/language/translate" .
-    "?v=1.0&q=" . uri_escape($string) . "&langpair=${from}|${to}";
-  my ($result, $excode) = google_json_get_and_check($target);
-  if ($excode) {
-     return "Huston, we have a problem... The APIs seems broken"
+  my $translation = $babelfish->translate( 'source' => $froml,
+					   'destination' => $tol,
+					   'text' => $string);
+
+  
+  if ($translation) {
+     return $translation
    } else {
-     return $result->{'translatedText'}
+     return $babelfish->error
    }
 }
 
