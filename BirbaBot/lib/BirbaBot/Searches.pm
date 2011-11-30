@@ -168,7 +168,6 @@ my %langtab = (
 
 sub google_translate {
   my ($string, $from, $to) = @_;
-  my $babelfish = 
   return "Missing paramenters" unless ($string and $from and $to);
   unless (($from =~ m/^\w+$/) and ($to =~ m/^\w+$/)) {
     return "Right example query: x it en here goes my text"
