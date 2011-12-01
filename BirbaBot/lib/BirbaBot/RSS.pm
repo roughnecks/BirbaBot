@@ -263,8 +263,7 @@ sub rss_fetch {
              'link' =>   $out_link};
         }
       }
-      my @revertedfeed = reverse @outputfeed ;
-      $output{$feedname} = \@revertedfeed;
+      $output{$feedname} = \@outputfeed;
       my $endtime  = localtime();
       print "Parsing and insertions in $feedname finished on $endtime";
  #     print Dumper(\%linksinrss);
