@@ -5,6 +5,7 @@ package BirbaBot::Quotes;
 use 5.010001;
 use strict;
 use warnings;
+use DBI;
 
 require Exporter;
 
@@ -24,70 +25,92 @@ our @EXPORT_OK = qw(ircquote_add
 
 our $VERSION = '0.01';
 
-=head2 ircquote_add($who, $where, $string)
+=head2 ircquote_add($dbname, $who, $where, $string)
 
 Add the quote $string to the quote db, with author $who and channel $where
 
 =cut
 
 sub ircquote_add {
-  my ($who, $where, $string) = @_;
+  my ($dbname, $who, $where, $string) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $query = $dbh->prepare();
+  $query->execute;
+  $dbh->disconnect;
   return @_;
 }
 
-=head2 ircquote_del($who, $where, $string)
+=head2 ircquote_del($dbname, $who, $where, $string)
 
 Delete the quote with id $string if the author and $who match.
 
 =cut
 
 sub ircquote_del {
-  my ($who, $where, $string) = @_;
+  my ($dbname, $who, $where, $string) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $query = $dbh->prepare();
+  $query->execute;
+  $dbh->disconnect;
   return @_;
 }
 
-=head2 ircquote_rand($where)
+=head2 ircquote_rand($dbname, $where)
 
 Get a random quote for channel $where
 
 =cut
 
 sub ircquote_rand {
-  my ($where) = @_;
+  my ($dbname, $where) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $query = $dbh->prepare();
+  $query->execute;
+  $dbh->disconnect;
   return @_;
 }
 
-=head2 ircquote_last($where);
+=head2 ircquote_last($dbname, $where);
 
 Get the latest quote for channel $where
 
 =cut
 
 sub ircquote_last {
-  my ($who, $where, $string) = @_;
+  my ($dbname, $who, $where, $string) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $query = $dbh->prepare();
+  $query->execute;
+  $dbh->disconnect;
   return @_;
 }
 
 
-=head2 ircquote_find($where, $string);
+=head2 ircquote_find($dbname, $where, $string);
 
 Find a quote with $string inside for channel $where
 
 =cut
 
 sub ircquote_find {
-  my ($where, $string) = @_;
+  my ($dbname, $where, $string) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $query = $dbh->prepare();
+  $query->execute;
+  $dbh->disconnect;
   return @_;
 }
 
-=head2 ircquote_num($num);
+=head2 ircquote_num($dbname, $num);
 
 Add the quote $string to the quote db, with author $who and channel $where
 
 =cut
 
 sub ircquote_num {
-  my ($num) = @_;
+  my ($dbname, $num) = @_;
+  my $query = $dbh->prepare();
+  $query->execute;
   return @_;
 }
 
