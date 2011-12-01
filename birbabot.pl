@@ -303,7 +303,8 @@ sub irc_botcmd_urban {
 
 
 sub irc_botcmd_rss {
-  my $nick = (split /!/, $_[ARG0])[0];
+  my $mask = $_[ARG0];
+  my $nick = (split /!/, $mask)[0];
   my ($where, $arg) = @_[ARG1, ARG2];
   my @args = split / +/, $arg;
   my ($action, $feed, $url) = @args;
@@ -320,7 +321,7 @@ sub irc_botcmd_rss {
     return;
   }
 
-  unless (check_if_op($where, $nick)) {
+  unless (check_if_op($where, $nick) or check_if_admin($mask)) {
     bot_says($where, "You need to be a channel operator to manage the RSS, sorry");
     return;
   }
@@ -634,7 +635,7 @@ sub irc_public {
     my ($auth, $spiterror) = check_if_fucker($sender, $who, $where, $what);
     return unless $auth;
 
-    if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
+    if ( my ($kw) = $what =~ /^([^\s]+)\?\s*$/ ) {
       bot_says($channel, kw_query($dbname, lc($1)));
       return;
     }
