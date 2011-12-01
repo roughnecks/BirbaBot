@@ -35,7 +35,8 @@ use BirbaBot::Searches qw(search_google
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
 use BirbaBot::Notes qw(notes_add notes_give);
-
+use BirbaBot::Shorten qw(make_tiny_url);
+use URI::Find;
 
 use POE;
 use POE::Component::Client::DNS;
@@ -54,7 +55,9 @@ use constant {
 my $seen = { };
 $seen = retrieve(DATA_FILE) if -s DATA_FILE;
 
-
+my @longurls;
+my $urifinder = URI::Find->new( sub { # print "Found url: ", $_[1], "\n"; 
+				      push @longurls, $_[1]; } );
 
 $| = 1; # turn buffering off
 
@@ -632,24 +635,39 @@ sub irc_public {
     return unless $auth;
 
     if ( my ($kw) = $what =~ /^([^\s]+)\?/ ) {
-      bot_says($channel, kw_query($dbname, lc($1))) 
+      bot_says($channel, kw_query($dbname, lc($1)));
+      return;
     }
     elsif ($what =~ /((AH){2,})/) {
-      bot_says($channel, "AHAHAHAHAHAH!")
+      bot_says($channel, "AHAHAHAHAHAH!");
+      return;
     }
     elsif ($what =~ /^\s*([^\s]+)(\+\+|--)\s*$/) {
       my $karmanick = $1;
       my $karmaaction = $2;
       if ($karmanick eq $nick) {
 	bot_says($channel, "You're cheating, moron!");
+	return;
       } 
       elsif (! $irc->is_channel_member($channel, $karmanick)) {
 	print "$karmanick is not here, skipping\n";
+	return;
       }
       else {
 	bot_says($channel, karma_manage($dbname, $karmanick, $karmaaction));
+	return;
       }
     }
+    # this will push in @longurls
+    $urifinder->find(\$what);
+    while (@longurls) {
+      my $url = shift @longurls;
+      next if (length($url) < 40);
+      my $reply = $nick . "'s url: " . make_tiny_url($url);
+      bot_says($channel, $reply);
+      return;
+    }
+    
 #     elsif (($what =~ /\?$/) and (int(rand(6)) == 1)) {
 #       bot_says($channel, "RTFM!");
 #     }
