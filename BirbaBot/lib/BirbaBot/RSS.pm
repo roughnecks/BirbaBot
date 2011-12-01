@@ -229,7 +229,7 @@ sub rss_fetch {
       }
       #      print Dumper(\%alreadyfetchedurls);
       ## start looping over RSS
-      foreach my $item ($rss->entries) {
+      foreach my $item (reverse $rss->entries) {
 	# avoid doing another loop, and save the link
 	my $feed_item_link = $item->link;
 	$linksinrss{$feed_item_link} = 1;
