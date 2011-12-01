@@ -36,6 +36,14 @@ use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item k
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
 use BirbaBot::Notes qw(notes_add notes_give);
 use BirbaBot::Shorten qw(make_tiny_url);
+use BirbaBot::Quotes qw(ircquote_add 
+		    ircquote_del 
+		    ircquote_rand 
+		    ircquote_last 
+		    ircquote_find
+		    ircquote_num);
+
+
 use URI::Find;
 
 use POE;
@@ -153,6 +161,7 @@ POE::Session->create(
 		     irc_botcmd_gv
 		     irc_botcmd_x
 		     irc_botcmd_imdb
+		     irc_botcmd_quote
 		     irc_public
                     irc_join
                     irc_part
@@ -192,6 +201,7 @@ sub _start {
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
+	    quote => 'Manage the qutes',
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -706,7 +716,31 @@ sub irc_botcmd_seen {
   }
 }
 
-
+sub irc_botcmd_quote {
+  my ($who, $where, $what) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  my $subcmd = shift(@args);
+  my $string = join (" ", @args);
+  my $reply;
+  if ($subcmd eq 'add') {
+    $reply = ircquote_add($who, $where, $string)
+  } elsif ($subcmd eq 'del') {
+    $reply = ircquote_del($who, $where, $string)
+  } elsif ($subcmd eq 'rand') {
+    $reply = ircquote_rand($where)
+  } elsif ($subcmd eq 'last') {
+    $reply = ircquote_last($where)
+  } elsif ($subcmd =~ m/([0-9]+)/) {
+    $reply = ircquote_num($1)
+  } elsif ($subcmd eq 'find') {
+    $reply = ircquote_find($where, $string)
+  } else {
+    $reply = "command not supported"
+  }
+  bot_says($where, $reply);
+  return
+}
 
 sub rss_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
