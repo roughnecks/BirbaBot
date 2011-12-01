@@ -21,7 +21,7 @@ SELECT '
 Elimino  la quote 2
 ';
 
-DELETE FROM quotes WHERE id=2;
+DELETE FROM quotes WHERE id=2 AND chan='##laltromondo';
 SELECT * FROM quotes;
 
 
@@ -36,23 +36,23 @@ SELECT '
 Richiedo una quote specifica: la 4
 ';
 
-SELECT author,phrase FROM quotes WHERE id='4';
+SELECT author,phrase FROM quotes WHERE id='4' AND chan='##laltromondo';
 
 SELECT '
 Cerco una stringa tra tutte le quotes ("cancellato")
 ';
 
-SELECT author,phrase FROM quotes WHERE phrase LIKE '%cancellato%';
+SELECT author,phrase FROM quotes WHERE chan ='##laltromondo' AND phrase LIKE '%cancellato%';
 
 
 SELECT '
 Cerco l ultima quote
 ';
 
-SELECT author,phrase FROM quotes ORDER BY id DESC LIMIT 1;
+SELECT author,phrase FROM quotes WHERE chan='##laltromondo' ORDER BY id DESC LIMIT 1;
 
 SELECT '
 Cerco una quote random
 ';
 
-SELECT author,phrase FROM quotes WHERE id='random_num';
+SELECT author,phrase FROM quotes WHERE id='random_num' AND chan='##laltromondo';
