@@ -321,8 +321,8 @@ sub irc_botcmd_rss {
     return;
   }
 
-  unless (check_if_op($where, $nick) or check_if_admin($mask)) {
-    bot_says($where, "You need to be a channel operator to manage the RSS, sorry");
+  unless (check_if_admin($mask)) {
+    bot_says($where, "You need to be a bot admin to manage the RSS, sorry");
     return;
   }
   if (($action eq 'add') &&
@@ -442,8 +442,8 @@ sub irc_botcmd_done {
   my ($who, $chan, $arg) = @_[ARG0, ARG1, ARG2];
   my $nick = (split /!/, $_[ARG0])[0];
   #  bot_says($chan, $irc->nick_channel_modes($chan, $nick));
-  unless (check_if_op($chan, $nick) or check_if_admin($who)) {
-    bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
+  unless (check_if_admin($who)) {
+    bot_says($chan, "You're not a bot admin" . todo_list($dbname, $chan));
     return
   }
   if ($arg =~ m/^([0-9]+)$/) {
@@ -458,11 +458,8 @@ sub irc_botcmd_todo {
   my ($who, $chan, $arg) = @_[ARG0, ARG1, ARG2];
   my $nick = (split /!/, $_[ARG0])[0];
 #  bot_says($chan, $irc->nick_channel_modes($chan, $nick));
-  unless (($irc->is_channel_operator($chan, $nick)) or 
-	  ($irc->nick_channel_modes($chan, $nick) =~ m/[aoq]/)
-	  or check_if_admin($who))
-    {
-    bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
+  unless (check_if_admin($who)) {
+    bot_says($chan, "You're not a bot admin" . todo_list($dbname, $chan));
     return
   }
    my @commands_args;
@@ -772,16 +769,6 @@ sub check_if_admin {
   return 0;
 }
 
-sub check_if_op {
-  my ($chan, $nick) = @_;
-  if (($irc->is_channel_operator($chan, $nick)) or 
-      ($irc->nick_channel_modes($chan, $nick) =~ m/[aoq]/)) {
-    return 1;
-  }
-  else {
-    return 0;
-  }
-}
 
 sub check_if_fucker {
   my ($object, $nick, $place, $command, $args) = @_;
