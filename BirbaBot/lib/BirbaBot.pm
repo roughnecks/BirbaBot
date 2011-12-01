@@ -78,6 +78,12 @@ sub create_bot_db {
             last         BIGINT,
             level        INTEGER);');
 
+  $dbh->do('CREATE TABLE IF NOT EXISTS quotes (
+            id      INTEGER PRIMARY KEY,
+            chan    VARCHAR(30),
+            author  VARCHAR(30),
+            phrase  TEXT);');
+
   $dbh->disconnect;
   return 1;
 }
