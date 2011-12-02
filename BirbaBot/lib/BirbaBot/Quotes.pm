@@ -34,10 +34,15 @@ Add the quote $string to the quote db, with author $who and channel $where
 sub ircquote_add {
   my ($dbname, $who, $where, $string) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare('INSERT INTO quotes (id, chan, author, phrase) VALUES (NULL, ?, ?, ?;');
+  my $query = $dbh->prepare('INSERT INTO quotes (id, chan, author, phrase) VALUES (NULL, ?, ?, ?);');
   $query->execute($where, $who, $string);
+  my $errorcode = $query->err;
   $dbh->disconnect;
-  return @_;
+  if ($errorcode) {
+    return "DB transation ended with error $errorcode";
+  } else {
+    return "Quote added";
+  }
 }
 
 =head2 ircquote_del($dbname, $who, $where, $string)
