@@ -96,10 +96,20 @@ Get a random quote for channel $where
 sub ircquote_rand {
   my ($dbname, $where) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare();
-  $query->execute;
+  my $queryids = $dbh->prepare('SELECT id FROM quotes WHERE chan = ?;');
+  $queryids->execute($where);
+  my @quotesid;
+  while (my @ids = $queryids->fetchrow_array()) {
+    push @quotesid, $ids[0];
+  }
   $dbh->disconnect;
-  return @_;
+  return "No quotes!" unless @quotesid;
+
+  my $total = 
+  my $random = int(rand(scalar @quotesid));
+  print "Picked random quote with id $random\n";
+  my $choosen = $quotesid[$random];
+  return ircquote_num($dbname, $choosen);
 }
 
 =head2 ircquote_last($dbname, $where);
