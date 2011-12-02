@@ -34,8 +34,8 @@ Add the quote $string to the quote db, with author $who and channel $where
 sub ircquote_add {
   my ($dbname, $who, $where, $string) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare();
-  $query->execute;
+  my $query = $dbh->prepare('INSERT INTO quotes (id, chan, author, phrase) VALUES (NULL, ?, ?, ?;');
+  $query->execute($where, $who, $string);
   $dbh->disconnect;
   return @_;
 }
@@ -48,11 +48,12 @@ Delete the quote with id $string if the author and $who match.
 
 sub ircquote_del {
   my ($dbname, $who, $where, $string) = @_;
+
+  ### fixme
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare();
-  $query->execute;
+  my $query = $dbh->prepare('DELETE FROM quotes WHERE id = ?;');
+  $query->execute($string);
   $dbh->disconnect;
-  return @_;
 }
 
 =head2 ircquote_rand($dbname, $where)
@@ -109,8 +110,10 @@ Add the quote $string to the quote db, with author $who and channel $where
 
 sub ircquote_num {
   my ($dbname, $num) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   my $query = $dbh->prepare();
   $query->execute;
+  $dbh->disconnect;
   return @_;
 }
 

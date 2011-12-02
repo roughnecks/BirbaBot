@@ -724,17 +724,17 @@ sub irc_botcmd_quote {
   my $string = join (" ", @args);
   my $reply;
   if ($subcmd eq 'add') {
-    $reply = ircquote_add($who, $where, $string)
+    $reply = ircquote_add($dbname, $who, $where, $string)
   } elsif ($subcmd eq 'del') {
-    $reply = ircquote_del($who, $where, $string)
+    $reply = ircquote_del($dbname, $who, $where, $string)
   } elsif ($subcmd eq 'rand') {
-    $reply = ircquote_rand($where)
+    $reply = ircquote_rand($dbname, $where)
   } elsif ($subcmd eq 'last') {
-    $reply = ircquote_last($where)
+    $reply = ircquote_last($dbname, $where)
   } elsif ($subcmd =~ m/([0-9]+)/) {
-    $reply = ircquote_num($1)
+    $reply = ircquote_num($dbname, $1)
   } elsif ($subcmd eq 'find') {
-    $reply = ircquote_find($where, $string)
+    $reply = ircquote_find($dbname, $where, $string)
   } else {
     $reply = "command not supported"
   }
