@@ -53,12 +53,38 @@ Delete the quote with id $string if the author and $who match.
 
 sub ircquote_del {
   my ($dbname, $who, $where, $string) = @_;
-
-  ### fixme
+  my $id;
+  my $reply;
+  if ($string =~ m/([0-9]+)/) {
+    $id = $1;
+  } else {
+    return "Illegal characters in deletion command";
+  }
+  
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare('DELETE FROM quotes WHERE id = ?;');
-  $query->execute($string);
+  my $checkquery = $dbh->prepare('SELECT author,phrase FROM quotes WHERE id = ?');
+  my $delquery = $dbh->prepare('DELETE FROM quotes WHERE id = ?;');
+
+  $checkquery->execute($id);
+  my ($author) = $checkquery->fetchrow_array();
+
+  if ($author) {
+    if ($author eq $who) { 
+      $delquery->execute($id);
+      my $error = $delquery->err;
+      if ($error) {
+	$reply = "$error while deletin";
+      } else {
+	$reply = "Quote with id $id deleted";
+      }
+    } else {
+      $reply = "The quote is not yours to delete";
+    }
+  } else {
+    $reply = "No such quote"
+  }
   $dbh->disconnect;
+  return $reply;
 }
 
 =head2 ircquote_rand($dbname, $where)
