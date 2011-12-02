@@ -141,12 +141,28 @@ Add the quote $string to the quote db, with author $who and channel $where
 
 sub ircquote_num {
   my ($dbname, $num) = @_;
+  my $reply;
+  if ($num =~ m/(\d+)/) {
+    $num = $1;
+  } else {
+    return "Invalid character $num for quotes"
+  }
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare();
-  $query->execute;
+  my $query = $dbh->prepare('SELECT author,phrase FROM quotes WHERE id = ?');
+  $query->execute($num);
+  my ($author, $phrase) = $query->fetchrow_array();
+  my $error = $query->err;
+  if ($error) {
+    $reply = "Error $error while fetching id $num"
+  } else {
+    if ($phrase and $author) {
+      $reply = "[$num] $phrase (added by $author)";
+    } else {
+      $reply = "No such quote";
+    }
+  }
   $dbh->disconnect;
-  return @_;
+  return $reply;
 }
-
 
 1;
