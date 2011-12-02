@@ -119,12 +119,20 @@ Get the latest quote for channel $where
 =cut
 
 sub ircquote_last {
-  my ($dbname, $who, $where, $string) = @_;
+  my ($dbname, $where) = @_;
+  my $reply;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare();
-  $query->execute;
+  my $query = $dbh->prepare('SELECT id,author,phrase FROM quotes WHERE chan = ? ORDER BY id DESC LIMIT 1;');
+  $query->execute($where);
+  my ($id, $author, $phrase) = $query->fetchrow_array();
+  print "$id, $author, $phrase\n";
+  if ($phrase) {
+    $reply =  "[$id] $phrase (by $author)"
+  } else {
+    $reply = "No quotes!";
+  }
   $dbh->disconnect;
-  return @_;
+  return $reply;
 }
 
 
