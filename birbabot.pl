@@ -674,7 +674,7 @@ sub irc_public {
     while (@longurls) {
       my $url = shift @longurls;
       print "Found $url\n";
-      next if (length($url) < 40);
+      next if (length($url) < 46);
       my $reply = $nick . "'s url: " . make_tiny_url($url);
       bot_says($channel, $reply);
       return;
