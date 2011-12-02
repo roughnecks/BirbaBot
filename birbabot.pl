@@ -69,6 +69,8 @@ my $urifinder = URI::Find->new( sub { # print "Found url: ", $_[1], "\n";
 
 $| = 1; # turn buffering off
 
+my $lastpinged;
+
 # before starting, create a pid file
 
 open (my $fh, ">", "birba.pid");
@@ -143,6 +145,9 @@ POE::Session->create(
 		     _default
 		     irc_001 
 		     irc_disconnected
+		     irc_error
+		     irc_socketerr
+		     irc_ping
 		     irc_botcmd_bash
 		     irc_botcmd_urban
 		     irc_botcmd_karma
@@ -569,6 +574,19 @@ sub irc_disconnected {
   $irc->yield( connect => { });
 }
 
+sub irc_error {
+  print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
+  # we better sleep here, so we don't spam events which are not going to happen
+  sleep $reconnect_delay;
+  $irc->yield( connect => { });
+}
+
+sub irc_socketerr {
+  print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
+  # we better sleep here, so we don't spam events which are not going to happen
+  sleep $reconnect_delay;
+  $irc->yield( connect => { });
+}
 
 sub irc_001 {
     my ($kernel, $sender) = @_[KERNEL, SENDER];
@@ -584,7 +602,13 @@ sub irc_001 {
     $irc->yield( join => $_ ) for @channels;
     # here we register the rss_sentinel
     $kernel->delay_set("rss_sentinel", 30);  # first run after 30 seconds
+    $lastpinged = time();
     return;
+}
+
+sub irc_ping {
+  print "Ping!\n";
+  $lastpinged = time();
 }
 
 sub save {
@@ -744,6 +768,13 @@ sub irc_botcmd_quote {
 
 sub rss_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $currentime = time();
+  if (($currentime - $lastpinged) > 200) {
+    print print_timestamp(), "no ping in more then 200 secs, checking\n";
+    $irc->yield( userhost => $serverconfig{nick} );
+    $kernel->delay_set("rss_sentinel", $botconfig{rsspolltime});
+    return
+  }
   print print_timestamp(), "Starting fetching RSS...\n";
   my $feeds = rss_get_my_feeds($dbname, $localdir);
   foreach my $channel (keys %$feeds) {
