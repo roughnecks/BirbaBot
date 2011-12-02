@@ -206,7 +206,7 @@ sub _start {
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
-	    quote => 'Manage the qutes',
+	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
