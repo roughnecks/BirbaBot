@@ -6,6 +6,7 @@ use 5.010001;
 use strict;
 use warnings;
 use DBI;
+use Data::Dumper;
 
 require Exporter;
 
@@ -144,11 +145,33 @@ Find a quote with $string inside for channel $where
 
 sub ircquote_find {
   my ($dbname, $where, $string) = @_;
+  my $reply;
+  { use locale;
+    $string =~ s/\W/%/g;
+    $string = '%' . $string . '%';
+    $string =~ s/%%+/%/g;
+    print "Using $string for query";
+  }
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare();
-  $query->execute;
+  my $query = $dbh->prepare('SELECT id,phrase FROM quotes WHERE chan = ? AND phrase LIKE ?;');
+  $query->execute($where, $string);
+  # find all
+  my @output;
+  while (my @quotes = $query->fetchrow_array()) {
+    
+    push @output, [$quotes[0], $quotes[1] ];
+  }
   $dbh->disconnect;
-  return @_;
+#  print Dumper(\@output);
+  return "No quotes!" unless $output[0]->[1];
+  $reply = '[' . $output[0]->[0] . '] ' . $output[0]->[1] . ". ";
+  print Dumper(shift @output);
+  $reply .= "Other quotes: " if @output;
+  while (@output) {
+    my $quote = shift(@output);
+    $reply .= "[" . $quote->[0] . "] ";
+  }
+  return $reply;
 }
 
 =head2 ircquote_num($dbname, $num);
