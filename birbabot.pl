@@ -99,6 +99,7 @@ my %botconfig = (
 		 'dbname' => "bot.db",
 		 'admins' => 'nobody!nobody@nowhere',
 		 'fuckers' => 'fucker1,fucker2',
+		 'nspassword' => 'nopass',
 		);
 
 # initialize the local storage
