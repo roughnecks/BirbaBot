@@ -150,6 +150,7 @@ POE::Session->create(
 		     irc_error
 		     irc_socketerr
 		     irc_ping
+		     irc_kick
 		     irc_botcmd_bash
 		     irc_botcmd_urban
 		     irc_botcmd_karma
@@ -615,6 +616,15 @@ sub irc_001 {
 sub irc_ping {
   print "Ping!\n";
   $lastpinged = time();
+}
+
+sub irc_kick {
+  my $kicker = $_[ARG0];
+  my $channel = $_[ARG1];
+  sleep 5;
+  $kicker = parse_user($kicker);
+  $irc->yield( join => $channel );
+  bot_says($channel, "$kicker: :-P");
 }
 
 sub save {
