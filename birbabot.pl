@@ -236,6 +236,10 @@ sub _start {
 sub bot_says {
   my ($where, $what) = @_;
   return unless ($where and $what);
+  # here we hack some entities;
+  $what =~ s/&amp;/&/g;
+  $what =~ s/&quot;/"/g;
+  
 #  print print_timestamp(), "I'm gonna say $what on $where\n";
   if (length($what) < 400) {
     $irc->yield(privmsg => $where => $what);
