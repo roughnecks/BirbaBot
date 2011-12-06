@@ -318,8 +318,12 @@ sub search_urban {
   my $results = process_urban($query);
   my $outstring;
   my $counter = 1;
+  my $maxlenght = 1000;
 #  print Dumper($results);
-  while (@$results && ($counter < 6))  {
+  while (@$results 
+	 && ($counter < 6) 
+	 && (length($outstring) < $maxlenght)
+	)  {
     my $res = shift(@$results);
     $outstring .= $bbold . $counter . "." . " " .  $res->{'term'} . $ebold . " " .
       $res->{'definition'} . " " . $res->{'example'} . "; ";
