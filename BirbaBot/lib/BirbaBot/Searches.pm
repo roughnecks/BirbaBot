@@ -20,6 +20,7 @@ our @EXPORT_OK = qw(
 		     search_imdb
 		     search_bash
 		     search_urban
+                     get_youtube_title
 		  );
 
 our $VERSION = '0.01';
@@ -336,6 +337,21 @@ sub search_urban {
   }
 }
 
+sub get_youtube_title {
+  my $url = shift;
+  print "Parsing title of $url\n";
+  my $response = $ua->get($url);
+  return unless $response->is_success;
+  my $rawtext = $response->decoded_content();
+  $rawtext =~ s/\n/ /gs;
+  $rawtext =~ s/\r/ /gs;
+  $rawtext =~ s/  +/ /gs;
+  if ($rawtext =~ m!<title>(.+)</title>!) {
+    return "Youtube title: $1";
+  } else {
+    return "No title found";
+  }
+}
 
 sub process_urban {
   my $baseurl = 'http://www.urbandictionary.com/define.php?term=';

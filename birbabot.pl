@@ -31,6 +31,7 @@ use BirbaBot::Searches qw(search_google
 			  search_imdb
 			  search_bash
 			  search_urban
+			  get_youtube_title
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
@@ -714,6 +715,10 @@ sub irc_public {
     while (@longurls) {
       my $url = shift @longurls;
       print "Found $url\n";
+      if ($url =~ m/youtube/) {
+	bot_says($channel, get_youtube_title($url));
+      };
+
       next if (length($url) < 55);
       my $reply = $nick . "'s url: " . make_tiny_url($url);
       bot_says($channel, $reply);
