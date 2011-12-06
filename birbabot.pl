@@ -51,6 +51,7 @@ use POE::Component::Client::DNS;
 use POE::Component::IRC::Common qw(parse_user l_irc);
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
+use POE::Component::IRC::Plugin::NickServID;
 use Storable;
 
 use constant {
@@ -218,6 +219,10 @@ sub _start {
             Ignore_unknown => 1,
 								  
 								 ));
+    $irc->plugin_add( 'NickServID', 
+		      POE::Component::IRC::Plugin::NickServID->new(
+								   Password => $botconfig{'nspassword'}
+								  ));
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     $kernel->delay_set('save', SAVE_INTERVAL);
