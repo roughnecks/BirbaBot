@@ -347,7 +347,9 @@ sub get_youtube_title {
   $rawtext =~ s/\r/ /gs;
   $rawtext =~ s/  +/ /gs;
   if ($rawtext =~ m!<title>(.+)</title>!) {
-    return "Youtube title: $1";
+    my $title = $1;
+    $title =~ s/( - )?YouTube\s*$//;
+    return "YouTube title: $title";
   } else {
     return "No title found";
   }
