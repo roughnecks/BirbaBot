@@ -31,14 +31,14 @@ argument with the long url to shorten and return a shortened one,
 unless the online services are down or going nuts. If everything
 fails, return the long url.
 
-Urls with less than 40 characters are returned without furter
+Urls with less than 50 characters are returned without furter
 processing.
 
 =cut
 
 sub make_tiny_url {
   my $url = shift;
-  return $url unless ((length $url) > 40);
+  return $url unless ((length $url) > 50);
   print "Requesting tinyurl for $url\n";
 #  print $url, "\n";
   my $ua = LWP::UserAgent->new(timeout => 10);
