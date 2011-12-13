@@ -31,6 +31,7 @@ use BirbaBot::Searches qw(search_google
 			  search_imdb
 			  search_bash
 			  search_urban
+			  get_youtube_title
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
@@ -51,6 +52,7 @@ use POE::Component::Client::DNS;
 use POE::Component::IRC::Common qw(parse_user l_irc);
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
+use POE::Component::IRC::Plugin::NickServID;
 use Storable;
 
 use constant {
@@ -98,6 +100,7 @@ my %botconfig = (
 		 'dbname' => "bot.db",
 		 'admins' => 'nobody!nobody@nowhere',
 		 'fuckers' => 'fucker1,fucker2',
+		 'nspassword' => 'nopass',
 		);
 
 # initialize the local storage
@@ -148,6 +151,7 @@ POE::Session->create(
 		     irc_error
 		     irc_socketerr
 		     irc_ping
+		     irc_kick
 		     irc_botcmd_bash
 		     irc_botcmd_urban
 		     irc_botcmd_karma
@@ -218,6 +222,10 @@ sub _start {
             Ignore_unknown => 1,
 								  
 								 ));
+    $irc->plugin_add( 'NickServID', 
+		      POE::Component::IRC::Plugin::NickServID->new(
+								   Password => $botconfig{'nspassword'}
+								  ));
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     $kernel->delay_set('save', SAVE_INTERVAL);
@@ -228,6 +236,10 @@ sub _start {
 sub bot_says {
   my ($where, $what) = @_;
   return unless ($where and $what);
+  # here we hack some entities;
+  $what =~ s/&amp;/&/g;
+  $what =~ s/&quot;/"/g;
+  
 #  print print_timestamp(), "I'm gonna say $what on $where\n";
   if (length($what) < 400) {
     $irc->yield(privmsg => $where => $what);
@@ -611,6 +623,15 @@ sub irc_ping {
   $lastpinged = time();
 }
 
+sub irc_kick {
+  my $kicker = $_[ARG0];
+  my $channel = $_[ARG1];
+  sleep 5;
+  $kicker = parse_user($kicker);
+  $irc->yield( join => $channel );
+  bot_says($channel, "$kicker: :-P");
+}
+
 sub save {
     my $kernel = $_[KERNEL];
     warn "storing\n";
@@ -698,6 +719,10 @@ sub irc_public {
     while (@longurls) {
       my $url = shift @longurls;
       print "Found $url\n";
+      if ($url =~ m/youtube/) {
+	bot_says($channel, get_youtube_title($url));
+      };
+
       next if (length($url) < 55);
       my $reply = $nick . "'s url: " . make_tiny_url($url);
       bot_says($channel, $reply);

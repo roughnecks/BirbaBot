@@ -20,6 +20,7 @@ our @EXPORT_OK = qw(
 		     search_imdb
 		     search_bash
 		     search_urban
+                     get_youtube_title
 		  );
 
 our $VERSION = '0.01';
@@ -318,8 +319,12 @@ sub search_urban {
   my $results = process_urban($query);
   my $outstring;
   my $counter = 1;
+  my $maxlenght = 1000;
 #  print Dumper($results);
-  while (@$results && ($counter < 6))  {
+  while (@$results 
+	 && ($counter < 6) 
+	 && (length($outstring) < $maxlenght)
+	)  {
     my $res = shift(@$results);
     $outstring .= $bbold . $counter . "." . " " .  $res->{'term'} . $ebold . " " .
       $res->{'definition'} . " " . $res->{'example'} . "; ";
@@ -332,6 +337,23 @@ sub search_urban {
   }
 }
 
+sub get_youtube_title {
+  my $url = shift;
+  print "Parsing title of $url\n";
+  my $response = $ua->get($url);
+  return unless $response->is_success;
+  my $rawtext = $response->decoded_content();
+  $rawtext =~ s/\n/ /gs;
+  $rawtext =~ s/\r/ /gs;
+  $rawtext =~ s/  +/ /gs;
+  if ($rawtext =~ m!<title>(.+)</title>!) {
+    my $title = $1;
+    $title =~ s/( - )?YouTube\s*$//;
+    return "YouTube title: $title";
+  } else {
+    return "No title found";
+  }
+}
 
 sub process_urban {
   my $baseurl = 'http://www.urbandictionary.com/define.php?term=';
