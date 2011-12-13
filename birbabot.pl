@@ -723,7 +723,7 @@ sub irc_public {
 	bot_says($channel, get_youtube_title($url));
       };
 
-      next if (length($url) < 55);
+      next if (length($url) < 60);
       my $reply = $nick . "'s url: " . make_tiny_url($url);
       bot_says($channel, $reply);
       return;
