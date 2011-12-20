@@ -83,7 +83,7 @@ undef $fh;
 
 # initialize the db
 
-my $reconnect_delay = 500;
+my $reconnect_delay = 300;
 
 my %serverconfig = (
 		    'nick' => 'Birba',
