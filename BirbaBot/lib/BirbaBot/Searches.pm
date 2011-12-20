@@ -63,7 +63,7 @@ sub query_meteo {
   my $location = shift;
   return "No location provided" unless $location;
   my $query = uri_escape($location);
-  print "Query google for $query";
+  print "Query google for $query\n";
   my $response = $ua->get("http://www.google.ca/ig/api?weather=$location");
   return "Failed query" unless $response->is_success;
   my $xml = $response->decoded_content();
@@ -71,10 +71,49 @@ sub query_meteo {
   my $intag;
   my $parser = new XML::Parser(Style => 'Tree');
   my $data = $parser->parse($xml);
-  print Dumper($data);
-  return "Okki";
+  my $inforef = $data->[1]->[2];
+  my @collected;
+  foreach my $item (@$inforef) {
+    if (ref($item) eq 'ARRAY') {
+      my @data = @$item;
+      shift @data;
+      my %datas = @data;
+      push @collected, \%datas;
+    } elsif (ref($item)) {
+      next;
+    } else {
+      push @collected, $item;
+    }
+  }
+#  print Dumper(\@collected);
   
+  my $outstring;
+
+  my $i = 0;
+  while ($i<=$#collected) {
+    if ($collected[$i] eq "forecast_information") {
+#      print $collected[$i+1]->{city}->[0]->{data};
+      $outstring .= "City: " . $collected[$i+1]->{city}->[0]->{data} . ". ";
+      $i++; # skip the next
+    }
+    elsif ($collected[$i] eq "current_conditions") {
+      $outstring .= " Current conditions: " .
+      "Temp: " .  $collected[$i+1]->{temp_c}->[0]->{data} . " " .
+	$collected[$i+1]->{wind_condition}->[0]->{data} . " " .
+	  $collected[$i+1]->{humidity}->[0]->{data} . ". " .
+	  "It's " . $collected[$i+1]->{condition}->[0]->{data} . "; ";
+	    $i++;
+    }
+    elsif ($collected[$i] eq "forecast_conditions") {
+      $outstring .= $collected[$i+1]->{day_of_week}->[0]->{data} . ": " .
+	$collected[$i+1]->{condition}->[0]->{data} . "; ";
+      $i++
+    }
+    $i++
+  }
+  return $outstring;
 }
+
 
 sub search_imdb {
   my $string = shift;
