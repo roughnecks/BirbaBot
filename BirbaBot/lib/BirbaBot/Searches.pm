@@ -21,6 +21,7 @@ our @EXPORT_OK = qw(
 		     search_bash
 		     search_urban
                      get_youtube_title
+		     query_meteo
 		  );
 
 our $VERSION = '0.01';
@@ -35,6 +36,7 @@ use JSON::Any;
 use BirbaBot::Shorten qw(make_tiny_url);
 use Data::Dumper;
 use URI::Escape;
+use XML::Parser;
 
 use WWW::Babelfish;
 
@@ -57,6 +59,22 @@ must be at the end), do a refined search.
 
 =cut
 
+sub query_meteo {
+  my $location = shift;
+  return "No location provided" unless $location;
+  my $query = uri_escape($location);
+  print "Query google for $query";
+  my $response = $ua->get("http://www.google.ca/ig/api?weather=$location");
+  return "Failed query" unless $response->is_success;
+  my $xml = $response->decoded_content();
+  my %meteodata;
+  my $intag;
+  my $parser = new XML::Parser(Style => 'Tree');
+  my $data = $parser->parse($xml);
+  print Dumper($data);
+  return "Okki";
+  
+}
 
 sub search_imdb {
   my $string = shift;

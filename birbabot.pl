@@ -28,6 +28,7 @@ use BirbaBot::RSS qw(
 use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
 			  google_translate
+			  query_meteo
 			  search_imdb
 			  search_bash
 			  search_urban
@@ -171,6 +172,7 @@ POE::Session->create(
 		     irc_botcmd_x
 		     irc_botcmd_imdb
 		     irc_botcmd_quote
+		     irc_botcmd_meteo
 		     irc_public
                     irc_join
                     irc_part
@@ -209,6 +211,7 @@ sub _start {
 
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
+	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
 		    },
@@ -230,6 +233,13 @@ sub _start {
     $irc->yield( connect => { } );
     $kernel->delay_set('save', SAVE_INTERVAL);
     return;
+}
+
+sub irc_botcmd_meteo {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  print "Asking the weatherman\n";
+  bot_says($where, query_meteo($arg));
+  return;
 }
 
 
