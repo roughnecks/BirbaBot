@@ -636,6 +636,9 @@ sub irc_ping {
 sub irc_kick {
   my $kicker = $_[ARG0];
   my $channel = $_[ARG1];
+  my $kicked = $_[ARG2];
+  my $botnick = $irc->nick_name;
+  return unless $kicked eq $botnick;
   sleep 5;
   $kicker = parse_user($kicker);
   $irc->yield( join => $channel );
