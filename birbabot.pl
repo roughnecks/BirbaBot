@@ -89,7 +89,7 @@ my %serverconfig = (
 		    'nick' => 'Birba',
 		    'ircname' => "Birba the Bot",
 		    'username' => 'birbabot',
-		    'server' => "irc.syrolnet.org",
+		    'server' => "localhost",
 		    'port' => 7000,
 		    'usessl' => 1,
 		   );
