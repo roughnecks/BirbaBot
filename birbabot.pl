@@ -411,16 +411,19 @@ sub irc_botcmd_note {
 
 sub irc_botcmd_g {
   my ($where, $arg) = @_[ARG1, ARG2];
+  return unless is_where_a_channel($where);
   bot_says($where, search_google($arg, "web"));
 }
 
 sub irc_botcmd_gi {
   my ($where, $arg) = @_[ARG1, ARG2];
+  return unless is_where_a_channel($where);
   bot_says($where, search_google($arg, "images"));
 }
 
 sub irc_botcmd_gv {
   my ($where, $arg) = @_[ARG1, ARG2];
+  return unless is_where_a_channel($where);
   bot_says($where, search_google($arg, "video"));
 }
 
@@ -471,6 +474,7 @@ sub irc_botcmd_imdb {
 sub irc_botcmd_geoip {
     my $nick = (split /!/, $_[ARG0])[0];
     my ($where, $arg) = @_[ARG1, ARG2];
+    return unless is_where_a_channel($where);
     $irc->yield(privmsg => $where => BirbaBot::Geo::geo_by_name_or_ip($arg));
     return;
 }
@@ -544,6 +548,7 @@ sub irc_botcmd_todo {
 sub irc_botcmd_lookup {
     my $nick = (split /!/, $_[ARG0])[0];
     my ($where, $arg) = @_[ARG1, ARG2];
+    return unless is_where_a_channel($where);
     if ($arg =~ m/(([0-9]{1,3}\.){3}([0-9]{1,3}))/) {
       my $ip = $1;
       # this is from `man perlsec` so it has to be safe
@@ -896,6 +901,15 @@ sub check_if_fucker {
     }
   }
   return 1;
+}
+
+sub is_where_a_channel {
+  my $where = shift;
+  if ($where =~ m/^#/) {
+    return 1
+  } else {
+    return 0
+  }
 }
 
 exit;
