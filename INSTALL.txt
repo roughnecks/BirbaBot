@@ -9,3 +9,6 @@ libdbd-sqlite3-perl
 libgeo-ip-perl
 geoip-database
 libpoe-component-client-dns-perl
+libxml-feed-perl
+libjson-any-perl
+liburi-find-perl

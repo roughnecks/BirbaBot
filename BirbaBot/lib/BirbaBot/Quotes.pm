@@ -36,13 +36,14 @@ sub ircquote_add {
   my ($dbname, $who, $where, $string) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   my $query = $dbh->prepare('INSERT INTO quotes (id, chan, author, phrase) VALUES (NULL, ?, ?, ?);');
+  my $id = $dbh->prepare('SELECT last(id) FROM quotes'); 
   $query->execute($where, $who, $string);
   my $errorcode = $query->err;
   $dbh->disconnect;
   if ($errorcode) {
     return "DB transation ended with error $errorcode";
   } else {
-    return "Quote added";
+    return "Quote $id added";
   }
 }
 
