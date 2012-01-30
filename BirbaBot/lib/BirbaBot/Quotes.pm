@@ -45,7 +45,7 @@ sub ircquote_add {
   if ($errorcode) {
     return "DB transation ended with error $errorcode";
   } else {
-    return "Quote $id added";
+    return "Quote \#$id added";
   }
 }
 
