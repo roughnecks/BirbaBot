@@ -36,8 +36,10 @@ sub ircquote_add {
   my ($dbname, $who, $where, $string) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   my $query = $dbh->prepare('INSERT INTO quotes (id, chan, author, phrase) VALUES (NULL, ?, ?, ?);');
-  my $id = $dbh->prepare('SELECT last(id) FROM quotes'); 
   $query->execute($where, $who, $string);
+  my $idquery = $dbh->prepare('SELECT id FROM quotes WHERE chan = ? ORDER BY id DESC LIMIT 1;');
+  $idquery->execute($where);
+  my $id = $idquery->fetchrow_array();
   my $errorcode = $query->err;
   $dbh->disconnect;
   if ($errorcode) {
