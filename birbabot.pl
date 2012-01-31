@@ -200,7 +200,7 @@ sub _start {
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
-            bash => 'Get a quote from bash.org | bash [ number | random ]',
+            bash => 'Get a random quote from bash.org - Optionally accepts one number as argument: bash <number>',
             urban => 'Get definitions from the urban dictionary',
             karma => 'Get the karma of a user',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
