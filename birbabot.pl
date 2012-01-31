@@ -328,7 +328,9 @@ sub irc_botcmd_math {
 sub irc_botcmd_bash {
   my ($where, $arg) = @_[ARG1, ARG2];
   my $good;
-  if ( $arg =~ m/^(\d+)/s ) { $good = $1 } elsif (! $arg ) { $good = 'random' } else { return };
+  if ( $arg =~ m/^(\d+)/s ) { $good = $1 } 
+	elsif (! $arg ) { $good = 'random' } 
+		else { return };
     foreach my $line (split("\n", search_bash($good))) {
     bot_says($where, $line);
     }
