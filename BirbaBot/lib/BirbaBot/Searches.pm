@@ -314,8 +314,8 @@ sub google_process_results {
 
 
 sub search_bash {
-  my $response = $ua->get("http://bash.org/?random");
-
+  my $basharg = shift;
+  my $response = $ua->get("http://bash.org/?$basharg");
   my $rawtext = $response->decoded_content();
   my $inquote = 0;
   my $quotecount = 0;
@@ -370,6 +370,69 @@ sub search_bash {
 		   )->parse($rawtext) || return "Something went wrong: $!\n";;
   return $quotes[0];
 }
+
+
+=test script
+sub search_bash2 {
+  my $bashid = shift;
+  my $response = $ua->get("http://bash.org/?$bashid");
+  my $rawtext = $response->decoded_content();
+  my $inquote = 0;
+  my $quotecount = 0;
+  my @quotes;
+  my $inbashid = 0;
+ HTML::Parser->new(api_version => 3,
+		   handlers    => [start => [ sub {
+		       my ($tag, $attr) = @_;
+		        if ($tag &&
+			         ($tag eq 'p') &&
+			    $attr->{class} &&
+			    ($attr->{class} eq 'qt')) {
+			    $inquote++;
+			} elsif (
+			      $tag &&
+			      ($tag eq 'p') &&
+			    $attr->{class} &&
+			    ($attr->{class} eq 'quote')) 
+			{
+			    $inbashid++;
+			}
+					      }, "tagname, attr"],
+				   end   => [ sub {my $tag = shift;
+						   if (($inquote) && ($tag eq 'p')) {
+						       $inquote--;
+						       $quotecount++;
+						   }
+						   elsif (($inbashid) && ($tag eq 'p')) {
+						       $inbashid--;
+						   }
+					      }, "tagname"],
+				   text  => [ sub {
+				       my $line = shift;
+				       chomp $line;
+				       if ($inquote) {
+					      $quotes[$quotecount] .=
+						  encode("utf-8", $line) . "\n";
+				       } elsif ($inbashid) {
+					      if ($line =~ m/(#\d+)/) {
+							           $quotes[$quotecount] .= 
+							             $bbold .
+							       "[" . $1 . "]" . 
+							      $ebold . " ";
+						  }
+						  }
+				       }, "dtext"],
+					         ],
+				       empty_element_tags => 1,
+				       marked_sections => 1,
+				       unbroken_text => 0,
+				       ignore_elements => ['script', 'style'],
+		   )->parse($rawtext) || return "Something went wrong: $!\n";;
+  print Dumper(\@quotes);
+  return $quotes[0];
+}
+
+=cut
 
 sub search_urban {
   my $query = shift;
