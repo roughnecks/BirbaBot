@@ -368,6 +368,7 @@ sub search_bash {
 		    unbroken_text => 0,
 		    ignore_elements => ['script', 'style'],
 		   )->parse($rawtext) || return "Something went wrong: $!\n";;
+#	print Dumper(\@quotes);
   return $quotes[0];
 }
 

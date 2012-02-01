@@ -328,12 +328,21 @@ sub irc_botcmd_math {
 sub irc_botcmd_bash {
   my ($where, $arg) = @_[ARG1, ARG2];
   my $good;
-  if ( $arg =~ m/^(\d+)/s ) { $good = $1 } 
-	elsif (! $arg ) { $good = 'random' } 
-		else { return };
-    foreach my $line (split("\n", search_bash($good))) {
-    bot_says($where, $line);
+  if (! $arg ) {
+    $good = 'random';
+  } elsif ( $arg =~ m/^(\d+)/s ) {
+    $good = $1;
+  } else {
+    return;
+  }
+  my $result = search_bash($good);
+  if ($result) {
+    foreach my $line (split("\r*\n", $result)) {
+      bot_says($where, $line);
     }
+  } else {
+    bot_says($where, "Quote $good not found");
+  }
 }
 
 
