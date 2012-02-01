@@ -932,10 +932,10 @@ sub is_where_a_channel {
 sub irc_botcmd_choose {
   my ($where, $args) = @_[ARG1..$#_];
   my @choises = split(/ +/, $args);
-  my $lenght = $#choises +=1;
+  my $lenght = scalar @choises;
   my $random = int(rand($lenght));
 
- bot_says($where, "$choises[$random]");
+ bot_says($where, "$choises[$random] ");
 }
 
 exit;
