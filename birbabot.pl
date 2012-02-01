@@ -153,6 +153,7 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_choose
 		     irc_botcmd_bash
 		     irc_botcmd_urban
 		     irc_botcmd_karma
@@ -214,6 +215,7 @@ sub _start {
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
+	    choose => 'Do a random guess',
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -925,6 +927,15 @@ sub is_where_a_channel {
   } else {
     return 0
   }
+}
+
+sub irc_botcmd_choose {
+  my ($where, $args) = @_[ARG1..$#_];
+  my @choises = split(/ +/, $args);
+  my $lenght = $#choises +=1;
+  my $random = int(rand($lenght));
+
+ bot_says($where, "$choises[$random]");
 }
 
 exit;
