@@ -337,8 +337,8 @@ sub irc_botcmd_bash {
   }
   my $result = search_bash($good);
   if ($result) {
-    foreach my $line (split("\r*\n", $result)) {
-      bot_says($where, $line);
+    foreach (split("\r*\n", $result)) {
+      bot_says($where, $_);
     }
   } else {
     bot_says($where, "Quote $good not found");
