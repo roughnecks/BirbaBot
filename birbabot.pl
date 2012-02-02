@@ -247,7 +247,7 @@ sub irc_botcmd_meteo {
 
 sub bot_says {
   my ($where, $what) = @_;
-  return unless ($where and $what);
+  return unless ($where and (defined $what));
   # here we hack some entities;
   $what =~ s/&amp;/&/g;
   $what =~ s/&quot;/"/g;
@@ -938,7 +938,7 @@ sub irc_botcmd_choose {
   my $lenght = scalar @choises;
   my $random = int(rand($lenght));
 
- bot_says($where, "$choises[$random] ");
+ bot_says($where, "$choises[$random]");
 }
 
 exit;
