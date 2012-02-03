@@ -314,8 +314,8 @@ sub google_process_results {
 
 
 sub search_bash {
-  my $response = $ua->get("http://bash.org/?random");
-
+  my $basharg = shift;
+  my $response = $ua->get("http://bash.org/?$basharg");
   my $rawtext = $response->decoded_content();
   my $inquote = 0;
   my $quotecount = 0;
@@ -368,8 +368,10 @@ sub search_bash {
 		    unbroken_text => 0,
 		    ignore_elements => ['script', 'style'],
 		   )->parse($rawtext) || return "Something went wrong: $!\n";;
+#	print Dumper(\@quotes);
   return $quotes[0];
 }
+
 
 sub search_urban {
   my $query = shift;

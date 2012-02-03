@@ -200,7 +200,7 @@ sub _start {
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
-            bash => 'Get a random quote from bash.org',
+            bash => 'Get a random quote from bash.org - Optionally accepts one number as argument: bash <number>',
             urban => 'Get definitions from the urban dictionary',
             karma => 'Get the karma of a user',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
@@ -326,11 +326,26 @@ sub irc_botcmd_math {
 }
 
 sub irc_botcmd_bash {
-  my $where = $_[ARG1];
-  foreach my $line (split("\n", search_bash())) {
-    bot_says($where, $line);
+  my ($where, $arg) = @_[ARG1, ARG2];
+  my $good;
+  if (! $arg ) {
+    $good = 'random';
+  } elsif ( $arg =~ m/^(\d+)/s ) {
+    $good = $1;
+  } else {
+    return;
+  }
+  my $result = search_bash($good);
+  if ($result) {
+    foreach my $line (split("\r*\n", $result)) {
+      bot_says($where, $line);
+    }
+  } else {
+    bot_says($where, "Quote $good not found");
   }
 }
+
+
 
 sub irc_botcmd_urban {
   my ($where, $arg) = @_[ARG1, ARG2];
