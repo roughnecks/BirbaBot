@@ -153,6 +153,7 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_version
 		     irc_botcmd_choose
 		     irc_botcmd_bash
 		     irc_botcmd_urban
@@ -216,6 +217,7 @@ sub _start {
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
 	    choose => 'Do a random guess',
+	    version => 'Show from which branch we are running the bot',
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -940,6 +942,17 @@ sub irc_botcmd_choose {
 
  bot_says($where, "$choises[$random]");
 }
+
+sub irc_botcmd_version {
+  my $where = $_[ARG1];
+  open (GIT, "git status |") or die "Something went wrong: $!";
+  my @git_status = <GIT>;
+#  print Dumper(\@version);
+  my $version = shift (@git_status);
+
+bot_says($where, "$version");
+}
+
 
 exit;
 
