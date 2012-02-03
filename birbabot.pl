@@ -217,7 +217,7 @@ sub _start {
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
 	    choose => 'Do a random guess',
-	    version => 'Show from which branch we are running the bot',
+	    version => 'Show from which git branch we are running the bot. Do not use without git',
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -947,7 +947,6 @@ sub irc_botcmd_version {
   my $where = $_[ARG1];
   open (GIT, "git status |") or die "Something went wrong: $!";
   my @git_status = <GIT>;
-#  print Dumper(\@version);
   my $version = shift (@git_status);
 
 bot_says($where, "$version");
