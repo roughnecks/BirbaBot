@@ -378,10 +378,10 @@ sub search_urban {
   my $results = process_urban($query);
   my $outstring;
   my $counter = 1;
-  my $maxlenght = 1000;
+  my $maxlenght = 790;
 #  print Dumper($results);
   while (@$results 
-	 && ($counter < 6) 
+	 && ($counter < 3) 
 	 && (length($outstring) < $maxlenght)
 	)  {
     my $res = shift(@$results);
@@ -390,6 +390,8 @@ sub search_urban {
     $counter++;
   }
   if ($outstring) {
+#    print Dumper(\$outstring);
+    $outstring =~ s/\;\s*$//;
     return $outstring;
   } else {
     return "No results found";
