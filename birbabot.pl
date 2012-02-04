@@ -949,12 +949,17 @@ sub irc_botcmd_choose {
   my ($where, $args) = @_[ARG1..$#_];
   my @choises = split(/ +/, $args);
   unless ($#choises > 0) {
-    bot_says($where, "I cannot choose between just one topic"); return
+    bot_says($where, 'I cannot choose between just one topic'); return
   }
-  my $lenght = scalar @choises;
-  my $random = int(rand($lenght));
-
- bot_says($where, "$choises[$random]");
+  my %string = map { $_, 1 } @choises;
+  if (keys %string == 1) {
+    # all equal
+    bot_says($where, 'That\'s an hard guess for sure :P');
+  } else {
+    my $lenght = scalar @choises;
+    my $random = int(rand($lenght));
+    bot_says($where, "$choises[$random]");
+  }
 }
 
 sub irc_botcmd_version {
