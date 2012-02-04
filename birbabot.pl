@@ -945,12 +945,18 @@ sub irc_botcmd_choose {
 
 sub irc_botcmd_version {
   my $where = $_[ARG1];
-  open (GIT, "git status |") or die "Something went wrong: $!";
-  my @git_status = <GIT>;
-  my $version = shift (@git_status);
-
-bot_says($where, "$version");
-}
+      die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+      if ($pid) {           # parent                                                                                                                                                
+        while (<KID>) {
+          bot_says($where, $_); last;
+        }
+        close KID;
+        return;
+      } else {
+        # this is the external process, forking. It never returns
+	exec "git", "status" or die "Can't exec git: $!";
+      }
+    }
 
 
 exit;
