@@ -203,7 +203,7 @@ sub _start {
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
             bash => 'Get a random quote from bash.org - Optionally accepts one number as argument: bash <number>',
-            urban => 'Get definitions from the urban dictionary',
+            urban => 'Get definitions from the urban dictionary | "urban url <word>" asks for the url',
             karma => 'Get the karma of a user',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
@@ -354,8 +354,17 @@ sub irc_botcmd_bash {
 
 
 sub irc_botcmd_urban {
-  my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_urban($arg));
+  my ($where, $arg) = @_[ARG1..$#_];
+  my @args = split(/ +/, $arg);
+  my $subcmd = shift(@args);
+  my $string = join (" ", @args);
+  if (($subcmd) && $subcmd eq "url") {
+    my $baseurl = 'http://www.urbandictionary.com/define.php?term=';
+    my $url = $baseurl . $string;
+    bot_says($where, $url);
+  } else {
+    bot_says($where, search_urban($arg));
+  }
 }
 
 
