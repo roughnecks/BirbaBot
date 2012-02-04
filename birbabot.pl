@@ -410,9 +410,9 @@ sub irc_botcmd_slap {
     my ($where, $arg) = @_[ARG1, ARG2];
     my $botnick = $irc->nick_name;
     if ($arg =~ m/\Q$botnick\E/) {
-      $irc->yield(ctcp => $where, "ACTION slaps $nick");
+      $irc->yield(ctcp => $where, "ACTION slaps $nick with her tail");
     } else {
-      $irc->yield(ctcp => $where, "ACTION slaps $arg");
+      $irc->yield(ctcp => $where, "ACTION slaps $arg with her tail");
     }
     return;
 }
