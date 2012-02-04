@@ -979,6 +979,7 @@ sub irc_botcmd_remind {
   my $time = shift(@args);
   my $string = join (" ", @args);
   $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $time );
+  bot_says($where, 'Reminder added.');
 }
 
 
