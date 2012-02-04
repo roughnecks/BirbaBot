@@ -45,7 +45,7 @@ use WWW::Babelfish;
 my $ua = LWP::UserAgent->new;
 $ua->timeout(10); # 5 seconds of timeout
 $ua->show_progress(1);
-$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
+#$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
 
 
 my $bbold = "\x{0002}";
@@ -97,7 +97,7 @@ sub query_meteo {
       $i++; # skip the next
     }
     elsif ($collected[$i] eq "current_conditions") {
-      $outstring .= " Current conditions: " .
+      $outstring .= "Current conditions: " .
       "Temp: " .  $collected[$i+1]->{temp_c}->[0]->{data} . " " .
 	$collected[$i+1]->{wind_condition}->[0]->{data} . " " .
 	  $collected[$i+1]->{humidity}->[0]->{data} . ". " .

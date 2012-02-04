@@ -15,7 +15,7 @@ use XML::Parser;
 my $ua = LWP::UserAgent->new;
 $ua->timeout(10); # 5 seconds of timeout
 $ua->show_progress(1);
-$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
+#$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
 
 
 sub query_meteo {
