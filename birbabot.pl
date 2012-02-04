@@ -242,7 +242,9 @@ sub _start {
 sub irc_botcmd_meteo {
   my ($where, $arg) = @_[ARG1, ARG2];
   print "Asking the weatherman\n";
-  bot_says($where, query_meteo($arg));
+  my $result = query_meteo($arg);
+  $result =~ s/\;\s*$/./;
+  bot_says($where, $result);
   return;
 }
 
