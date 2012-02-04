@@ -449,7 +449,9 @@ sub irc_botcmd_gv {
 sub irc_botcmd_x {
   my ($where, $arg) = @_[ARG1, ARG2];
   if ($arg =~ m/^\s*([a-z]{2,3})\s+([a-z]{2,3})\s+(.*)\s*$/) {
-    bot_says($where, google_translate($3, $1, $2));
+    my $result = google_translate($3, $1, $2);
+    $result =~ s/^\s+//;
+    bot_says($where, $result);
   } else {
     bot_says($where, "Example: x hr it govno");
   }
