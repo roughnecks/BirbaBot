@@ -47,6 +47,7 @@ use BirbaBot::Quotes qw(ircquote_add
 
 
 use URI::Find;
+use URI::Escape;
 
 use POE;
 use POE::Component::Client::DNS;
@@ -363,7 +364,7 @@ sub irc_botcmd_urban {
   elsif ($arg =~ m/^\s*$/) { return } 
   elsif (($subcmd) && $subcmd eq "url" && ($string)) {
     my $baseurl = 'http://www.urbandictionary.com/define.php?term=';
-    my $url = $baseurl . $string;
+    my $url = $baseurl . uri_escape($string);
     bot_says($where, $url);
   } else {
     bot_says($where, search_urban($arg));
