@@ -359,7 +359,8 @@ sub irc_botcmd_urban {
   my @args = split(/ +/, $arg);
   my $subcmd = shift(@args);
   my $string = join (" ", @args);
-  if (($subcmd) && $subcmd eq "url") {
+  if (! $arg) { return }
+  elsif (($subcmd) && $subcmd eq "url" && ($string)) {
     my $baseurl = 'http://www.urbandictionary.com/define.php?term=';
     my $url = $baseurl . $string;
     bot_says($where, $url);
