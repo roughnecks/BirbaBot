@@ -360,6 +360,7 @@ sub irc_botcmd_urban {
   my $subcmd = shift(@args);
   my $string = join (" ", @args);
   if (! $arg) { return }
+  elsif ($arg =~ m/^\s*$/) { return } 
   elsif (($subcmd) && $subcmd eq "url" && ($string)) {
     my $baseurl = 'http://www.urbandictionary.com/define.php?term=';
     my $url = $baseurl . $string;
