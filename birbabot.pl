@@ -951,20 +951,24 @@ sub is_where_a_channel {
 sub irc_botcmd_choose {
   my ($where, $args) = @_[ARG1..$#_];
   my @choises = split(/ +/, $args);
-  unless ($#choises > 0) {
-    bot_says($where, 'I cannot choose between just one topic'); return
+  foreach ( @choises ) {
+    $_ =~ s/^\s*$//;
   }
-  my %string = map { $_, 1 } @choises;
-  if (keys %string == 1) {
-    # all equal
-    bot_says($where, 'That\'s an hard guess for sure :P');
+  unless ($#choises > 0) {
+    bot_says ($where, 'Provide at least 2 arguments');
   } else {
-    my $lenght = scalar @choises;
-    my $random = int(rand($lenght));
-    bot_says($where, "$choises[$random]");
+    my %string = map { $_, 1 } @choises;
+    if (keys %string == 1) {
+      # all equal
+      bot_says($where, 'That\'s an hard guess for sure :P');
+    } else {
+      my $lenght = scalar @choises;
+      my $random = int(rand($lenght));
+      bot_says($where, "$choises[$random]");
+    }
   }
 }
-
+  
 sub irc_botcmd_version {
   my $where = $_[ARG1];
       die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
