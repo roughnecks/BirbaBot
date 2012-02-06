@@ -1,0 +1,24 @@
+Required perl modules to apt-get
+
+libpoe-component-irc-perl
+libpoe-component-sslify-perl
+libxml-rss-perl
+libwww-perl
+libcrypt-ssleay-perl
+libdbd-sqlite3-perl
+libgeo-ip-perl
+geoip-database
+libpoe-component-client-dns-perl
+libxml-feed-perl
+libjson-any-perl
+liburi-find-perl
+
+Copy example.conf to some_file.conf in the bot root directory and modify it.
+cp example.conf bot.conf ; nano bot.conf
+
+Start the bot with: 
+./birbabot.pl bot.conf
+
+If you want to use cron to check if the bot crashed/stopped and reload it automatically use "restart.bot.sh"; cron example:
+
+5,20,35,50 * * * * /home/user/birbabot/script/restart.bot.sh /home/user/birbabot/bot.conf

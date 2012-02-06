@@ -47,6 +47,7 @@ use BirbaBot::Quotes qw(ircquote_add
 
 
 use URI::Find;
+use URI::Escape;
 
 use POE;
 use POE::Component::Client::DNS;
@@ -153,6 +154,9 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_remind
+		     irc_botcmd_version
+		     irc_botcmd_choose
 		     irc_botcmd_bash
 		     irc_botcmd_urban
 		     irc_botcmd_karma
@@ -201,19 +205,21 @@ sub _start {
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
             bash => 'Get a random quote from bash.org - Optionally accepts one number as argument: bash <number>',
-            urban => 'Get definitions from the urban dictionary',
+            urban => 'Get definitions from the urban dictionary | "urban url <word>" asks for the url',
             karma => 'Get the karma of a user',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
             note => 'Send a note to a user: note <nick> <message>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
-
+	    remind => 'Store an alarm for the current user, delayed by "#n seconds" | remind <time> <message>',
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
+	    choose => 'Do a random guess | Takes 2 or more arguments: choose <choise1> <choise2> <choice#n>',
+	    version => 'Show from which git branch we are running the bot. Do not use without git',
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -238,14 +244,16 @@ sub _start {
 sub irc_botcmd_meteo {
   my ($where, $arg) = @_[ARG1, ARG2];
   print "Asking the weatherman\n";
-  bot_says($where, query_meteo($arg));
+  my $result = query_meteo($arg);
+  $result =~ s/\;\s*$/./;
+  bot_says($where, $result);
   return;
 }
 
 
 sub bot_says {
   my ($where, $what) = @_;
-  return unless ($where and $what);
+  return unless ($where and (defined $what));
   # here we hack some entities;
   $what =~ s/&amp;/&/g;
   $what =~ s/&quot;/"/g;
@@ -337,8 +345,8 @@ sub irc_botcmd_bash {
   }
   my $result = search_bash($good);
   if ($result) {
-    foreach my $line (split("\r*\n", $result)) {
-      bot_says($where, $line);
+    foreach (split("\r*\n", $result)) {
+      bot_says($where, $_);
     }
   } else {
     bot_says($where, "Quote $good not found");
@@ -348,8 +356,19 @@ sub irc_botcmd_bash {
 
 
 sub irc_botcmd_urban {
-  my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_urban($arg));
+  my ($where, $arg) = @_[ARG1..$#_];
+  my @args = split(/ +/, $arg);
+  my $subcmd = shift(@args);
+  my $string = join (" ", @args);
+  if (! $arg) { return }
+  elsif ($arg =~ m/^\s*$/) { return } 
+  elsif (($subcmd) && $subcmd eq "url" && ($string)) {
+    my $baseurl = 'http://www.urbandictionary.com/define.php?term=';
+    my $url = $baseurl . uri_escape($string);
+    bot_says($where, $url);
+  } else {
+    bot_says($where, search_urban($arg));
+  }
 }
 
 
@@ -404,9 +423,9 @@ sub irc_botcmd_slap {
     my ($where, $arg) = @_[ARG1, ARG2];
     my $botnick = $irc->nick_name;
     if ($arg =~ m/\Q$botnick\E/) {
-      $irc->yield(ctcp => $where, "ACTION slaps $nick");
+      $irc->yield(ctcp => $where, "ACTION slaps $nick with her tail");
     } else {
-      $irc->yield(ctcp => $where, "ACTION slaps $arg");
+      $irc->yield(ctcp => $where, "ACTION slaps $arg with her tail");
     }
     return;
 }
@@ -445,7 +464,9 @@ sub irc_botcmd_gv {
 sub irc_botcmd_x {
   my ($where, $arg) = @_[ARG1, ARG2];
   if ($arg =~ m/^\s*([a-z]{2,3})\s+([a-z]{2,3})\s+(.*)\s*$/) {
-    bot_says($where, google_translate($3, $1, $2));
+    my $result = google_translate($3, $1, $2);
+    $result =~ s/^\s+//;
+    bot_says($where, $result);
   } else {
     bot_says($where, "Example: x hr it govno");
   }
@@ -926,6 +947,53 @@ sub is_where_a_channel {
     return 0
   }
 }
+
+sub irc_botcmd_choose {
+  my ($where, $args) = @_[ARG1..$#_];
+  my @choises = split(/ +/, $args);
+  foreach ( @choises ) {
+    $_ =~ s/^\s*$//;
+  }
+  unless ($#choises > 0) {
+    bot_says ($where, 'Provide at least 2 arguments');
+  } else {
+    my %string = map { $_, 1 } @choises;
+    if (keys %string == 1) {
+      # all equal
+      bot_says($where, 'That\'s an hard guess for sure :P');
+    } else {
+      my $lenght = scalar @choises;
+      my $random = int(rand($lenght));
+      bot_says($where, "$choises[$random]");
+    }
+  }
+}
+  
+sub irc_botcmd_version {
+  my $where = $_[ARG1];
+      die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+      if ($pid) {           # parent                                                                                                                                                
+        while (<KID>) {
+          bot_says($where, $_); last;
+        }
+        close KID;
+        return;
+      } else {
+        # this is the external process, forking. It never returns
+	exec "git", "status" or die "Can't exec git: $!";
+      }
+    }
+
+sub irc_botcmd_remind {
+  my ($who, $where, $what) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  my $time = shift(@args);
+  my $string = join (" ", @args);
+  $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $time );
+  bot_says($where, 'Reminder added.');
+}
+
 
 exit;
 

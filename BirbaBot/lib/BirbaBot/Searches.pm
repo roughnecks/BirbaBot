@@ -45,7 +45,7 @@ use WWW::Babelfish;
 my $ua = LWP::UserAgent->new;
 $ua->timeout(10); # 5 seconds of timeout
 $ua->show_progress(1);
-$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
+#$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
 
 
 my $bbold = "\x{0002}";
@@ -97,7 +97,7 @@ sub query_meteo {
       $i++; # skip the next
     }
     elsif ($collected[$i] eq "current_conditions") {
-      $outstring .= " Current conditions: " .
+      $outstring .= "Current conditions: " .
       "Temp: " .  $collected[$i+1]->{temp_c}->[0]->{data} . " " .
 	$collected[$i+1]->{wind_condition}->[0]->{data} . " " .
 	  $collected[$i+1]->{humidity}->[0]->{data} . ". " .
@@ -378,10 +378,10 @@ sub search_urban {
   my $results = process_urban($query);
   my $outstring;
   my $counter = 1;
-  my $maxlenght = 1000;
+  my $maxlenght = 790;
 #  print Dumper($results);
   while (@$results 
-	 && ($counter < 6) 
+	 && ($counter < 3) 
 	 && (length($outstring) < $maxlenght)
 	)  {
     my $res = shift(@$results);
@@ -390,6 +390,8 @@ sub search_urban {
     $counter++;
   }
   if ($outstring) {
+#    print Dumper(\$outstring);
+    $outstring =~ s/\;\s*$//;
     return $outstring;
   } else {
     return "No results found";
