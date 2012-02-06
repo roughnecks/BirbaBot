@@ -13,8 +13,8 @@ libxml-feed-perl
 libjson-any-perl
 liburi-find-perl
 
-Copy files/example.conf to some_file.conf in the bot root directory and modify it.
-cp files/example.conf bot.conf ; nano bot.conf
+Copy example.conf to some_file.conf in the bot root directory and modify it.
+cp example.conf bot.conf ; nano bot.conf
 
 Start the bot with: 
 ./birbabot.pl bot.conf
