@@ -212,7 +212,7 @@ sub _start {
             note => 'Send a note to a user: note <nick> <message>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
-	    remind => 'Store an alarm for the current user, delayed by "#n seconds" | remind <time> <message>',
+	    remind => 'Store an alarm for the current user, delayed by "#n minutes" | remind <minutes> <message>',
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
 	    meteo => 'Query the weather for location',							       
@@ -988,9 +988,13 @@ sub irc_botcmd_remind {
   my ($who, $where, $what) = @_[ARG0..$#_];
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  my $time = shift(@args);
+  my $minutes = shift(@args);
+  print Dumper(\$minutes);
+#  my $minutes =~ s/^\s*//;
+  my $seconds = $minutes*60;
+  print "$seconds\n";
   my $string = join (" ", @args);
-  $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $time );
+  $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
   bot_says($where, 'Reminder added.');
 }
 
