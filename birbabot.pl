@@ -995,7 +995,7 @@ sub irc_botcmd_remind {
   } elsif ($time =~ m/^(\d+)$/) {
     $seconds = $1*60;
   } else {
-    bot_says($where, 'Wrong syntax: ask me ",help remind" <= This is for the lazy one :)');
+    bot_says($where, 'Wrong syntax: ask me "help remind" <= This is for the lazy one :)');
     return
   }
   my $string = join (" ", @args);
