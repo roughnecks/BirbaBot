@@ -994,7 +994,10 @@ sub irc_botcmd_remind {
     $seconds = ($1*3600)+($2*60);
   } elsif ($time =~ m/^(\d+)$/) {
     $seconds = $1*60;
-  } else { return }
+  } else {
+    bot_says($where, 'Wrong syntax: ask me ",help remind" <= This is for the lazy one :)');
+    return
+  }
   my $string = join (" ", @args);
   $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
   bot_says($where, 'Reminder added.');
