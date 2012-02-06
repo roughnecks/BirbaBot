@@ -22,4 +22,4 @@ Start the bot with:
 
 If you want to use cron to check if the bot crashed/stopped and reload it automatically use "restart.bot.sh"; cron example:
 
-5,20,35,50 * * * * /home/user/birbabot/script/restart.bot.sh /home/user/birbabot/bot.conf
+5,20,35,50 * * * * /home/user/birbabot/restart.bot.sh /home/user/birbabot/bot.conf
