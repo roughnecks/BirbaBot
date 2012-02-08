@@ -10,6 +10,7 @@
 use strict;
 use warnings;
 
+use LWP::Simple;
 use File::Spec;
 use File::Path qw(make_path);
 use Data::Dumper;
@@ -154,6 +155,7 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_wikiz
 		     irc_botcmd_remind
 		     irc_botcmd_version
 		     irc_botcmd_choose
@@ -213,6 +215,7 @@ sub _start {
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "hxmx hours and minutes" | remind [ <x> | <hxmx> ] <message> , assuming "x" is a number',
+	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
 	    meteo => 'Query the weather for location',							       
@@ -1002,6 +1005,34 @@ sub irc_botcmd_remind {
   $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
   bot_says($where, 'Reminder added.');
 }
+
+sub irc_botcmd_wikiz {
+  my ($where, $arg) = @_[ARG1, ARG2];
+
+  # get the sitemap
+  my $file = get 'http://laltromondo.dynalias.net/~iki/sitemap/index.html';
+  my $prepend = 'http://laltromondo.dynalias.net/~iki';
+
+  # split sitemap in an array and extract urls
+  my @list = split ( /(<.+?>)/, $file );
+  my @formatlist = grep ( /href="(\.\.)(.+?)"/, @list );
+
+  # grep the formatted list of url searching for pattern
+  my @out = grep ( /\Q$arg\E/ , @formatlist );
+
+  # looping through the output of matching urls, clean some shit and spit to channel
+
+  my %hash;
+  foreach my $item (@out) {
+    $item =~ m!href="(\.\.)(.+?)"!;
+    $hash{$2} = 1;
+  }
+  @out = keys %hash;
+
+  foreach (@out) {
+    bot_says ($where, $prepend .$_);
+  }
+} 
 
 
 exit;
