@@ -1029,11 +1029,14 @@ sub irc_botcmd_wikiz {
   }
   @out = keys %hash;
 
-  foreach (@out) {
-    bot_says ($where, $prepend .$_);
+  if (@out) {
+    foreach (@out) {
+      bot_says ($where, $prepend .$_);
+    }
+  } else {
+    bot_says ($where, 'No matches found.');
   }
-} 
-
+}
 
 exit;
 
