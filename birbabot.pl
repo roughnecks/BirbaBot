@@ -805,11 +805,16 @@ sub irc_botcmd_seen {
   my ($heap, $nick, $channel, $target) = @_[HEAP, ARG0..$#_];
   $nick = parse_user($nick);
   $target =~ s/\s+//g;
+  my $botnick = $irc->nick_name;
   print "processing seen command\n";
   if ($seen->{l_irc($target)}) {
     my $date = localtime $seen->{l_irc($target)}->[USER_DATE];
     my $msg = $seen->{l_irc($target)}->[USER_MSG];
-    $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");
+    if ("$target" eq "$nick") {
+      $irc->yield(privmsg => $channel, "$nick: Looking for yourself, ah?");
+    } elsif ($target =~ m/\Q$botnick\E/) {
+      $irc->yield(privmsg => $channel, "$nick: I'm right here!");
+    } else { $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");}
   } elsif ($irc->is_channel_member($channel, $target)) {
     $irc->yield(privmsg => $channel,
 		"$nick: $target is here, but $target didn't say a word, AFAIK");
