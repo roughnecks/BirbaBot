@@ -843,7 +843,7 @@ sub irc_botcmd_quote {
   } elsif ($subcmd eq 'last') {
     $reply = ircquote_last($dbname, $where)
   } elsif ($subcmd =~ m/([0-9]+)/) {
-    $reply = ircquote_num($dbname, $1)
+    $reply = ircquote_num($dbname, $1, $where)
   } elsif ($subcmd eq 'find') {
     $reply = ircquote_find($dbname, $where, $string)
   } else {
