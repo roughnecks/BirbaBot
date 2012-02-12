@@ -132,7 +132,7 @@ sub ircquote_last {
   print "$id, $author, $phrase\n";
   if ($phrase) {
     $author =~ s/\!.+$//;
-    $reply =  "[$id] $phrase (by $author)"
+    $reply =  "[$id] $phrase (added by $author)"
   } else {
     $reply = "No quotes!";
   }
