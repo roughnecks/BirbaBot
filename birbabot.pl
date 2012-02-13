@@ -808,13 +808,12 @@ sub irc_botcmd_seen {
   my ($heap, $nick, $channel, $target) = @_[HEAP, ARG0..$#_];
   $nick = parse_user($nick);
   if (($target) && $target =~ m/^\s+$/) {
-    $irc->yield(privmsg => $channel, "$nick: who are you looking for, exactly?");
     return;
-  } elsif ($target) {
+  } elsif (! defined $target) { 
+    return;
+  }
+  elsif ($target) {
     $target =~ s/\s+//g;
-  } else { 
-    $irc->yield(privmsg => $channel, "$nick: who are you looking for, exactly?");
-    return;
   }
   my $botnick = $irc->nick_name;
   print "processing seen command\n";
