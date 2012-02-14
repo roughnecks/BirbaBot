@@ -807,7 +807,6 @@ sub add_nick {
 sub irc_botcmd_seen {
   my ($heap, $nick, $channel, $target) = @_[HEAP, ARG0..$#_];
   $nick = parse_user($nick);
-<<<<<<< HEAD
   if (($target) && $target =~ m/^\s+$/) {
     return;
   } elsif (! defined $target) { 
@@ -816,9 +815,6 @@ sub irc_botcmd_seen {
   elsif ($target) {
     $target =~ s/\s+//g;
   }
-=======
-  $target =~ s/\s+//g;
->>>>>>> master
   my $botnick = $irc->nick_name;
   print "processing seen command\n";
   if ($seen->{l_irc($target)}) {
@@ -828,13 +824,9 @@ sub irc_botcmd_seen {
       $irc->yield(privmsg => $channel, "$nick: Looking for yourself, ah?");
     } elsif ($target =~ m/\Q$botnick\E/) {
       $irc->yield(privmsg => $channel, "$nick: I'm right here!");
-<<<<<<< HEAD
     } else {
       $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");
     }
-=======
-    } else { $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");}
->>>>>>> master
   } elsif ($irc->is_channel_member($channel, $target)) {
     $irc->yield(privmsg => $channel,
 		"$nick: $target is here, but $target didn't say a word, AFAIK");
