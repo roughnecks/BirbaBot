@@ -14,8 +14,8 @@ libjson-any-perl                       JSON::Any
 liburi-find-perl                       URI::Find
 
 
-Copy example.conf to some_file.conf in the bot root directory and modify it.
-cp example.conf bot.conf ; nano bot.conf
+Copy files/example.conf to some_file.conf in the bot root directory and modify it.
+cp files/example.conf bot.conf ; nano bot.conf
 
 If you don't need console output start the bot with: 
 ./restart.bot.sh bot.conf ## <<< This one also provides logging function
