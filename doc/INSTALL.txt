@@ -17,7 +17,10 @@ liburi-find-perl                       URI::Find
 Copy example.conf to some_file.conf in the bot root directory and modify it.
 cp example.conf bot.conf ; nano bot.conf
 
-Start the bot with: 
+If you don't need console output start the bot with: 
+./restart.bot.sh bot.conf ## <<< This one also provides logging function
+
+If you would like to see output in console window, start the bot with:
 ./birbabot.pl bot.conf
 
 If you want to use cron to check if the bot crashed/stopped and reload it automatically use "restart.bot.sh"; cron example:
