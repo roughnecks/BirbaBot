@@ -214,7 +214,7 @@ sub _start {
             note => 'Send a note to a user: note <nick> <message>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
-	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "hxmx hours and minutes" | remind [ <x> | <hxmx> ] <message> , assuming "x" is a number',
+	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
@@ -1007,15 +1007,22 @@ sub irc_botcmd_remind {
   my $seconds;
   my @args = split(/ +/, $what);
   my $time = shift(@args);
-  if ($time =~ m/^(\d+)h(\d+)m$/) {
-    $seconds = ($1*3600)+($2*60);
-  } elsif ($time =~ m/^(\d+)$/) {
-    $seconds = $1*60;
+  print "Time:", Dumper(\$time);
+  my $string = join (" ", @args);
+  print "String:", Dumper(\$string);
+  if (($string) && defined $string) {
+    if (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
+      $seconds = ($1*3600)+($2*60);
+    } elsif (($time) && defined $time && $time =~ m/^(\d+)$/) {
+      $seconds = $1*60;
+    } else {
+      bot_says($where, 'Wrong syntax: ask me "help remind" <= This is for the lazy one :)');
+      return
+    }
   } else {
-    bot_says($where, 'Wrong syntax: ask me "help remind" <= This is for the lazy one :)');
+    bot_says($where, 'Missing argument');
     return
   }
-  my $string = join (" ", @args);
   $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
   bot_says($where, 'Reminder added.');
 }
