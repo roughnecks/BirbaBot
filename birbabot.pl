@@ -1007,9 +1007,7 @@ sub irc_botcmd_remind {
   my $seconds;
   my @args = split(/ +/, $what);
   my $time = shift(@args);
-  print "Time:", Dumper(\$time);
   my $string = join (" ", @args);
-  print "String:", Dumper(\$string);
   if (($string) && defined $string) {
     if (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
       $seconds = ($1*3600)+($2*60);
