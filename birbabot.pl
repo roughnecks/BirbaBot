@@ -37,7 +37,7 @@ use BirbaBot::Searches qw(search_google
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
-use BirbaBot::Notes qw(notes_add notes_give);
+use BirbaBot::Notes qw(notes_add notes_give notes_pending);
 use BirbaBot::Shorten qw(make_tiny_url);
 use BirbaBot::Quotes qw(ircquote_add 
 		    ircquote_del 
@@ -165,6 +165,7 @@ POE::Session->create(
 		     irc_botcmd_math
 		     irc_botcmd_seen
 		     irc_botcmd_note
+		     irc_botcmd_notes
 		     irc_botcmd_todo
 		     irc_botcmd_done
 		     irc_botcmd_kw
@@ -212,6 +213,7 @@ sub _start {
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
             note => 'Send a note to a user: note <nick> <message>',
+	    notes => 'List pending notes by current user',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
@@ -444,6 +446,13 @@ sub irc_botcmd_note {
     }
     return;
 }
+
+sub irc_botcmd_notes {
+  my $nick = (split /!/, $_[ARG0])[0];
+  my $where = $_[ARG1];
+  bot_says($where, notes_pending($dbname, $nick))
+}
+
 
 
 sub irc_botcmd_g {
