@@ -68,13 +68,11 @@ sub notes_pending {
   $query->execute($who);
   my @out;
   while (my $data = $query->fetchrow_array()) {
-    push @out, "$data";
+    push @out, $data;
   }
   $dbh->disconnect;
-#  print Dumper(\@out);
   if (@out) {
     my $response = join (" ", @out);
-#  print Dumper(\$response);
     return "Some notes are awaiting to be sent to: $response."
   } else { return "No notes pending from $who." }
 }
