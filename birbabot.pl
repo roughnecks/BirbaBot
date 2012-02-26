@@ -248,10 +248,10 @@ sub _start {
 
 sub irc_botcmd_meteo {
   my ($where, $arg) = @_[ARG1, ARG2];
-  if ($arg =~ /^\s*$/) {
+  if (! defined $arg) {
     bot_says($where, 'Missing location.');
     return
-  } elsif (! defined $arg) {
+  } elsif ($arg =~ /^\s*$/) {
     bot_says($where, 'Missing location.');
     return
   }
