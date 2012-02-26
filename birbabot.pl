@@ -1040,14 +1040,22 @@ sub irc_botcmd_wikiz {
   # get the sitemap
   my $file = get 'http://laltromondo.dynalias.net/~iki/sitemap/index.html';
   my $prepend = 'http://laltromondo.dynalias.net/~iki';
+  my @out = ();
 
   # split sitemap in an array and extract urls
   my @list = split ( /(<.+?>)/, $file );
   my @formatlist = grep ( /href="(\.\.)(.+?)"/, @list );
 
   # grep the formatted list of url searching for pattern
-  my @out = grep ( /\Q$arg\E/ , @formatlist );
-
+  if (! defined $arg) {
+    bot_says($where, 'Missing Argument');
+    return
+  } elsif ($arg =~ /^\s*$/) {
+    bot_says($where, 'Missing Argument');
+    return
+    } else {
+      @out = grep ( /\Q$arg\E/ , @formatlist );
+    }
   # looping through the output of matching urls, clean some shit and spit to channel
 
   my %hash;
