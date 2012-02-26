@@ -510,14 +510,14 @@ sub irc_botcmd_kw {
   print print_timestamp(), "$who, $where, $arg\n";
   if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.+?)\s*$/)  {
     my $what = $2;
-    if ($what =~ /^\s$/) {
+    if ($what =~ /^\s*$/) {
       bot_says($where, 'Missing argument.');
       return
     } 
     bot_says($where, kw_add($dbname, $who, lc($1), $2));
   } elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.+?)\s*$/)  {
     my $what = $2;
-    if ($what =~ /^\s$/) {
+    if ($what =~ /^\s*$/) {
       bot_says($where, 'Missing argument.');
       return
     } 
