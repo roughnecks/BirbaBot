@@ -508,27 +508,34 @@ sub irc_botcmd_x {
 sub irc_botcmd_kw {
   my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
   print print_timestamp(), "$who, $where, $arg\n";
-  if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.*)\s*$/)  {
+  if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.+?)\s*$/)  {
+    my $what = $2;
+    if ($what =~ /^\s$/) {
+      bot_says($where, 'Missing argument.');
+      return
+    } 
     bot_says($where, kw_add($dbname, $who, lc($1), $2));
-  } 
-  elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.*)\s*$/)  {
+  } elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.+?)\s*$/)  {
+    my $what = $2;
+    if ($what =~ /^\s$/) {
+      bot_says($where, 'Missing argument.');
+      return
+    } 
     bot_says($where, kw_new($dbname, $who, lc($1), $2));
-  } 
-  elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*$/) {
+  } elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*$/) {
     my $key = lc($1);
     if (check_if_admin($who)) {
       bot_says($where, kw_remove($dbname, $who, $key));
       return;
-    } else {
-      bot_says($where, "You're not a bot admin, sorry, I can't do that");
-      return;
-    }
-  }
-  elsif ($arg =~ m/^\s*delete\s*([^\s]+)\s+([23])\s*$/) {
+    } 
+    bot_says($where, "You're not a bot admin, sorry, I can't do that");
+    return;
+  } elsif ($arg =~ m/^\s*delete\s*([^\s]+)\s+([23])\s*$/) {
     bot_says($where, kw_delete_item($dbname, lc($1), $2));
-  }
-  else {
+  } elsif (! defined $arg) {
     bot_says($where, kw_list($dbname));
+  } else {
+    bot_says($where, 'Wrong syntax');
   }
 }
 
