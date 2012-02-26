@@ -226,7 +226,7 @@ my %langtab = (
 
 sub google_translate {
   my ($string, $from, $to) = @_;
-  return "Missing paramenters" unless ($string and $from and $to);
+  return "Missing parameters" unless ($string and $from and $to);
   unless (($from =~ m/^\w+$/) and ($to =~ m/^\w+$/)) {
     return "Right example query: x it en here goes my text"
   }

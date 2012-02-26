@@ -248,6 +248,13 @@ sub _start {
 
 sub irc_botcmd_meteo {
   my ($where, $arg) = @_[ARG1, ARG2];
+  if ($arg =~ /^\s*$/) {
+    bot_says($where, 'Missing location.');
+    return
+  } elsif (! defined $arg) {
+    bot_says($where, 'Missing location.');
+    return
+  }
   print "Asking the weatherman\n";
   my $result = query_meteo($arg);
   $result =~ s/\;\s*$/./;
@@ -429,6 +436,8 @@ sub irc_botcmd_slap {
     my $botnick = $irc->nick_name;
     if ($arg =~ m/\Q$botnick\E/) {
       $irc->yield(ctcp => $where, "ACTION slaps $nick with her tail");
+    } elsif ($arg =~ /^\s*$/) { 
+      return
     } else {
       $irc->yield(ctcp => $where, "ACTION slaps $arg with her tail");
     }
@@ -458,19 +467,31 @@ sub irc_botcmd_notes {
 sub irc_botcmd_g {
   my ($where, $arg) = @_[ARG1, ARG2];
   return unless is_where_a_channel($where);
-  bot_says($where, search_google($arg, "web"));
+  if (($arg) && $arg =~ /^\s*$/) {
+    return
+  } else {
+    bot_says($where, search_google($arg, "web"));
+  }
 }
 
 sub irc_botcmd_gi {
   my ($where, $arg) = @_[ARG1, ARG2];
   return unless is_where_a_channel($where);
-  bot_says($where, search_google($arg, "images"));
+  if (($arg) && $arg =~ /^\s*$/) {
+    return
+  } else { 
+    bot_says($where, search_google($arg, "images"));
+  }
 }
 
 sub irc_botcmd_gv {
   my ($where, $arg) = @_[ARG1, ARG2];
   return unless is_where_a_channel($where);
-  bot_says($where, search_google($arg, "video"));
+  if (($arg) && $arg =~ /^\s*$/) {
+    return
+  } else { 
+    bot_says($where, search_google($arg, "video"));
+  }
 }
 
 sub irc_botcmd_x {
@@ -515,7 +536,11 @@ sub irc_botcmd_kw {
 
 sub irc_botcmd_imdb {
   my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_imdb($arg));
+  if ($arg =~ /^\s*$/) {
+    return
+  } else {
+    bot_says($where, search_imdb($arg));
+  }
 }
 
 
@@ -852,9 +877,9 @@ sub irc_botcmd_quote {
   my $subcmd = shift(@args);
   my $string = join (" ", @args);
   my $reply;
-  if ($subcmd eq 'add') {
+  if ($subcmd eq 'add' && $string =~ /.+/) {
     $reply = ircquote_add($dbname, $who, $where, $string)
-  } elsif ($subcmd eq 'del') {
+  } elsif ($subcmd eq 'del' && $string =~ /.+/) {
     $reply = ircquote_del($dbname, $who, $where, $string)
   } elsif ($subcmd eq 'rand') {
     $reply = ircquote_rand($dbname, $where)
@@ -862,7 +887,7 @@ sub irc_botcmd_quote {
     $reply = ircquote_last($dbname, $where)
   } elsif ($subcmd =~ m/([0-9]+)/) {
     $reply = ircquote_num($dbname, $1, $where)
-  } elsif ($subcmd eq 'find') {
+  } elsif ($subcmd eq 'find' && $string =~ /.+/) {
     $reply = ircquote_find($dbname, $where, $string)
   } else {
     $reply = "command not supported"
