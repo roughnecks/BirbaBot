@@ -865,17 +865,21 @@ sub irc_botcmd_seen {
       $irc->yield(privmsg => $channel, "$nick: Looking for yourself, ah?");
     } elsif ($target =~ m/\Q$botnick\E/) {
       $irc->yield(privmsg => $channel, "$nick: I'm right here!");
+    } elsif ($irc->is_channel_member($channel, $target)) {
+      $irc->yield(privmsg => $channel,
+                  "$nick: $target is here and i last saw $target at $date $msg.");
     } else {
       $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");
     }
-  } elsif ($irc->is_channel_member($channel, $target)) {
-    $irc->yield(privmsg => $channel,
-		"$nick: $target is here, but $target didn't say a word, AFAIK");
   } else {
-    $irc->yield(privmsg => $channel, "$nick: I haven't seen $target");
+    if ($irc->is_channel_member($channel, $target)) {
+      $irc->yield(privmsg => $channel,
+                  "$nick: $target is here but he didn't say a thing, AFAIK.");
+    } else {
+      $irc->yield(privmsg => $channel, "$nick: I haven't seen $target");
+    }
   }
-} 
-
+}
 
 sub irc_botcmd_quote {
   my ($who, $where, $what) = @_[ARG0..$#_];
