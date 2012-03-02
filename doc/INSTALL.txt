@@ -12,7 +12,7 @@ libpoe-component-client-dns-perl       POE::Component::Client::DNS
 libxml-feed-perl                       XML::Feed
 libjson-any-perl                       JSON::Any
 liburi-find-perl                       URI::Find
-
+libyaml-perl			       YAML::Any
 
 Copy files/example.conf to some_file.conf in the bot root directory and modify it.
 cp files/example.conf bot.conf ; nano bot.conf
