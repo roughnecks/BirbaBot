@@ -50,6 +50,8 @@ use BirbaBot::Quotes qw(ircquote_add
 use URI::Find;
 use URI::Escape;
 
+use HTML::Entities;
+
 use POE;
 use POE::Component::Client::DNS;
 use POE::Component::IRC::Common qw(parse_user l_irc);
@@ -267,9 +269,12 @@ sub bot_says {
   my ($where, $what) = @_;
   return unless ($where and (defined $what));
   # here we hack some entities;
-  $what =~ s/&amp;/&/g;
-  $what =~ s/&quot;/"/g;
-  $what =~ s/&#39;/'/g;
+  #  $what =~ s/&amp;/&/g;
+  #  $what =~ s/&quot;/"/g;
+  #  $what =~ s/&#39;/'/g;
+
+  # Let's use HTML::Entities
+  $what = decode_entities($what);
   
 #  print print_timestamp(), "I'm gonna say $what on $where\n";
   if (length($what) < 400) {
