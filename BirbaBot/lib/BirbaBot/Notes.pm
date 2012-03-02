@@ -15,7 +15,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw(notes_add notes_give notes_pending);
+our @EXPORT_OK = qw(notes_add notes_give notes_pending notes_del);
 
 our $VERSION = '0.01';
 
@@ -72,9 +72,25 @@ sub notes_pending {
   }
   $dbh->disconnect;
   if (@out) {
-    my $response = join (" ", @out);
+    my $response = join (", ", @out);
     return "Some notes are awaiting to be sent to: $response."
   } else { return "No notes pending from $who." }
 }
+
+sub notes_del {
+  my ($dbname, $who, $rcpt) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $delete = $dbh->prepare('DELETE FROM notes WHERE recipient = ?');
+  my $query = $dbh->prepare('SELECT recipient FROM notes WHERE sender = ?');
+  $query->execute($who);
+  if (my @data = $query->fetchrow_array()) {
+    $delete->execute($rcpt);
+    $dbh->disconnect;
+    return "Succesfully deleted pending notes to: $rcpt."
+  } else {
+    return "No pending notes to $rcpt found."
+  }
+}
+
 
 1;

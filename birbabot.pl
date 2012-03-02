@@ -37,7 +37,7 @@ use BirbaBot::Searches qw(search_google
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
-use BirbaBot::Notes qw(notes_add notes_give notes_pending);
+use BirbaBot::Notes qw(notes_add notes_give notes_pending notes_del);
 use BirbaBot::Shorten qw(make_tiny_url);
 use BirbaBot::Quotes qw(ircquote_add 
 		    ircquote_del 
@@ -217,7 +217,7 @@ sub _start {
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
             note => 'Send a note to a user: note <nick> <message>',
-	    notes => 'List pending notes by current user',
+	    notes => 'Without arguments lists pending notes by current user | "notes del <nickname>" Deletes all pending notes from the current user to <nickname>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
@@ -461,11 +461,23 @@ sub irc_botcmd_note {
 }
 
 sub irc_botcmd_notes {
-  my $nick = (split /!/, $_[ARG0])[0];
-  my $where = $_[ARG1];
-  bot_says($where, notes_pending($dbname, $nick))
+  my ($who, $where, $arg) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  if (! defined $arg) {
+    bot_says($where, notes_pending($dbname, $nick));
+  } elsif ($arg =~ /^\s*$/) {
+    bot_says($where, notes_pending($dbname, $nick));
+  } else {
+    my @array = split(" ", $arg);
+    my $subcmd = shift @array;
+    if (($subcmd eq 'del') && ($array[0]) && ($array[0] =~ m/^\s*\w+\s*$/)) {
+      bot_says($where, notes_del($dbname, $nick, $array[0]));
+      return
+    } else { 
+      bot_says($where, "Missing or invalid argument");
+    }
+  }
 }
-
 
 
 sub irc_botcmd_g {
