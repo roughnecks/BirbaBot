@@ -269,6 +269,7 @@ sub bot_says {
   # here we hack some entities;
   $what =~ s/&amp;/&/g;
   $what =~ s/&quot;/"/g;
+  $what =~ s/&#39;/'/g;
   
 #  print print_timestamp(), "I'm gonna say $what on $where\n";
   if (length($what) < 400) {
