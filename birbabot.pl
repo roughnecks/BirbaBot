@@ -105,6 +105,7 @@ my %botconfig = (
 		 'dbname' => "bot.db",
 		 'admins' => 'nobody!nobody@nowhere',
 		 'fuckers' => 'fucker1,fucker2',
+		 'servpassword' => 'nopass',
 		 'nspassword' => 'nopass',
 		);
 
@@ -152,6 +153,7 @@ POE::Session->create(
         main => [ qw(_start
 		     _default
 		     irc_001 
+		     irc_notice
 		     irc_disconnected
 		     irc_error
 		     irc_socketerr
@@ -240,7 +242,7 @@ sub _start {
 								 ));
     $irc->plugin_add( 'NickServID', 
 		      POE::Component::IRC::Plugin::NickServID->new(
-								   Password => $botconfig{'nspassword'}
+								   Password => $botconfig{'servpassword'}
 								  ));
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
@@ -268,10 +270,6 @@ sub irc_botcmd_meteo {
 sub bot_says {
   my ($where, $what) = @_;
   return unless ($where and (defined $what));
-  # here we hack some entities;
-  #  $what =~ s/&amp;/&/g;
-  #  $what =~ s/&quot;/"/g;
-  #  $what =~ s/&#39;/'/g;
 
   # Let's use HTML::Entities
   $what = decode_entities($what);
@@ -711,12 +709,25 @@ sub irc_001 {
 
     print print_timestamp(), "Connected to ", $irc->server_name(), "\n";
 
-    # we join our channels
-    $irc->yield( join => $_ ) for @channels;
+    # we join our channels waiting a few secs
+    foreach (@channels) {
+      $irc->delay( [ join => $_ ], 4 ); 
+    }
+
     # here we register the rss_sentinel
     $kernel->delay_set("rss_sentinel", 30);  # first run after 30 seconds
     $lastpinged = time();
     return;
+}
+
+sub irc_notice {
+  my ($who, $text) = @_[ARG0, ARG2];
+  my $nick = parse_user($who);
+  print "Notice from $who: $text", "\n";
+  if ( ($nick eq 'NickServ' ) && ( $text =~ m/^.+\s*is\sregistered\sand\sprotected.+$/) ) {
+    my $passwd = $botconfig{'nspassword'};
+    $irc->yield( privmsg => 'nickserv', "IDENTIFY $passwd");
+  }
 }
 
 sub irc_ping {
