@@ -59,6 +59,7 @@ use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
 use POE::Component::IRC::Plugin::NickServID;
 use Storable;
+use YAML::Any qw/LoadFile/;
 
 use constant {
   USER_DATE     => 0,
@@ -99,12 +100,12 @@ my %serverconfig = (
 		   );
 
 my %botconfig = (
-		 'channels' => "#lamerbot",
+		 'channels' => ["#lamerbot"],
 		 'botprefix' => "@",
 		 'rsspolltime' => 600, # default to 10 minutes
 		 'dbname' => "bot.db",
-		 'admins' => 'nobody!nobody@nowhere',
-		 'fuckers' => 'fucker1,fucker2',
+		 'admins' => [ 'nobody!nobody@nowhere' ],
+		 'fuckers' => [ 'fucker1',' fucker2'],
 		 'servpassword' => 'nopass',
 		 'nspassword' => 'nopass',
 		);
@@ -119,20 +120,21 @@ my $debug = $ARGV[1];
 show_help() unless $config_file;
 
 ### configuration checking 
-override_defaults(\%serverconfig, read_config($config_file));
-override_defaults(\%botconfig, read_config($config_file));
+my ($botconf, $serverconf) = LoadFile($config_file);
+override_defaults(\%serverconfig, $serverconf);
+override_defaults(\%botconfig, $botconf);
 
 print "Bot options: ", Dumper(\%botconfig),
   "Server options: ", Dumper(\%serverconfig);
 
 my $dbname = $botconfig{'dbname'};
 
-my @channels = split(/ *, */, $botconfig{'channels'});
+my @channels = @{$botconfig{'channels'}};
 
 # build the regexp of the admins
-my @adminregexps = process_admin_list($botconfig{'admins'});
+my @adminregexps = process_admin_list(@{$botconfig{'admins'}});
 
-my @fuckers = split(/ *, */, $botconfig{'fuckers'});
+my @fuckers = @{$botconfig{'fuckers'}};
 
 # when we start, we check if we have all the tables.  By no means this
 # guarantees that the tables are correct. Devs, I'm looking at you
@@ -981,7 +983,7 @@ sub print_timestamp {
 }
 
 sub process_admin_list {
-  my @masks = split(/\s*,\s*/, shift);
+  my @masks = @_;
   my @regexp;
   foreach my $mask (@masks) {
     # first, we check nick, username, host. The *!*@* form is required
