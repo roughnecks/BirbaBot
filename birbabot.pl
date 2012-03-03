@@ -970,12 +970,12 @@ sub tail_sentinel {
     my $channel = $what->{$file};
     my $to_say = file_tail($file);
     if ((defined $to_say) && ($to_say ne "")) {
-      bot_says($channel, $to_say);
+      my @lines = split(/\r?\n/, $to_say);
+ 	bot_says($channel, $to_say);
     }
   }
   $kernel->delay_set("tail_sentinel", 60)
 }
-
 
 # We registered for all events, this will produce some debug info.
 sub _default {
