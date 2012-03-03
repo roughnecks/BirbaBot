@@ -965,6 +965,7 @@ sub rss_sentinel {
 sub tail_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $what = $botconfig{tail};
+  return unless ($what);
   foreach my $file (keys %{$what}) { 
     my $channel = $what->{$file};
     bot_says($channel, file_tail($file));

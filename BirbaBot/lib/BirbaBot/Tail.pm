@@ -53,15 +53,14 @@ sub file_tail {
   } else {
     $offset = 0; # if the old size is bigger, it means the file was truncated
   }
-  open (my $fh, '<', $file) 
-    or next;
+  open (my $fh, '<', $file) or die "Houston, we have a problem: $!";
   if ($offset > 0) {
     seek($fh, $offset, 0);    # move the cursor, starting from the end
   }
   my @saythings;
   while (<$fh>) {
     chomp;
-    next if m/Already up-to-date/;
+    s/^$//g;
     s/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/xxx.xxx.xxx.xxx/g;
     s/(\w+\@)[\w.-]+/$1hidden.domain/g;
     push @saythings, $_, "\n";
