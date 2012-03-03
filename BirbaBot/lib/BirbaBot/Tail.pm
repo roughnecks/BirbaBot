@@ -21,7 +21,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(file_tail);
 our $VERSION = '0.01';
 
-
+$| = 1;
 
 my %file_stats;
 
