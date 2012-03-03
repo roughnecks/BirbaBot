@@ -72,6 +72,7 @@ sub file_tail {
     }
   }
   my $body =  join("", @saythings);
+  $body =~ s/\s+/ /gs;
   if ($body) {
     $body .= " (" . $name . ")" ;
     return "$body";
