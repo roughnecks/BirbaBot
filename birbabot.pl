@@ -45,7 +45,7 @@ use BirbaBot::Quotes qw(ircquote_add
 		    ircquote_last 
 		    ircquote_find
 		    ircquote_num);
-
+use BirbaBot::Tail qw(file_tail);
 
 use URI::Find;
 use URI::Escape;
@@ -108,6 +108,7 @@ my %botconfig = (
 		 'fuckers' => [ 'fucker1',' fucker2'],
 		 'servpassword' => 'nopass',
 		 'nspassword' => 'nopass',
+		 'tail' => {},
 		);
 
 # initialize the local storage
@@ -193,6 +194,7 @@ POE::Session->create(
 		    save
                     irc_ctcp_action
 		     rss_sentinel
+		     tail_sentinel
 		     dns_response) ],
     ],
 );
@@ -729,7 +731,8 @@ sub irc_001 {
     }
 
     # here we register the rss_sentinel
-    $kernel->delay_set("rss_sentinel", 30);  # first run after 30 seconds
+    $kernel->delay_set("tail_sentinel", 20);  # first run after 20 seconds
+    $kernel->delay_set("rss_sentinel", 40);  # first run after 40 seconds
     $lastpinged = time();
     return;
 }
@@ -959,6 +962,15 @@ sub rss_sentinel {
   $kernel->delay_set("rss_sentinel", $botconfig{rsspolltime})
 }
 
+sub tail_sentinel {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $what = $botconfig{tail};
+  foreach my $file (keys %{$what}) { 
+    my $channel = $what->{$file};
+    bot_says($channel, file_tail($file));
+  }
+  $kernel->delay_set("tail_sentinel", 60)
+}
 
 # We registered for all events, this will produce some debug info.
 sub _default {
