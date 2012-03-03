@@ -968,7 +968,10 @@ sub tail_sentinel {
   return unless (%$what);
   foreach my $file (keys %{$what}) { 
     my $channel = $what->{$file};
-    bot_says($channel, file_tail($file));
+    my $to_say = file_tail($file);
+    if ((defined $to_say) && ($to_say ne "")) {
+      bot_says($channel, $to_say);
+    }
   }
   $kernel->delay_set("tail_sentinel", 60)
 }
