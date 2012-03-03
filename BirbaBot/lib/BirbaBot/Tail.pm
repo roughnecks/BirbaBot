@@ -34,25 +34,24 @@ sub file_tail {
   my $oldmoddate = 0;
   my $oldbytes;			# the old size, if any
   if (exists $file_stats{$file}) {
-    $oldmoddate = $file_stats{$file}->[0];
-    $oldbytes = $file_stats{$file}->[1];
+    $oldbytes = $file_stats{$file}
   } else {
     $oldbytes = 0;
     $firstrun = 1;
   }
   my $bytes = -s $file;		# the new size
-  my $moddate = (stat($file))[9];
+
   # update the hash
-  $file_stats{$file} = [ $moddate, $bytes ];
+  $file_stats{$file} = $bytes;
 
-  return if ($moddate == $oldmoddate); # nothing changed, so next!
-
+  return if ($oldbytes == $bytes); # nothing changed, so next!
   my $offset;
   if ($bytes > $oldbytes) { # the new size is bigger, so the offset is the 
     $offset = $oldbytes;    # old size
   } else {
     $offset = 0; # if the old size is bigger, it means the file was truncated
   }
+
   open (my $fh, '<', $file) or die "Houston, we have a problem: $!";
   if ($offset > 0) {
     seek($fh, $offset, 0);    # move the cursor, starting from the end
@@ -65,6 +64,7 @@ sub file_tail {
     s/(\w+\@)[\w.-]+/$1hidden.domain/g;
     push @saythings, $_, "\n";
   }
+  # first run, don't output all the stuff.
   if ($firstrun) {
     if ($#saythings > 15) {
       my @newsaythings = splice(@saythings, -15);
