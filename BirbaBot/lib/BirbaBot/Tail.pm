@@ -60,7 +60,7 @@ sub file_tail {
   my @saythings;
   while (<$fh>) {
     chomp;
-    s/^$//g;
+    next if m/^\s*$/;
     s/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/xxx.xxx.xxx.xxx/g;
     s/(\w+\@)[\w.-]+/$1hidden.domain/g;
     push @saythings, $_, "\n";

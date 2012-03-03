@@ -965,13 +965,14 @@ sub rss_sentinel {
 sub tail_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $what = $botconfig{tail};
-  return unless ($what);
+  return unless (%$what);
   foreach my $file (keys %{$what}) { 
     my $channel = $what->{$file};
     bot_says($channel, file_tail($file));
   }
   $kernel->delay_set("tail_sentinel", 60)
 }
+
 
 # We registered for all events, this will produce some debug info.
 sub _default {
