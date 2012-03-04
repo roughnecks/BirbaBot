@@ -133,8 +133,10 @@ sub kw_list {
     push @out, $data[0]
   }
   $dbh->disconnect;
-  my $output = "I know the following facts: " . join(", ", sort(@out));
-  return $output;
+  if (defined @out) {
+    my $output = "I know the following facts: " . join(", ", sort(@out));
+    return $output;
+  } else { return "Dunno about any fact; empy list." }
 }
 
 sub karma_manage {
