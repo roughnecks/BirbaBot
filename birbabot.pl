@@ -743,7 +743,7 @@ sub irc_notice {
   print "Notice from $who: $text", "\n";
   if ( ($nick eq 'NickServ' ) && ( $text =~ m/^.+\s*is\sregistered\sand\sprotected.+$/) ) {
     my $passwd = $botconfig{'nspassword'};
-    $irc->yield( privmsg => 'nickserv', "IDENTIFY $passwd");
+    $irc->yield( privmsg => '$nick', "IDENTIFY $passwd");
   }
 }
 
