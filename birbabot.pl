@@ -244,10 +244,11 @@ sub _start {
             Ignore_unknown => 1,
 								  
 								 ));
-    $irc->plugin_add( 'NickServID', 
-		      POE::Component::IRC::Plugin::NickServID->new(
-								   Password => $botconfig{'servpassword'}
-								  ));
+#    $irc->plugin_add( 'NickServID', 
+#		      POE::Component::IRC::Plugin::NickServID->new(
+#								   Password => $botconfig{'servpassword'}
+#								  ));
+ 
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     $kernel->delay_set('save', SAVE_INTERVAL);
@@ -741,7 +742,7 @@ sub irc_notice {
   my ($who, $text) = @_[ARG0, ARG2];
   my $nick = parse_user($who);
   print "Notice from $who: $text", "\n";
-  if ( ($nick eq 'NickServ' ) && ( $text =~ m/^.+\s*is\sregistered\sand\sprotected.+$/) ) {
+  if ( ($nick eq 'NickServ' ) && ( $text =~ m/^This\snickname\sis\sregistered.+$/) ) {
     my $passwd = $botconfig{'nspassword'};
     $irc->yield( privmsg => "$nick", "IDENTIFY $passwd");
   }
