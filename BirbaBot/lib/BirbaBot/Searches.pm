@@ -190,7 +190,11 @@ sub imdb_query_api {
   # if it fails, return only the url
   my $imdburl = "http://imdb.com/title/$id";
   return $imdburl unless $json->is_success;
-  my $imdb = JSON::Any->jsonToObj($json->content);
+  my $imdb;
+  eval {
+    $imdb = JSON::Any->jsonToObj($json->content);
+  };
+  return if $@;
   unless (($imdb->{'Response'}) && ($imdb->{'Response'} eq 'True')) {
     return $imdburl
   }
