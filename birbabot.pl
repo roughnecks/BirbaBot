@@ -107,6 +107,7 @@ my %botconfig = (
 		 'fuckers' => [ 'fucker1',' fucker2'],
 		 'nspassword' => 'nopass',
 		 'tail' => {},
+		 'ignored_lines' => [],
 		);
 
 # initialize the local storage
@@ -960,8 +961,9 @@ sub rss_sentinel {
 sub tail_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $what = $botconfig{tail};
+  my @ignored = @{$botconfig{'ignored_lines'}};
   return unless (%$what);
-  foreach my $file (keys %{$what}) { 
+  foreach my $file (keys %{$what}) {
     my $channel = $what->{$file};
     my $to_say = file_tail($file);
     if ((defined $to_say) && ($to_say ne "")) {
