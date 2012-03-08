@@ -59,11 +59,13 @@ sub file_tail {
   my @saythings;
   while (<$fh>) {
     chomp;
+    s/\r//g;
     next if m/^\s*$/;
     s/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/xxx.xxx.xxx.xxx/g;
     s/(\w+\@)[\w.-]+/$1hidden.domain/g;
-    push @saythings, $_, "\n";
+    push @saythings, $_;
   }
+  close $fh;
   # first run, don't output all the stuff.
   if ($firstrun) {
     if ($#saythings > 15) {
@@ -71,12 +73,8 @@ sub file_tail {
       @saythings = @newsaythings;
     }
   }
-  my $body =  join("", @saythings);
-  if ($body) {
-    $body .= " (" . $name . ")" ;
-    return "$body";
-  }
-  close $fh;
+  $saythings[$#saythings] .=  " (" . $name . ")";
+  return \@saythings;
 }
 
 1;

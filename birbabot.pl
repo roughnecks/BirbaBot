@@ -965,11 +965,17 @@ sub tail_sentinel {
   return unless (%$what);
   foreach my $file (keys %{$what}) {
     my $channel = $what->{$file};
-    my $to_say = file_tail($file);
-    if ((defined $to_say) && ($to_say ne "")) {
-      foreach my $line (split(/\r?\n/, $to_say)) {
-	bot_says($channel, $line);
+    my $things_to_say = file_tail($file);
+    foreach my $thing (@$things_to_say) {
+      next if ($thing =~ m/^\s*$/);
+      # see if the line should be ignored
+      my $in_ignore;
+      foreach my $ignored (@ignored) {
+	if ((index $thing, $ignored) >= 0) {
+	  $in_ignore++;
+	}
       }
+      bot_says($channel, $thing) unless $in_ignore;
     }
   }
   $kernel->delay_set("tail_sentinel", 60)
