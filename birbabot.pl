@@ -161,6 +161,7 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_sitedown
 		     irc_botcmd_wikiz
 		     irc_botcmd_remind
 		     irc_botcmd_version
@@ -232,6 +233,7 @@ sub _start {
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
 	    choose => 'Do a random guess | Takes 2 or more arguments: choose <choise1> <choise2> <choice#n>',
 	    version => 'Show from which git branch we are running the bot. Do not use without git',
+            sitedown => 'Check whether a website is up or down | sitedown <domain>',									       
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1161,6 +1163,21 @@ sub irc_botcmd_wikiz {
     bot_says ($where, 'No matches found.');
   }
 }
+
+sub irc_botcmd_sitedown {
+  my ($where, $what) = @_[ARG1, ARG2];
+  return unless $what =~ m/^\s*(\w.+\.)+[a-z]{2,3}$/;
+  my $prepend = 'http://www.downforeveryoneorjustme.com/';
+  my $query = $prepend . $what;
+  print "Asking downforeveryoneorjustme for $query\n";
+  my $file = get "$query";
+  if ( $file =~ m|<title>(.+)</title>|s ) {
+    my $result = $1;
+    $result =~ s/->.*$//;
+    bot_says($where, $result);
+  }
+}
+
 
 exit;
 
