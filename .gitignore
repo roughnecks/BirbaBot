@@ -2,4 +2,7 @@
 poe/*
 data/
 *.db
-
+seen
+birba.*
+temp/
+logs/

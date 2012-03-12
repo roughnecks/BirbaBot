@@ -43,7 +43,7 @@ use WWW::Babelfish;
 my $ua = LWP::UserAgent->new;
 $ua->timeout(10); # 5 seconds of timeout
 $ua->show_progress(1);
-$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
+#$ua->default_header('Referer' => 'http://laltromondo.dynalias.net');
 
 
 my $bbold = "\x{0002}";
@@ -57,6 +57,60 @@ must be at the end), do a refined search.
 
 =cut
 
+sub query_meteo {
+  my $location = shift;
+  return "No location provided" unless $location;
+  my $query = uri_escape($location);
+  print "Query google for $query\n";
+  my $response = $ua->get("http://www.google.ca/ig/api?weather=$location");
+  return "Failed query" unless $response->is_success;
+  my $xml = $response->decoded_content();
+  my %meteodata;
+  my $intag;
+  my $parser = new XML::Parser(Style => 'Tree');
+  my $data = $parser->parse($xml);
+  my $inforef = $data->[1]->[2];
+  my @collected;
+  foreach my $item (@$inforef) {
+    if (ref($item) eq 'ARRAY') {
+      my @data = @$item;
+      shift @data;
+      my %datas = @data;
+      push @collected, \%datas;
+    } elsif (ref($item)) {
+      next;
+    } else {
+      push @collected, $item;
+    }
+  }
+#  print Dumper(\@collected);
+  
+  my $outstring;
+
+  my $i = 0;
+  while ($i<=$#collected) {
+    if ($collected[$i] eq "forecast_information") {
+#      print $collected[$i+1]->{city}->[0]->{data};
+      $outstring .= "City: " . $collected[$i+1]->{city}->[0]->{data} . ". ";
+      $i++; # skip the next
+    }
+    elsif ($collected[$i] eq "current_conditions") {
+      $outstring .= "Current conditions: " .
+      "Temp: " .  $collected[$i+1]->{temp_c}->[0]->{data} . " " .
+	$collected[$i+1]->{wind_condition}->[0]->{data} . " " .
+	  $collected[$i+1]->{humidity}->[0]->{data} . ". " .
+	  "It's " . $collected[$i+1]->{condition}->[0]->{data} . "; ";
+	    $i++;
+    }
+    elsif ($collected[$i] eq "forecast_conditions") {
+      $outstring .= $collected[$i+1]->{day_of_week}->[0]->{data} . ": " .
+	$collected[$i+1]->{condition}->[0]->{data} . "; ";
+      $i++
+    }
+    $i++
+  }
+  return $outstring;
+}
 
 sub search_imdb {
   my $string = shift;
@@ -133,7 +187,11 @@ sub imdb_query_api {
   # if it fails, return only the url
   my $imdburl = "http://imdb.com/title/$id";
   return $imdburl unless $json->is_success;
-  my $imdb = JSON::Any->jsonToObj($json->content);
+  my $imdb;
+  eval {
+    $imdb = JSON::Any->jsonToObj($json->content);
+  };
+  return if $@;
   unless (($imdb->{'Response'}) && ($imdb->{'Response'} eq 'True')) {
     return $imdburl
   }
@@ -169,7 +227,7 @@ my %langtab = (
 
 sub google_translate {
   my ($string, $from, $to) = @_;
-  return "Missing paramenters" unless ($string and $from and $to);
+  return "Missing parameters" unless ($string and $from and $to);
   unless (($from =~ m/^\w+$/) and ($to =~ m/^\w+$/)) {
     return "Right example query: x it en here goes my text"
   }
@@ -257,8 +315,8 @@ sub google_process_results {
 
 
 sub search_bash {
-  my $response = $ua->get("http://bash.org/?random");
-
+  my $basharg = shift;
+  my $response = $ua->get("http://bash.org/?$basharg");
   my $rawtext = $response->decoded_content();
   my $inquote = 0;
   my $quotecount = 0;
@@ -311,18 +369,20 @@ sub search_bash {
 		    unbroken_text => 0,
 		    ignore_elements => ['script', 'style'],
 		   )->parse($rawtext) || return "Something went wrong: $!\n";;
+#	print Dumper(\@quotes);
   return $quotes[0];
 }
+
 
 sub search_urban {
   my $query = shift;
   my $results = process_urban($query);
   my $outstring;
   my $counter = 1;
-  my $maxlenght = 1000;
+  my $maxlenght = 790;
 #  print Dumper($results);
   while (@$results 
-	 && ($counter < 6) 
+	 && ($counter < 3) 
 	 && (length($outstring) < $maxlenght)
 	)  {
     my $res = shift(@$results);
@@ -331,6 +391,8 @@ sub search_urban {
     $counter++;
   }
   if ($outstring) {
+#    print Dumper(\$outstring);
+    $outstring =~ s/\;\s*$//;
     return $outstring;
   } else {
     return "No results found";

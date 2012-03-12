@@ -1,0 +1,8 @@
+Hi :-)
+
+We're building a simple stats' table on the wiki, at this address: http://laltromondo.dynalias.net/~iki//informatica/soft/birbabot/
+It would be kind if you let us know the following details about your birbabot's usage so that we can keep an up-to-date sheet about the currently running bots.
+
+"Owner - Bot-Nick - Network - Channel - SSl (Y/N) - Operating System"
+
+Thanks and happy meeeowing.

@@ -10,6 +10,7 @@
 use strict;
 use warnings;
 
+use LWP::Simple;
 use File::Spec;
 use File::Path qw(make_path);
 use Data::Dumper;
@@ -35,7 +36,7 @@ use BirbaBot::Searches qw(search_google
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
-use BirbaBot::Notes qw(notes_add notes_give);
+use BirbaBot::Notes qw(notes_add notes_give notes_pending notes_del);
 use BirbaBot::Shorten qw(make_tiny_url);
 use BirbaBot::Quotes qw(ircquote_add 
 		    ircquote_del 
@@ -43,17 +44,20 @@ use BirbaBot::Quotes qw(ircquote_add
 		    ircquote_last 
 		    ircquote_find
 		    ircquote_num);
-
+use BirbaBot::Tail qw(file_tail);
 
 use URI::Find;
+use URI::Escape;
+
+use HTML::Entities;
 
 use POE;
 use POE::Component::Client::DNS;
 use POE::Component::IRC::Common qw(parse_user l_irc);
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
-use POE::Component::IRC::Plugin::NickServID;
 use Storable;
+use YAML::Any qw/LoadFile/;
 
 use constant {
   USER_DATE     => 0,
@@ -82,25 +86,27 @@ undef $fh;
 
 # initialize the db
 
-my $reconnect_delay = 500;
+my $reconnect_delay = 300;
 
 my %serverconfig = (
 		    'nick' => 'Birba',
 		    'ircname' => "Birba the Bot",
 		    'username' => 'birbabot',
-		    'server' => "irc.syrolnet.org",
+		    'server' => "localhost",
 		    'port' => 7000,
 		    'usessl' => 1,
 		   );
 
 my %botconfig = (
-		 'channels' => "#lamerbot",
+		 'channels' => ["#lamerbot"],
 		 'botprefix' => "@",
 		 'rsspolltime' => 600, # default to 10 minutes
 		 'dbname' => "bot.db",
-		 'admins' => 'nobody!nobody@nowhere',
-		 'fuckers' => 'fucker1,fucker2',
+		 'admins' => [ 'nobody!nobody@nowhere' ],
+		 'fuckers' => [ 'fucker1',' fucker2'],
 		 'nspassword' => 'nopass',
+		 'tail' => {},
+		 'ignored_lines' => [],
 		);
 
 # initialize the local storage
@@ -113,20 +119,21 @@ my $debug = $ARGV[1];
 show_help() unless $config_file;
 
 ### configuration checking 
-override_defaults(\%serverconfig, read_config($config_file));
-override_defaults(\%botconfig, read_config($config_file));
+my ($botconf, $serverconf) = LoadFile($config_file);
+override_defaults(\%serverconfig, $serverconf);
+override_defaults(\%botconfig, $botconf);
 
 print "Bot options: ", Dumper(\%botconfig),
   "Server options: ", Dumper(\%serverconfig);
 
 my $dbname = $botconfig{'dbname'};
 
-my @channels = split(/ *, */, $botconfig{'channels'});
+my @channels = @{$botconfig{'channels'}};
 
 # build the regexp of the admins
-my @adminregexps = process_admin_list($botconfig{'admins'});
+my @adminregexps = process_admin_list(@{$botconfig{'admins'}});
 
-my @fuckers = split(/ *, */, $botconfig{'fuckers'});
+my @fuckers = @{$botconfig{'fuckers'}};
 
 # when we start, we check if we have all the tables.  By no means this
 # guarantees that the tables are correct. Devs, I'm looking at you
@@ -147,17 +154,24 @@ POE::Session->create(
         main => [ qw(_start
 		     _default
 		     irc_001 
+		     irc_notice
 		     irc_disconnected
 		     irc_error
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_sitedown
+		     irc_botcmd_wikiz
+		     irc_botcmd_remind
+		     irc_botcmd_version
+		     irc_botcmd_choose
 		     irc_botcmd_bash
 		     irc_botcmd_urban
 		     irc_botcmd_karma
 		     irc_botcmd_math
 		     irc_botcmd_seen
 		     irc_botcmd_note
+		     irc_botcmd_notes
 		     irc_botcmd_todo
 		     irc_botcmd_done
 		     irc_botcmd_kw
@@ -178,6 +192,7 @@ POE::Session->create(
 		    save
                     irc_ctcp_action
 		     rss_sentinel
+		     tail_sentinel
 		     dns_response) ],
     ],
 );
@@ -198,19 +213,24 @@ sub _start {
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
-            bash => 'Get a random quote from bash.org',
-            urban => 'Get definitions from the urban dictionary',
+            bash => 'Get a random quote from bash.org - Optionally accepts one number as argument: bash <number>',
+            urban => 'Get definitions from the urban dictionary | "urban url <word>" asks for the url',
             karma => 'Get the karma of a user',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
             note => 'Send a note to a user: note <nick> <message>',
+	    notes => 'Without arguments lists pending notes by current user | "notes del <nickname>" Deletes all pending notes from the current user to <nickname>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ] - done < #id > ',
             done => 'delete something to the channel TODO; done #id ',
-
+	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
+	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
             x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
+	    choose => 'Do a random guess | Takes 2 or more arguments: choose <choise1> <choise2> <choice#n>',
+	    version => 'Show from which git branch we are running the bot. Do not use without git',
+            sitedown => 'Check whether a website is up or down | sitedown <domain>',									       
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -222,23 +242,35 @@ sub _start {
             Ignore_unknown => 1,
 								  
 								 ));
-    $irc->plugin_add( 'NickServID', 
-		      POE::Component::IRC::Plugin::NickServID->new(
-								   Password => $botconfig{'nspassword'}
-								  ));
+ 
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     $kernel->delay_set('save', SAVE_INTERVAL);
     return;
 }
 
+sub irc_botcmd_meteo {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  if (! defined $arg) {
+    bot_says($where, 'Missing location.');
+    return
+  } elsif ($arg =~ /^\s*$/) {
+    bot_says($where, 'Missing location.');
+    return
+  }
+  print "Asking the weatherman\n";
+  my $result = query_meteo($arg);
+  $result =~ s/\;\s*$/./;
+  bot_says($where, $result);
+  return;
+}
 
 sub bot_says {
   my ($where, $what) = @_;
-  return unless ($where and $what);
-  # here we hack some entities;
-  $what =~ s/&amp;/&/g;
-  $what =~ s/&quot;/"/g;
+  return unless ($where and (defined $what));
+
+  # Let's use HTML::Entities
+  $what = decode_entities($what);
   
 #  print print_timestamp(), "I'm gonna say $what on $where\n";
   if (length($what) < 400) {
@@ -316,15 +348,41 @@ sub irc_botcmd_math {
 }
 
 sub irc_botcmd_bash {
-  my $where = $_[ARG1];
-  foreach my $line (split("\n", search_bash())) {
-    bot_says($where, $line);
+  my ($where, $arg) = @_[ARG1, ARG2];
+  my $good;
+  if (! $arg ) {
+    $good = 'random';
+  } elsif ( $arg =~ m/^(\d+)/s ) {
+    $good = $1;
+  } else {
+    return;
+  }
+  my $result = search_bash($good);
+  if ($result) {
+    foreach (split("\r*\n", $result)) {
+      bot_says($where, $_);
+    }
+  } else {
+    bot_says($where, "Quote $good not found");
   }
 }
 
+
+
 sub irc_botcmd_urban {
-  my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_urban($arg));
+  my ($where, $arg) = @_[ARG1..$#_];
+  my @args = split(/ +/, $arg);
+  my $subcmd = shift(@args);
+  my $string = join (" ", @args);
+  if (! $arg) { return }
+  elsif ($arg =~ m/^\s*$/) { return } 
+  elsif (($subcmd) && $subcmd eq "url" && ($string)) {
+    my $baseurl = 'http://www.urbandictionary.com/define.php?term=';
+    my $url = $baseurl . uri_escape($string);
+    bot_says($where, $url);
+  } else {
+    bot_says($where, search_urban($arg));
+  }
 }
 
 
@@ -379,9 +437,11 @@ sub irc_botcmd_slap {
     my ($where, $arg) = @_[ARG1, ARG2];
     my $botnick = $irc->nick_name;
     if ($arg =~ m/\Q$botnick\E/) {
-      $irc->yield(ctcp => $where, "ACTION slaps $nick");
+      $irc->yield(ctcp => $where, "ACTION slaps $nick with her tail");
+    } elsif ($arg =~ /^\s*$/) { 
+      return
     } else {
-      $irc->yield(ctcp => $where, "ACTION slaps $arg");
+      $irc->yield(ctcp => $where, "ACTION slaps $arg with her tail");
     }
     return;
 }
@@ -398,26 +458,62 @@ sub irc_botcmd_note {
     return;
 }
 
+sub irc_botcmd_notes {
+  my ($who, $where, $arg) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  if (! defined $arg) {
+    bot_says($where, notes_pending($dbname, $nick));
+  } elsif ($arg =~ /^\s*$/) {
+    bot_says($where, notes_pending($dbname, $nick));
+  } else {
+    my @array = split(" ", $arg);
+    my $subcmd = shift @array;
+    if (($subcmd eq 'del') && ($array[0]) && ($array[0] =~ m/^\s*\w+\s*$/)) {
+      bot_says($where, notes_del($dbname, $nick, $array[0]));
+      return
+    } else { 
+      bot_says($where, "Missing or invalid argument");
+    }
+  }
+}
+
 
 sub irc_botcmd_g {
   my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_google($arg, "web"));
+  return unless is_where_a_channel($where);
+  if (($arg) && $arg =~ /^\s*$/) {
+    return
+  } else {
+    bot_says($where, search_google($arg, "web"));
+  }
 }
 
 sub irc_botcmd_gi {
   my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_google($arg, "images"));
+  return unless is_where_a_channel($where);
+  if (($arg) && $arg =~ /^\s*$/) {
+    return
+  } else { 
+    bot_says($where, search_google($arg, "images"));
+  }
 }
 
 sub irc_botcmd_gv {
   my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_google($arg, "video"));
+  return unless is_where_a_channel($where);
+  if (($arg) && $arg =~ /^\s*$/) {
+    return
+  } else { 
+    bot_says($where, search_google($arg, "video"));
+  }
 }
 
 sub irc_botcmd_x {
   my ($where, $arg) = @_[ARG1, ARG2];
   if ($arg =~ m/^\s*([a-z]{2,3})\s+([a-z]{2,3})\s+(.*)\s*$/) {
-    bot_says($where, google_translate($3, $1, $2));
+    my $result = google_translate($3, $1, $2);
+    $result =~ s/^\s+//;
+    bot_says($where, $result);
   } else {
     bot_says($where, "Example: x hr it govno");
   }
@@ -426,27 +522,34 @@ sub irc_botcmd_x {
 sub irc_botcmd_kw {
   my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
   print print_timestamp(), "$who, $where, $arg\n";
-  if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.*)\s*$/)  {
+  if ($arg =~ m/^\s*([^\s]+)\s+is also\s+(.+?)\s*$/)  {
+    my $what = $2;
+    if ($what =~ /^\s*$/) {
+      bot_says($where, 'Missing argument.');
+      return
+    } 
     bot_says($where, kw_add($dbname, $who, lc($1), $2));
-  } 
-  elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.*)\s*$/)  {
+  } elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.+?)\s*$/)  {
+    my $what = $2;
+    if ($what =~ /^\s*$/) {
+      bot_says($where, 'Missing argument.');
+      return
+    } 
     bot_says($where, kw_new($dbname, $who, lc($1), $2));
-  } 
-  elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*$/) {
+  } elsif ($arg =~ m/^\s*forget\s*([^\s]+)\s*$/) {
     my $key = lc($1);
     if (check_if_admin($who)) {
       bot_says($where, kw_remove($dbname, $who, $key));
       return;
-    } else {
-      bot_says($where, "You're not a bot admin, sorry, I can't do that");
-      return;
-    }
-  }
-  elsif ($arg =~ m/^\s*delete\s*([^\s]+)\s+([23])\s*$/) {
+    } 
+    bot_says($where, "You're not a bot admin, sorry, I can't do that");
+    return;
+  } elsif ($arg =~ m/^\s*delete\s*([^\s]+)\s+([23])\s*$/) {
     bot_says($where, kw_delete_item($dbname, lc($1), $2));
-  }
-  else {
+  } elsif (! defined $arg) {
     bot_says($where, kw_list($dbname));
+  } else {
+    bot_says($where, 'Wrong syntax');
   }
 }
 
@@ -454,13 +557,18 @@ sub irc_botcmd_kw {
 
 sub irc_botcmd_imdb {
   my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, search_imdb($arg));
+  if ($arg =~ /^\s*$/) {
+    return
+  } else {
+    bot_says($where, search_imdb($arg));
+  }
 }
 
 
 sub irc_botcmd_geoip {
     my $nick = (split /!/, $_[ARG0])[0];
     my ($where, $arg) = @_[ARG1, ARG2];
+    return unless is_where_a_channel($where);
     $irc->yield(privmsg => $where => BirbaBot::Geo::geo_by_name_or_ip($arg));
     return;
 }
@@ -534,6 +642,7 @@ sub irc_botcmd_todo {
 sub irc_botcmd_lookup {
     my $nick = (split /!/, $_[ARG0])[0];
     my ($where, $arg) = @_[ARG1, ARG2];
+    return unless is_where_a_channel($where);
     if ($arg =~ m/(([0-9]{1,3}\.){3}([0-9]{1,3}))/) {
       my $ip = $1;
       # this is from `man perlsec` so it has to be safe
@@ -610,12 +719,26 @@ sub irc_001 {
 
     print print_timestamp(), "Connected to ", $irc->server_name(), "\n";
 
-    # we join our channels
-    $irc->yield( join => $_ ) for @channels;
+    # we join our channels waiting a few secs
+    foreach (@channels) {
+      $irc->delay( [ join => $_ ], 4 ); 
+    }
+
     # here we register the rss_sentinel
-    $kernel->delay_set("rss_sentinel", 30);  # first run after 30 seconds
+    $kernel->delay_set("tail_sentinel", 20);  # first run after 20 seconds
+    $kernel->delay_set("rss_sentinel", 40);  # first run after 40 seconds
     $lastpinged = time();
     return;
+}
+
+sub irc_notice {
+  my ($who, $text) = @_[ARG0, ARG2];
+  my $nick = parse_user($who);
+  print "Notice from $who: $text", "\n";
+  if ( ($nick eq 'NickServ' ) && ( $text =~ m/^This\snickname\sis\sregistered.+$/) ) {
+    my $passwd = $botconfig{'nspassword'};
+    $irc->yield( privmsg => "$nick", "IDENTIFY $passwd");
+  }
 }
 
 sub irc_ping {
@@ -626,6 +749,9 @@ sub irc_ping {
 sub irc_kick {
   my $kicker = $_[ARG0];
   my $channel = $_[ARG1];
+  my $kicked = $_[ARG2];
+  my $botnick = $irc->nick_name;
+  return unless $kicked eq $botnick;
   sleep 5;
   $kicker = parse_user($kicker);
   $irc->yield( join => $channel );
@@ -723,7 +849,7 @@ sub irc_public {
 	bot_says($channel, get_youtube_title($url));
       };
 
-      next if (length($url) < 60);
+      next if (length($url) <= 60);
       my $reply = $nick . "'s url: " . make_tiny_url($url);
       bot_says($channel, $reply);
       return;
@@ -750,18 +876,36 @@ sub add_nick {
 sub irc_botcmd_seen {
   my ($heap, $nick, $channel, $target) = @_[HEAP, ARG0..$#_];
   $nick = parse_user($nick);
-  $target =~ s/\s+//g;
+  if (($target) && $target =~ m/^\s+$/) {
+    return;
+  } elsif (! defined $target) { 
+    return;
+  }
+  elsif ($target) {
+    $target =~ s/\s+//g;
+  }
+  my $botnick = $irc->nick_name;
   print "processing seen command\n";
   if ($seen->{l_irc($target)}) {
     my $date = localtime $seen->{l_irc($target)}->[USER_DATE];
     my $msg = $seen->{l_irc($target)}->[USER_MSG];
-    $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");
-  } elsif ($irc->is_channel_member($channel, $target)) {
-    $irc->yield(privmsg => $channel,
-		"$nick: $target is here, but $target didn't say a word, AFAIK");
-  }
-  else {
-    $irc->yield(privmsg => $channel, "$nick: I haven't seen $target");
+    if ("$target" eq "$nick") {
+      $irc->yield(privmsg => $channel, "$nick: Looking for yourself, ah?");
+    } elsif ($target =~ m/\Q$botnick\E/) {
+      $irc->yield(privmsg => $channel, "$nick: I'm right here!");
+    } elsif ($irc->is_channel_member($channel, $target)) {
+      $irc->yield(privmsg => $channel,
+                  "$nick: $target is here and i last saw $target at $date $msg.");
+    } else {
+      $irc->yield(privmsg => $channel, "$nick: I last saw $target at $date $msg");
+    }
+  } else {
+    if ($irc->is_channel_member($channel, $target)) {
+      $irc->yield(privmsg => $channel,
+                  "$nick: $target is here but he didn't say a thing, AFAIK.");
+    } else {
+      $irc->yield(privmsg => $channel, "$nick: I haven't seen $target");
+    }
   }
 }
 
@@ -772,17 +916,17 @@ sub irc_botcmd_quote {
   my $subcmd = shift(@args);
   my $string = join (" ", @args);
   my $reply;
-  if ($subcmd eq 'add') {
+  if ($subcmd eq 'add' && $string =~ /.+/) {
     $reply = ircquote_add($dbname, $who, $where, $string)
-  } elsif ($subcmd eq 'del') {
+  } elsif ($subcmd eq 'del' && $string =~ /.+/) {
     $reply = ircquote_del($dbname, $who, $where, $string)
   } elsif ($subcmd eq 'rand') {
     $reply = ircquote_rand($dbname, $where)
   } elsif ($subcmd eq 'last') {
     $reply = ircquote_last($dbname, $where)
   } elsif ($subcmd =~ m/([0-9]+)/) {
-    $reply = ircquote_num($dbname, $1)
-  } elsif ($subcmd eq 'find') {
+    $reply = ircquote_num($dbname, $1, $where)
+  } elsif ($subcmd eq 'find' && $string =~ /.+/) {
     $reply = ircquote_find($dbname, $where, $string)
   } else {
     $reply = "command not supported"
@@ -812,6 +956,29 @@ sub rss_sentinel {
   $kernel->delay_set("rss_sentinel", $botconfig{rsspolltime})
 }
 
+sub tail_sentinel {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $what = $botconfig{tail};
+  my @ignored = @{$botconfig{'ignored_lines'}};
+  return unless (%$what);
+  foreach my $file (keys %{$what}) {
+    my $channel = $what->{$file};
+    my @things_to_say = file_tail($file);
+    while (@things_to_say) {
+      my $thing = shift @things_to_say;
+      next if ($thing =~ m/^\s*$/);
+      # see if the line should be ignored
+      my $in_ignore;
+      foreach my $ignored (@ignored) {
+	if ((index $thing, $ignored) >= 0) {
+	  $in_ignore++;
+	}
+      }
+      bot_says($channel, $thing) unless $in_ignore;
+    }
+  }
+  $kernel->delay_set("tail_sentinel", 60)
+}
 
 # We registered for all events, this will produce some debug info.
 sub _default {
@@ -836,7 +1003,7 @@ sub print_timestamp {
 }
 
 sub process_admin_list {
-  my @masks = split(/\s*,\s*/, shift);
+  my @masks = @_;
   my @regexp;
   foreach my $mask (@masks) {
     # first, we check nick, username, host. The *!*@* form is required
@@ -884,6 +1051,131 @@ sub check_if_fucker {
   }
   return 1;
 }
+
+sub is_where_a_channel {
+  my $where = shift;
+  if ($where =~ m/^#/) {
+    return 1
+  } else {
+    return 0
+  }
+}
+
+sub irc_botcmd_choose {
+  my ($where, $args) = @_[ARG1..$#_];
+  my @choises = split(/ +/, $args);
+  foreach ( @choises ) {
+    $_ =~ s/^\s*$//;
+  }
+  unless ($#choises > 0) {
+    bot_says ($where, 'Provide at least 2 arguments');
+  } else {
+    my %string = map { $_, 1 } @choises;
+    if (keys %string == 1) {
+      # all equal
+      bot_says($where, 'That\'s an hard guess for sure :P');
+    } else {
+      my $lenght = scalar @choises;
+      my $random = int(rand($lenght));
+      bot_says($where, "$choises[$random]");
+    }
+  }
+}
+  
+sub irc_botcmd_version {
+  my $where = $_[ARG1];
+      die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+      if ($pid) {           # parent                                                                                                                                                
+        while (<KID>) {
+          bot_says($where, $_); last;
+        }
+        close KID;
+        return;
+      } else {
+        # this is the external process, forking. It never returns
+	exec "git", "status" or die "Can't exec git: $!";
+      }
+    }
+
+sub irc_botcmd_remind {
+  my ($who, $where, $what) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  my $seconds;
+  my @args = split(/ +/, $what);
+  my $time = shift(@args);
+  my $string = join (" ", @args);
+  if (($string) && defined $string) {
+    if (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
+      $seconds = ($1*3600)+($2*60);
+    } elsif (($time) && defined $time && $time =~ m/^(\d+)$/) {
+      $seconds = $1*60;
+    } else {
+      bot_says($where, 'Wrong syntax: ask me "help remind" <= This is for the lazy one :)');
+      return
+    }
+  } else {
+    bot_says($where, 'Missing argument');
+    return
+  }
+  $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
+  bot_says($where, 'Reminder added.');
+}
+
+sub irc_botcmd_wikiz {
+  my ($where, $arg) = @_[ARG1, ARG2];
+
+  # get the sitemap
+  my $file = get 'http://laltromondo.dynalias.net/~iki/sitemap/index.html';
+  my $prepend = 'http://laltromondo.dynalias.net/~iki';
+  my @out = ();
+
+  # split sitemap in an array and extract urls
+  my @list = split ( /(<.+?>)/, $file );
+  my @formatlist = grep ( /href="(\.\.)(.+?)"/, @list );
+
+  # grep the formatted list of url searching for pattern
+  if (! defined $arg) {
+    bot_says($where, 'Missing Argument');
+    return
+  } elsif ($arg =~ /^\s*$/) {
+    bot_says($where, 'Missing Argument');
+    return
+    } else {
+      @out = grep ( /\Q$arg\E/ , @formatlist );
+    }
+  # looping through the output of matching urls, clean some shit and spit to channel
+
+  my %hash;
+  foreach my $item (@out) {
+    $item =~ m!href="(\.\.)(.+?)"!;
+    $hash{$2} = 1;
+  }
+  @out = keys %hash;
+
+  if (@out) {
+    foreach (@out) {
+      bot_says ($where, $prepend .$_);
+    }
+  } else {
+    bot_says ($where, 'No matches found.');
+  }
+}
+
+sub irc_botcmd_sitedown {
+  my ($where, $what) = @_[ARG1, ARG2];
+  return unless is_where_a_channel($where);
+  return unless $what =~ m/^\s*(\w.+\.)+[a-z]{2,3}$/;
+  my $prepend = 'http://www.downforeveryoneorjustme.com/';
+  my $query = $prepend . $what;
+  print "Asking downforeveryoneorjustme for $query\n";
+  my $file = get "$query";
+  if ( $file =~ m|<title>(.+)</title>|s ) {
+    my $result = $1;
+    $result =~ s/->.*$//;
+    bot_says($where, $result);
+  }
+}
+
 
 exit;
 

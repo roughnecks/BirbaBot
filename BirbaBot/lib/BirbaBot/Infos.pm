@@ -6,7 +6,7 @@ use 5.010001;
 use strict;
 use warnings;
 use DBI;
-
+use Data::Dumper;
 
 require Exporter;
 
@@ -56,10 +56,18 @@ sub kw_remove {
   my ($dbname, $who, $key) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
-  my $query = $dbh->prepare("DELETE FROM factoids WHERE key=?;"); #key
+  my $del = $dbh->prepare("DELETE FROM factoids WHERE key=?;"); #key
+  my $query = $dbh->prepare("SELECT key FROM factoids WHERE key=?;"); #key
   $query->execute($key);
-  $dbh->disconnect;
-  return "I completely forgot $key";
+  my $value = ($query->fetchrow_array());
+  if ($value eq $key) { 
+    $del->execute($key);
+    $dbh->disconnect;
+    return "I completely forgot $key";
+  } else { 
+    return "Sorry, dunno about $key"; 
+    $dbh->disconnect;
+  }
 }
 
 sub kw_delete_item {
@@ -125,8 +133,10 @@ sub kw_list {
     push @out, $data[0]
   }
   $dbh->disconnect;
-  my $output = "I know the following facts: " . join(", ", sort(@out));
-  return $output;
+  if (@out) {
+    my $output = "I know the following facts: " . join(", ", sort(@out));
+    return $output;
+  } else { return "Dunno about any fact; empy list." }
 }
 
 sub karma_manage {

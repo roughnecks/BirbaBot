@@ -37,12 +37,15 @@ sub ircquote_add {
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   my $query = $dbh->prepare('INSERT INTO quotes (id, chan, author, phrase) VALUES (NULL, ?, ?, ?);');
   $query->execute($where, $who, $string);
+  my $idquery = $dbh->prepare('SELECT id FROM quotes WHERE chan = ? ORDER BY id DESC LIMIT 1;');
+  $idquery->execute($where);
+  my $id = $idquery->fetchrow_array();
   my $errorcode = $query->err;
   $dbh->disconnect;
   if ($errorcode) {
     return "DB transation ended with error $errorcode";
   } else {
-    return "Quote added";
+    return "Quote \#$id added";
   }
 }
 
@@ -110,7 +113,7 @@ sub ircquote_rand {
   my $random = int(rand(scalar @quotesid));
   print "Picked random quote with id $random\n";
   my $choosen = $quotesid[$random];
-  return ircquote_num($dbname, $choosen);
+  return ircquote_num($dbname, $choosen, $where);
 }
 
 =head2 ircquote_last($dbname, $where);
@@ -128,7 +131,8 @@ sub ircquote_last {
   my ($id, $author, $phrase) = $query->fetchrow_array();
   print "$id, $author, $phrase\n";
   if ($phrase) {
-    $reply =  "[$id] $phrase (by $author)"
+    $author =~ s/\!.+$//;
+    $reply =  "[$id] $phrase (added by $author)"
   } else {
     $reply = "No quotes!";
   }
@@ -181,22 +185,25 @@ Add the quote $string to the quote db, with author $who and channel $where
 =cut
 
 sub ircquote_num {
-  my ($dbname, $num) = @_;
+  my ($dbname, $num, $where) = @_;
+  #  print Dumper(\@_);
   my $reply;
+  $num = $_[1];
   if ($num =~ m/(\d+)/) {
     $num = $1;
   } else {
     return "Invalid character $num for quotes"
   }
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $query = $dbh->prepare('SELECT author,phrase FROM quotes WHERE id = ?');
-  $query->execute($num);
+  my $query = $dbh->prepare('SELECT author,phrase FROM quotes WHERE id = ? and chan = ?');
+  $query->execute($num, $where);
   my ($author, $phrase) = $query->fetchrow_array();
   my $error = $query->err;
   if ($error) {
     $reply = "Error $error while fetching id $num"
   } else {
     if ($phrase and $author) {
+      $author =~ s/\!.+$//;
       $reply = "[$num] $phrase (added by $author)";
     } else {
       $reply = "No such quote";
