@@ -74,7 +74,7 @@ sub file_tail {
     }
   }
   $saythings[$#saythings] .=  " (" . $name . ")";
-  return \@saythings;
+  return @saythings;
 }
 
 1;

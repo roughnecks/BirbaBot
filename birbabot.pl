@@ -967,8 +967,9 @@ sub tail_sentinel {
   return unless (%$what);
   foreach my $file (keys %{$what}) {
     my $channel = $what->{$file};
-    my $things_to_say = file_tail($file);
-    foreach my $thing (@$things_to_say) {
+    my @things_to_say = file_tail($file);
+    while (@things_to_say) {
+      my $thing = shift @things_to_say;
       next if ($thing =~ m/^\s*$/);
       # see if the line should be ignored
       my $in_ignore;
