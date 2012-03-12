@@ -21,6 +21,7 @@ our @EXPORT_OK = qw(
 		     search_bash
 		     search_urban
                      get_youtube_title
+		     query_meteo
 		  );
 
 our $VERSION = '0.01';
@@ -35,6 +36,7 @@ use JSON::Any;
 use BirbaBot::Shorten qw(make_tiny_url);
 use Data::Dumper;
 use URI::Escape;
+use XML::Parser;
 
 use WWW::Babelfish;
 
@@ -111,6 +113,7 @@ sub query_meteo {
   }
   return $outstring;
 }
+
 
 sub search_imdb {
   my $string = shift;
