@@ -40,9 +40,11 @@ sub file_tail {
     $firstrun = 1;
   }
   my $bytes = -s $file;		# the new size
-
   # update the hash
   $file_stats{$file} = $bytes;
+  # the first run we just skip. An alternate solution could be: define
+  # max, 500b, seek that from the end, read and output the stuff.
+  return if $firstrun;
 
   return if ($oldbytes == $bytes); # nothing changed, so next!
   my $offset;
