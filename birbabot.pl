@@ -1097,7 +1097,8 @@ sub irc_botcmd_version {
         return;
       } else {
         # this is the external process, forking. It never returns
-	exec "git", "status" or die "Can't exec git: $!";
+	my @command = ('git', 'log', '-n', '1');
+	exec @command or die "Can't exec git: $!";
       }
     }
 
