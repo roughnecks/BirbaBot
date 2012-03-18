@@ -75,6 +75,7 @@ sub file_tail {
       @saythings = @newsaythings;
     }
   }
+  return unless $#saythings >= 0;
   $saythings[$#saythings] .=  " (" . $name . ")";
   return @saythings;
 }
