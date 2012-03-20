@@ -143,6 +143,8 @@ create_bot_db($dbname) or die "Errors while updating db tables";
 # be sure that the feeds are in the channels we join
 rss_clean_unused_feeds($dbname, \@channels);
 
+my $starttime = time;
+
 ### starting POE stuff
 
 my $irc = POE::Component::IRC::State->spawn(%serverconfig) 
@@ -161,6 +163,7 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_uptime
 		     irc_botcmd_sitedown
 		     irc_botcmd_wikiz
 		     irc_botcmd_remind
@@ -234,6 +237,7 @@ sub _start {
 	    choose => 'Do a random guess | Takes 2 or more arguments: choose <choise1> <choise2> <choice#n>',
 	    version => 'Show from which git branch we are running the bot. Do not use without git',
             sitedown => 'Check whether a website is up or down | sitedown <domain>',									       
+	    uptime => 'Bot\'s uptime',
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1179,6 +1183,17 @@ sub irc_botcmd_sitedown {
     $result =~ s/->.*$//;
     bot_says($where, $result);
   }
+}
+
+sub irc_botcmd_uptime {
+  my $where = $_[ARG1];
+  my $now = time;
+  my $uptime = $now - $starttime;
+  my $days = int($uptime/(24*60*60));
+  my $hours = ($uptime/(60*60))%24;
+  my $mins = ($uptime/60)%60;
+  my $secs = $uptime%60;
+  bot_says($where, "uptime: $days day(s), $hours hour(s), $mins minute(s) and $secs sec(s).");
 }
 
 
