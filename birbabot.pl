@@ -1093,18 +1093,21 @@ sub irc_botcmd_choose {
 sub irc_botcmd_version {
   my $where = $_[ARG1];
       die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
-      if ($pid) {           # parent                                                                                                                                                
-        while (<KID>) {
-          bot_says($where, $_); last;
-        }
-        close KID;
-        return;
-      } else {
-        # this is the external process, forking. It never returns
-	my @command = ('git', 'log', '-n', '1');
-	exec @command or die "Can't exec git: $!";
+  if ($pid) { # parent
+    while (<KID>) {
+      my $line = $_;
+      unless ($line =~ m/^\s*$/) {
+	bot_says($where, $line);
       }
     }
+    close KID;
+    return;
+  } else {
+    # this is the external process, forking. It never returns
+    my @command = ('git', 'log', '-n', '1');
+    exec @command or die "Can't exec git: $!";
+  }
+}
 
 sub irc_botcmd_remind {
   my ($who, $where, $what) = @_[ARG0..$#_];
