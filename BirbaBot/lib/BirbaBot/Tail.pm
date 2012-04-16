@@ -54,7 +54,8 @@ sub file_tail {
     $offset = 0; # if the old size is bigger, it means the file was truncated
   }
 
-  open (my $fh, '<', $file) or die "Houston, we have a problem: $!";
+  open (my $fh, '<:encoding(utf8)', $file)
+    or die "Houston, we have a problem: $!";
   if ($offset > 0) {
     seek($fh, $offset, 0);    # move the cursor, starting from the end
   }
