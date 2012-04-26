@@ -14,7 +14,7 @@ logfile=$botdir/logs/birba-`date +%F`.log
 
 if [ ! -f "$botdir/birba.pid" ]; then
     cd $botdir
-    exec nohup perl birbabot.pl $1 >> "$logfile" 2>&1
+    exec nohup perl birbabot.pl $1 >> "$logfile" 2>&1 &
 fi
 
 pid=$(cat $botdir/birba.pid)
