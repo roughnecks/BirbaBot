@@ -211,11 +211,15 @@ sub rss_fetch {
       my $btime = localtime();
       print "Parsing $destfile on $btime\n";
       my $rss;
+      my @items;
       eval {
 	$rss = XML::Feed->parse($destfile);
+	@items = reverse $rss->entries;
       };
-      print $@ if $@;
-      next if $@;
+      if ($@) {
+	print $@;
+	next;
+      };
       my %linksinrss;
       my $sth = 
         $dbh->prepare("INSERT INTO feeds VALUES (NULL, DATETIME('NOW'),  ?, ?, ?, ?, ?)");
@@ -229,7 +233,7 @@ sub rss_fetch {
       }
       #      print Dumper(\%alreadyfetchedurls);
       ## start looping over RSS
-      foreach my $item (reverse $rss->entries) {
+      foreach my $item (@items) {
 	# avoid doing another loop, and save the link
 	my $feed_item_link = $item->link;
 	$linksinrss{$feed_item_link} = 1;
