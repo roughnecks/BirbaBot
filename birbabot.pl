@@ -163,6 +163,7 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_free
 		     irc_botcmd_uptime
 		     irc_botcmd_sitedown
 		     irc_botcmd_wikiz
@@ -238,6 +239,7 @@ sub _start {
 	    version => 'Show from which git branch we are running the bot. Do not use without git',
             sitedown => 'Check whether a website is up or down | sitedown <domain>',									       
 	    uptime => 'Bot\'s uptime',
+	    free => 'Show system memory usage',
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1197,6 +1199,26 @@ sub irc_botcmd_uptime {
   my $mins = ($uptime/60)%60;
   my $secs = $uptime%60;
   bot_says($where, "uptime: $days day(s), $hours hour(s), $mins minute(s) and $secs sec(s).");
+}
+
+
+sub irc_botcmd_free {
+  my $where = $_[ARG1];
+      die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+  if ($pid) { # parent
+    while (<KID>) {
+      my $line = $_;
+      unless ($line =~ m/^\s*$/) {
+        bot_says($where, $line);
+      }
+    }
+    close KID;
+    return;
+  } else {
+    # this is the external process, forking. It never returns
+    my @command = ('free', '-m');
+    exec @command or die "Can't exec git: $!";
+  }
 }
 
 
