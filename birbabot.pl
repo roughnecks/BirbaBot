@@ -1205,14 +1205,34 @@ sub irc_botcmd_uptime {
 sub irc_botcmd_free {
   my $where = $_[ARG1];
       die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+  my %freestats = (
+		   total => "n/a",
+		   used => "n/a",
+		   free => "n/a",
+		   swaptot => "n/a",
+		   swapused => "n/a",
+		   swapfree => "n/a",
+		  );
   if ($pid) { # parent
     while (<KID>) {
       my $line = $_;
-      unless ($line =~ m/^\s*$/) {
-        bot_says($where, $line);
+      if ($line =~ m/^Mem\:\s+(\d+)\s+/) {
+	$freestats{total} = $1;
+      } elsif ($line =~ m/^\-\/\+ buffers\/cache\:\s+(\d+)\s+(\d+)/) {
+	$freestats{used} = $1;
+	$freestats{free} = $2;
+      } elsif ($line =~ m/^Swap\:\s+(\d+)\s+(\d+)\s+(\d+)/) {
+	$freestats{swaptot} = $1;
+	$freestats{swapused} = $2;
+	$freestats{swapfree} = $3;
       }
     }
     close KID;
+    my $output = "Memory: used " . $freestats{used} . "/" . $freestats{total} .
+      "Mb, " . $freestats{free} . "Mb free. Swap: used " . $freestats{swapused} .
+	"/" . $freestats{swaptot} . "Mb";
+    undef %freestats;
+    bot_says($where, $output);
     return;
   } else {
     # this is the external process, forking. It never returns
