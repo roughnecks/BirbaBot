@@ -1229,8 +1229,8 @@ sub irc_botcmd_free {
     }
     close KID;
     my $output = "Memory: used " . $freestats{used} . "/" . $freestats{total} .
-      "Mb, " . $freestats{free} . "Mb free. Swap: used " . $freestats{swapused} .
-	"/" . $freestats{swaptot} . "Mb";
+      "MB, " . $freestats{free} . "MB free. Swap: used " . $freestats{swapused} .
+	"/" . $freestats{swaptot} . "MB";
     undef %freestats;
     bot_says($where, $output);
     return;
