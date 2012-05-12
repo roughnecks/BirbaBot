@@ -136,7 +136,7 @@ sub kw_list {
   if (@out) {
     my $output = "I know the following facts: " . join(", ", sort(@out));
     return $output;
-  } else { return "Dunno about any fact; empy list." }
+  } else { return "Dunno about any fact; empty list." }
 }
 
 sub karma_manage {

@@ -235,7 +235,7 @@ sub _start {
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
-	    choose => 'Do a random guess | Takes 2 or more arguments: choose <choise1> <choise2> <choice#n>',
+	    choose => 'Do a random guess | Takes 2 or more arguments: choose <choice1> <choice2> <choice#n>',
 	    version => 'Show from which git branch we are running the bot. Do not use without git',
             sitedown => 'Check whether a website is up or down | sitedown <domain>',									       
 	    uptime => 'Bot\'s uptime',
