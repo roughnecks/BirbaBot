@@ -123,7 +123,7 @@ sub search_imdb {
   if ($string =~ m/(tt[0-9]{3,})/) {
     my ($url, $imdb) = imdb_query_api($1);
     if ($imdb) {
-      return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. $imdb->{Plot}";
+      return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{imdbRating}. $imdb->{Plot}";
     } else {
       return "Sorry, the api failed us! Go to  ${bbold}http://imdb.com/title/$1${ebold}"
     }
@@ -139,7 +139,7 @@ sub search_imdb {
   if ($imdbresult->base =~ m!/title/(tt[0-9]{3,})!) {
     my ($url, $imdb) = imdb_query_api($1);
     if ($imdb) {
-      return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. ${bbold}http://imdb.com/title/$imdb->{ID}$ebold $imdb->{Plot}";
+      return "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}, with $imdb->{Actors}. Genre: $imdb->{Genre}. Rating: $imdb->{imdbRating}. ${bbold}http://imdb.com/title/$imdb->{imdbID}$ebold $imdb->{Plot}";
     } else {
       return "Sorry, the api failed us! Go to  ${bbold}http://imdb.com/title/$1${ebold}"
     }
@@ -152,7 +152,7 @@ sub search_imdb {
     my $arrayref = shift(@queryids);
     my ($url, $imdb) = imdb_query_api($arrayref->[1]);
     if ($imdb) {
-      push @output, "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}. Genre: $imdb->{Genre}. Rating: $imdb->{Rating}. ${bbold}http://imdb.com/title/$imdb->{ID}$ebold";
+      push @output, "${bbold}$imdb->{Title}${ebold}, $imdb->{Year}, directed by $imdb->{Director}. Genre: $imdb->{Genre}. Rating: $imdb->{imdbRating}. ${bbold}http://imdb.com/title/$imdb->{imdbID}$ebold";
     } else {
       my $scrapedtitle = $arrayref->[0];
       $scrapedtitle =~ s/&(\w+|#x[0-9a-zA-Z]+);/ /g; # to fix
@@ -198,7 +198,7 @@ sub imdb_query_api {
   unless (($imdb->{'Response'}) && ($imdb->{'Response'} eq 'True')) {
     return $imdburl
   }
-  my @required = qw(ID Title Year Director Actors Rating Genre Plot);
+  my @required = qw(imdbID Title Year Director Actors imdbRating Genre Plot);
   foreach my $key (@required) {
     unless ($imdb->{$key}) {
       $imdb->{$key} = "N/A";
