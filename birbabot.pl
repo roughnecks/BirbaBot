@@ -1203,7 +1203,13 @@ sub irc_botcmd_uptime {
 
 
 sub irc_botcmd_free {
+  my $mask = $_[ARG0];
+  my $nick = (split /!/, $mask)[0];
   my $where = $_[ARG1];
+  unless (check_if_op($where, $nick) or check_if_admin($mask)) {
+    bot_says($where, "You need to be a bot/channel operator, sorry");
+    return;
+  }
       die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
   my %freestats = (
 		   total => "n/a",
