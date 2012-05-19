@@ -383,21 +383,22 @@ sub search_urban {
   my $outstring;
   my $counter = 1;
   my $maxlenght = 790;
-#  print Dumper($results);
-  while (@$results 
-	 && ($counter < 3) 
-	 && (length($outstring) < $maxlenght)
-	)  {
+  while (@$results && ($counter < 3)) {
     my $res = shift(@$results);
     $outstring .= $bbold . $counter . "." . " " .  $res->{'term'} . $ebold . " " .
       $res->{'definition'} . " " . $res->{'example'} . "; ";
     $counter++;
   }
-  if ($outstring) {
-#    print Dumper(\$outstring);
+  if ($outstring && length($outstring) <= $maxlenght) {
     $outstring =~ s/\;\s*$//;
     return $outstring;
-  } else {
+  }
+  elsif ($outstring && length($outstring) > $maxlenght) {
+    $outstring =~ s/\;\s*$//;
+    my $outstring_cut = substr($outstring, 0, $maxlenght) . " ...";
+    return $outstring_cut;
+  }
+  else {
     return "No results found";
   }
 }
