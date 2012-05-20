@@ -98,8 +98,8 @@ sub query_meteo {
     }
     elsif ($collected[$i] eq "current_conditions") {
       $outstring .= "Current conditions: " .
-      "Temp: " .  $collected[$i+1]->{temp_c}->[0]->{data} . " " .
-	$collected[$i+1]->{wind_condition}->[0]->{data} . " " .
+      "Temp: " .  $collected[$i+1]->{temp_c}->[0]->{data} . "&#176;C, " .
+	$collected[$i+1]->{wind_condition}->[0]->{data} . ", " .
 	  $collected[$i+1]->{humidity}->[0]->{data} . ". " .
 	  "It's " . $collected[$i+1]->{condition}->[0]->{data} . "; ";
 	    $i++;
