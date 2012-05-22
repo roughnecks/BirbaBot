@@ -798,7 +798,7 @@ sub irc_part {
     my $chan = $_[ARG1];
     my $text = $_[ARG2];
 
-    my $msg = 'parting $chan';
+    my $msg = "parting " . $chan;
     $msg .= " with message '$text'" if defined $text;
 
     add_nick($nick, $msg);
