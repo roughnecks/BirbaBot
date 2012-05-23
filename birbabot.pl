@@ -451,7 +451,9 @@ sub irc_botcmd_slap {
     } elsif ($arg =~ /^\s*$/) { 
       return
     } else {
-      $irc->yield(ctcp => $where, "ACTION slaps $arg with her tail");
+      my $dest = $arg;
+      $dest =~ s/\s//;
+      $irc->yield(ctcp => $where, "ACTION slaps $dest with her tail");
     }
     return;
 }
