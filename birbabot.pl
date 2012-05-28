@@ -93,8 +93,8 @@ my %serverconfig = (
 		    'nick' => 'Birba',
 		    'ircname' => "Birba the Bot",
 		    'username' => 'birbabot',
-		    'server' => "localhost",
-		    'localaddr' => "192.168.1.1",
+		    'server' => 'localhost',
+		    'localaddr' => '',
 		    'port' => 7000,
 		    'usessl' => 1,
 		   );
