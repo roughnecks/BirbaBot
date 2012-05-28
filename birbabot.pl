@@ -863,6 +863,7 @@ sub irc_public {
       };
 
       next if (length($url) <= 60);
+      next if !(($url =~ m/^(f|ht)tp/));
       my $reply = $nick . "'s url: " . make_tiny_url($url);
       bot_says($channel, $reply);
       return;
