@@ -346,8 +346,11 @@ sub process_feeds {
       my $news = shift(@feeds);
 #      print Dumper($news);
       my $string = $bbold . $feedname . "::" . $ebold . " ";
-      if ($news->{'title'}) {
-	$string .= $news->{'title'} . " || ";
+      if ($news->{title}) {
+	$string .= $news->{title};
+      }
+      if ($news->{link}) {
+	$string .= " <${bbold}" . $news->{link} . "${ebold}> ";
       }
       if ($news->{content}) {
 	if ($news->{title} eq $news->{content}) {
@@ -358,10 +361,7 @@ sub process_feeds {
 	}
       }
       if ($news->{'author'}) {
-	$string .= " (" . $news->{'author'} . ")";
-      }
-      if ($news->{'link'}) {
-	$string .= "<${bbold}" . $news->{'link'} . "${ebold}>";
+	$string .= "(" . $news->{'author'} . ")";
       }
       push @processed, $string;
     }
@@ -466,7 +466,7 @@ sub clean_up_and_trim_html_stuff {
   $$string =~ s!<.+?>!!g;
   my @chunks = split /\s+/, $$string;
   my $out = " ";
-  while (@chunks && (length($out) < 300)) {
+  while (@chunks && (length($out) < 250)) {
     $out .= shift(@chunks) . " "
   }
   $out =~ s/(\s*\|\s*)+/ | /g;
