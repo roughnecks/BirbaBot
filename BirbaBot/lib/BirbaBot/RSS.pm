@@ -426,8 +426,11 @@ sub rss_list {
     push @watched, $reply;
   }
   $dbh->disconnect;
-  print Dumper(\@watched);
-  return join(" ", @watched);
+  if (@watched) {
+    return join(" ", @watched);
+  } else {
+    return "I'm not watching anything :-)";
+  }
 }
 
 sub rss_clean_unused_feeds {
