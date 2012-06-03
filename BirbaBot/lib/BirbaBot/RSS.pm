@@ -466,7 +466,11 @@ sub clean_up_and_trim_html_stuff {
   while (@chunks && (length($out) < 300)) {
     $out .= shift(@chunks) . " "
   }
-  $$string = $out . "...";
+  $out =~ s/(\s*\|\s*)+/ | /g;
+  $$string = $out;
+  if (@chunks) {
+     $$string .= "...";
+  }
 }
 
 
