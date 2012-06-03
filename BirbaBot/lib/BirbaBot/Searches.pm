@@ -37,8 +37,6 @@ use Data::Dumper;
 use URI::Escape;
 use XML::Parser;
 
-use WWW::Babelfish;
-
 # use Data::Dumper;
 
 my $ua = LWP::UserAgent->new;
