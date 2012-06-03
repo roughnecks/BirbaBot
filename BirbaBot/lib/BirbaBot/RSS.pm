@@ -165,9 +165,10 @@ It fetches the feeds, dumps them in the db, and return an hash reference like th
        'lamerbot' => [
                        {
                          'link' => 'http://laltromondo.dynalias.net/gitweb/?p=lamerbot.git;a=commitdiff;h=d45c48b6303defb3977eaad68cbfbfd080b74c3a',
-                         'desc' => 'new sql: date fixes',
+                         'desc' => 'new sql: date fixes', # uh? I can't see it
                          'author' => 'roughnecks <simcana@gmail.com>',
-                         'title' => 'new sql: date fixes'
+                         'title' => 'new sql: date fixes',
+                         'content' => 'The commit message',
                        }
                      ]
      };
@@ -242,6 +243,7 @@ sub rss_fetch {
 	};
 	my $feed_item_title = $item->title;
 	my $feed_item_author = $item->author;
+	my $feed_item_content = $item->summary->body || $item->content->body;
 	my $feed_item_tinyurl = BirbaBot::Shorten::make_tiny_url($feed_item_link);
 	my $out_link;
 	if ($feed_item_link eq $feed_item_tinyurl) {
@@ -262,9 +264,12 @@ sub rss_fetch {
         unless ($sth->err) {
           # here we push the new feed in a multidimensional hash
           push @outputfeed,
-            {'title' =>  $feed_item_title,
-             'author' => $feed_item_author,
-             'link' =>   $out_link};
+            {
+	     title   => $feed_item_title,
+             author  => $feed_item_author,
+	     content => $feed_item_content,
+             link    => $out_link,
+	    };
         }
       }
       $output{$feedname} = \@outputfeed;
@@ -338,6 +343,7 @@ sub process_feeds {
     # now loop over the feeds and create the string
     while(@feeds) {
       my $news = shift(@feeds);
+      print Dumper($news);
       my $string = $bbold . $feedname . "::" . $ebold . " ";
       if ($news->{'title'}) {
 	$string .= $news->{'title'} . " ";
@@ -351,8 +357,11 @@ sub process_feeds {
       } else {
 	next # wtf, no link?
       }
+      if ($news->{content}) {
+	$string .= $news->{content};
+      }
       if ($news->{'author'}) {
-	$string .= "(" . $news->{'author'} . ")";
+	$string .= " (" . $news->{'author'} . ")";
       }
       push @processed, $string;
     }
