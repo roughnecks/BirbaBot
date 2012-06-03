@@ -28,7 +28,6 @@ use BirbaBot::RSS qw(
 		   );
 use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
-			  google_translate
 			  query_meteo
 			  search_imdb
 			  search_bash
@@ -188,7 +187,6 @@ POE::Session->create(
 		     irc_botcmd_g
 		     irc_botcmd_gi
 		     irc_botcmd_gv
-		     irc_botcmd_x
 		     irc_botcmd_imdb
 		     irc_botcmd_quote
 		     irc_botcmd_meteo
@@ -232,7 +230,6 @@ sub _start {
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
-            x => 'Translate some text from lang to lang (where language is a two digit country code), for example: "x en it this is a test".',
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
@@ -521,16 +518,6 @@ sub irc_botcmd_gv {
   }
 }
 
-sub irc_botcmd_x {
-  my ($where, $arg) = @_[ARG1, ARG2];
-  if ($arg =~ m/^\s*([a-z]{2,3})\s+([a-z]{2,3})\s+(.*)\s*$/) {
-    my $result = google_translate($3, $1, $2);
-    $result =~ s/^\s+//;
-    bot_says($where, $result);
-  } else {
-    bot_says($where, "Example: x hr it govno");
-  }
-}
 
 sub irc_botcmd_kw {
   my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];

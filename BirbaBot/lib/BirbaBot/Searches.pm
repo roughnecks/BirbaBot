@@ -16,7 +16,6 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(
 		     search_google
-		     google_translate
 		     search_imdb
 		     search_bash
 		     search_urban
@@ -208,54 +207,6 @@ sub imdb_query_api {
 }
 
 
-
-
-=head2 google_translate($string, $from, $to)
-
-Query http://ajax.googleapis.com/ajax/services/language/translate for
-a $string to translatate from language code $from to language code
-$to.
-
-=cut
-
-my %langtab = (
-	       "nl" => "Dutch",
-	       "en" => "English",
-	       "fr" => "French",
-	       "de" => "German",
-	       "it" => "Italian",
-	       "ru" => "Russian",
-	       "es" => "Spanish"
-	       );
-
-sub google_translate {
-  my ($string, $from, $to) = @_;
-  return "Missing parameters" unless ($string and $from and $to);
-  unless (($from =~ m/^\w+$/) and ($to =~ m/^\w+$/)) {
-    return "Right example query: x it en here goes my text"
-  }
-  my $froml = $langtab{$from};
-  my $tol = $langtab{$to};
-
-  my $babelfish = new WWW::Babelfish(service => 'Yahoo', 
-				     agent => 'Mozilla/8.0');
-
-  return "Language pair not supported" unless ($froml && $tol);
-  $string .= "\n\n";
-
-  return "Service unavailable" unless defined $babelfish;
-  
-  my $translation = $babelfish->translate( 'source' => $froml,
-					   'destination' => $tol,
-					   'text' => $string);
-
-  
-  if ($translation) {
-     return $translation
-   } else {
-     return $babelfish->error
-   }
-}
 
 =head2 search_google($query, $type)
 
