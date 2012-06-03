@@ -253,7 +253,8 @@ sub rss_fetch {
 	  $out_link = $feed_item_tinyurl;
 	}
 	#strip the tags
-	$feed_item_title =~ s/<.+?>//g;
+	clean_up_and_trim_html_stuff(\$feed_item_title);
+	clean_up_and_trim_html_stuff(\$feed_item_content);
         $sth->execute(
                       $feedname,
                       $feed_item_title,
@@ -346,22 +347,21 @@ sub process_feeds {
       print Dumper($news);
       my $string = $bbold . $feedname . "::" . $ebold . " ";
       if ($news->{'title'}) {
-	$string .= $news->{'title'} . " ";
-      } else {
-	next # wtf, no title?
-      }
-      if ($news->{'link'}) {
-	# ENABLE ME!
-	$string .= "<" . $news->{'link'} . "> ";
-	# $string .= "<" . $news->{'link'} . "> ";
-      } else {
-	next # wtf, no link?
+	$string .= $news->{'title'} . " || ";
       }
       if ($news->{content}) {
-	$string .= $news->{content};
+	if ($news->{title} eq $news->{content}) {
+	  print "Not printing duplicated content in link and content";
+	}
+	else {
+	  $string .= $news->{content};
+	}
       }
       if ($news->{'author'}) {
 	$string .= " (" . $news->{'author'} . ")";
+      }
+      if ($news->{'link'}) {
+	$string .= "<${bbold}" . $news->{'link'} . "${ebold}>";
       }
       push @processed, $string;
     }
@@ -454,6 +454,19 @@ sub rss_clean_unused_feeds {
       " because we are not joining it\n";
     rss_delete_feed($dbname, $delete->[0], $delete->[1]);
   }
+}
+
+sub clean_up_and_trim_html_stuff {
+  my $string = shift;
+  # first, check for <br> or <p>
+  $$string =~ s!<(br|p)\s*/\s*>! | !g;
+  $$string =~ s!<.+?>!!g;
+  my @chunks = split /\s+/, $$string;
+  my $out = " ";
+  while (@chunks && (length($out) < 300)) {
+    $out .= shift(@chunks) . " "
+  }
+  $$string = $out . "...";
 }
 
 
