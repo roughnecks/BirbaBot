@@ -886,7 +886,7 @@ sub irc_botcmd_seen {
     $target =~ s/\s+//g;
   }
   my $botnick = $irc->nick_name;
-  print "processing seen command\n";
+#  print "processing seen command\n";
   if ($seen->{l_irc($target)}) {
     my $date = localtime $seen->{l_irc($target)}->[USER_DATE];
     my $msg = $seen->{l_irc($target)}->[USER_MSG];
@@ -1172,7 +1172,7 @@ sub irc_botcmd_sitedown {
   return unless $what =~ m/^\s*(\w.+\.)+[a-z]{2,3}$/;
   my $prepend = 'http://www.downforeveryoneorjustme.com/';
   my $query = $prepend . $what;
-  print "Asking downforeveryoneorjustme for $query\n";
+#  print "Asking downforeveryoneorjustme for $query\n";
   my $file = get "$query";
   if ( $file =~ m|<title>(.+)</title>|s ) {
     my $result = $1;
