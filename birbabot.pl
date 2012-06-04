@@ -844,7 +844,7 @@ sub irc_public {
     $urifinder->find(\$what);
     while (@longurls) {
       my $url = shift @longurls;
-      print "Found $url\n";
+#      print "Found $url\n";
       if ($url =~ m/youtube/) {
 	bot_says($channel, get_youtube_title($url));
       };
