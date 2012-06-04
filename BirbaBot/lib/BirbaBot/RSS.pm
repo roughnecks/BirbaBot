@@ -30,6 +30,7 @@ use LWP::UserAgent;
 use DBI;
 use BirbaBot::Shorten;
 use Data::Dumper;
+use HTML::Parser 3.00 ();
 
 my $ua = LWP::UserAgent->new(timeout => 10); # we can't wait too much
 $ua->agent('Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.16) Gecko/20110929 Iceweasel/3.5.16 (like Firefox/3.5.16)');
@@ -461,19 +462,38 @@ sub rss_clean_unused_feeds {
 
 sub clean_up_and_trim_html_stuff {
   my $string = shift;
-  # first, check for <br> or <p>
-  $$string =~ s!<(br|p)\s*/\s*>! | !g;
-  $$string =~ s!<.+?>!!g;
+  $$string = extract_text_from_html($$string);
   my @chunks = split /\s+/, $$string;
   my $out = " ";
   while (@chunks && (length($out) < 250)) {
     $out .= shift(@chunks) . " "
   }
-  $out =~ s/(\s*\|\s*)+/ | /g;
   $$string = $out;
   if (@chunks) {
      $$string .= "...";
   }
+}
+
+sub extract_text_from_html {
+  my @text;
+  my $p = HTML::Parser->new(api_version => 3,
+			    handlers => [start => [ 
+						   sub { push @text, " " },
+						   "tagname" ],
+					 end =>   [ 
+						   sub { push @text, " " },
+						   "tagname" ],
+					 text =>  [
+						   sub { push @text, shift },
+						   "dtext" ],
+					],
+			    marked_sections => 1,
+			    ignore_elements => ['script', 'style'],
+			   );
+  $p->parse(shift) || return "Something is wrong";
+  $p->eof;
+  undef $p;
+  return join("", @text);
 }
 
 
