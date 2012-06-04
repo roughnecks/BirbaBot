@@ -257,9 +257,9 @@ sub google_process_results {
   my $arrayref = shift;
   my @out;
   foreach my $c (0..3) {
-    my $result = "";
     my $title =  $arrayref->[$c]->{'titleNoFormatting'};
-    my $url = make_tiny_url($arrayref->[$c]->{'url'});
+    my $url = uri_unescape($arrayref->[$c]->{'url'});
+    $url = make_tiny_url($url);
     push @out, "${bbold}${title}${ebold} <$url>";
   }
   return join (" | ", @out);
