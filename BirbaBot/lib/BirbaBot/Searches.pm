@@ -320,7 +320,7 @@ sub search_bash {
 		    marked_sections => 1,
 		    unbroken_text => 0,
 		    ignore_elements => ['script', 'style'],
-		   )->parse($rawtext) || return "Something went wrong: $!\n";;
+		   )->parse($rawtext) || return "Something went wrong: $!\n";
 #	print Dumper(\@quotes);
   return $quotes[0];
 }
