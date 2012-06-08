@@ -853,7 +853,6 @@ sub irc_public {
       next unless ($url =~ m/^(f|ht)tp/);
       my $reply = $nick . "'s url: " . make_tiny_url($url);
       bot_says($channel, $reply);
-      return;
     }
     
 #     elsif (($what =~ /\?$/) and (int(rand(6)) == 1)) {
