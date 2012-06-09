@@ -1168,7 +1168,12 @@ sub irc_botcmd_wikiz {
 sub irc_botcmd_sitedown {
   my ($where, $what) = @_[ARG1, ARG2];
   return unless is_where_a_channel($where);
-  return unless $what =~ m/^\s*(\w.+\.)+[a-z]{2,3}$/;
+  if ($what =~ m/^\s*(http\:\/\/)?(\w.+\.)+[a-z]{2,3}$/) {
+    $what = $2;
+  } else {
+    bot_says($where, "Uh?");
+    return;
+  }
   my $prepend = 'http://www.downforeveryoneorjustme.com/';
   my $query = $prepend . $what;
 #  print "Asking downforeveryoneorjustme for $query\n";
