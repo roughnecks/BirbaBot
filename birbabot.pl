@@ -163,6 +163,8 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_pull
+		     irc_botcmd_restart
 		     irc_botcmd_free
 		     irc_botcmd_uptime
 		     irc_botcmd_sitedown
@@ -238,6 +240,8 @@ sub _start {
             sitedown => 'Check whether a website is up or down | sitedown <domain>',									       
 	    uptime => 'Bot\'s uptime',
 	    free => 'Show system memory usage',
+            restart => 'Restart BirbaBot',
+            pull => 'Execute a git pull',									    
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1240,6 +1244,14 @@ sub irc_botcmd_free {
     my @command = ('free', '-m');
     exec @command or die "Can't exec git: $!";
   }
+}
+
+sub irc_botcmd_restart {
+  return;
+}
+
+sub irc_botcmd_pull {
+  return;
 }
 
 
