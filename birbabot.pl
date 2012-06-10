@@ -14,6 +14,7 @@ use LWP::Simple;
 use File::Spec;
 use File::Path qw(make_path);
 use Data::Dumper;
+use File::Basename;
 use lib './BirbaBot/lib';
 use BirbaBot qw(create_bot_db
 		read_config
@@ -197,6 +198,7 @@ POE::Session->create(
                     irc_part
                     irc_quit
 		    save
+		    greetings_and_die
                     irc_ctcp_action
 		     rss_sentinel
 		     tail_sentinel
@@ -694,23 +696,17 @@ sub dns_response {
 
 sub irc_disconnected {
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
-  # we better sleep here, so we don't spam events which are not going to happen
-  sleep $reconnect_delay;
-  $irc->yield( connect => { });
+  $irc->delay([ connect => { }], $reconnect_delay);
 }
 
 sub irc_error {
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
-  # we better sleep here, so we don't spam events which are not going to happen
-  sleep $reconnect_delay;
-  $irc->yield( connect => { });
+  $irc->delay([ connect => { }], $reconnect_delay);
 }
 
 sub irc_socketerr {
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
-  # we better sleep here, so we don't spam events which are not going to happen
-  sleep $reconnect_delay;
-  $irc->yield( connect => { });
+  $irc->delay([ connect => { }], $reconnect_delay);
 }
 
 sub irc_001 {
@@ -1025,6 +1021,7 @@ sub process_admin_list {
 
 sub check_if_admin {
   my $mask = shift;
+  return 0 unless $mask;
   foreach my $regexp (@adminregexps) {
     if ($mask =~ m/$regexp/) {
       return 1
@@ -1035,6 +1032,7 @@ sub check_if_admin {
 
 sub check_if_op {
   my ($chan, $nick) = @_;
+  return 0 unless $nick;
   if (($irc->is_channel_operator($chan, $nick)) or 
       ($irc->nick_channel_modes($chan, $nick) =~ m/[aoq]/)) {
     return 1;
@@ -1247,13 +1245,61 @@ sub irc_botcmd_free {
 }
 
 sub irc_botcmd_restart {
-  return;
+  my ($kernel, $who, $where, $arg) = @_[KERNEL, ARG0, ARG1, ARG2];
+  return unless (sanity_check($who, $where));
+  $poe_kernel->signal($poe_kernel, 'POCOIRC_SHUTDOWN', 'Goodbye, cruel world');
+  $kernel->delay_set(greetings_and_die => 10);
 }
 
 sub irc_botcmd_pull {
+  my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
+  return unless (sanity_check($who, $where));
+  my $gitorigin = `git config --get remote.origin.url`;
+  if ($gitorigin =~ m!^\s*ssh://!) {
+    bot_says($where, "Your git uses ssh, I can't safely pull");
+    return;
+  }
+  die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+  if ($pid) {           # parent
+    while (<KID>) {
+      bot_says($where, $_);
+    }
+    close KID;
+    return;
+  } else {
+    my @command = ("git", "pull");
+    # this is the external process, forking. It never returns
+    exec @command or die "Can't exec git: $!";
+  }
   return;
 }
 
+
+sub sanity_check {
+  my ($who,$where) = @_;
+  return unless $who;
+  return unless $where;
+  unless (check_if_admin($who)) {
+    bot_says($where, "Who the hell are you?");
+    return undef;
+  };
+  if ((-e basename($0)) &&
+      (-d ".git") &&
+      (-d "BirbaBot") &&
+      (check_if_admin($who))) {
+    return 1;
+  } else {
+    bot_says($where, "I can't find myself");
+    return undef;
+  }
+}
+
+
+sub greetings_and_die {
+  $ENV{PATH} = "/bin:/usr/bin"; # Minimal PATH.
+  my @command = ($0, @ARGV);
+  exec @command or die "can't exec myself: $!";
+}
 
 exit;
 
