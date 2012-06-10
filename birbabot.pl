@@ -1297,7 +1297,7 @@ sub sanity_check {
 
 sub greetings_and_die {
   $ENV{PATH} = "/bin:/usr/bin"; # Minimal PATH.
-  my @command = ($0, @ARGV);
+  my @command = ('perl', $0, @ARGV);
   exec @command or die "can't exec myself: $!";
 }
 
