@@ -1170,13 +1170,18 @@ sub irc_botcmd_wikiz {
 sub irc_botcmd_sitedown {
   my ($where, $what) = @_[ARG1, ARG2];
   return unless is_where_a_channel($where);
-  if ($what =~ m/^\s*(http\:\/\/)?(\w.+\.)+[a-z]{2,3}$/) {
-    $what = $2;
+  if ($what =~ m/^\s*(http\:\/\/)?(\www\.)?(.+\.[a-z]{2,3})$/) {
+    $what = $3;
+    print "WHAT IS: $what";
+    if ($what =~ m/.*downforeveryoneorjustme.*/) {
+      bot_says($where, 'You just found egg #1: http://laltromondo.dynalias.net/~img/images/sitedown.png');
+      return;
+    }
   } else {
     bot_says($where, "Uh?");
     return;
   }
-  my $prepend = 'http://www.downforeveryoneorjustme.com/';
+    my $prepend = 'http://www.downforeveryoneorjustme.com/';
   my $query = $prepend . $what;
 #  print "Asking downforeveryoneorjustme for $query\n";
   my $file = get "$query";
