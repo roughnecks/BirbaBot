@@ -1172,7 +1172,6 @@ sub irc_botcmd_sitedown {
   return unless is_where_a_channel($where);
   if ($what =~ m/^\s*(http\:\/\/)?(\www\.)?(.+\.[a-z]{2,3})\s*$/) {
     $what = $2 . $3;
-    print "WHAT IS: $what";
     if ($what =~ m/^\s*(www\.)?downforeveryoneorjustme\.com\s*/) {
       bot_says($where, 'You just found egg #1: http://laltromondo.dynalias.net/~img/images/sitedown.png');
       return;
@@ -1181,9 +1180,9 @@ sub irc_botcmd_sitedown {
     bot_says($where, "Uh?");
     return;
   }
-    my $prepend = 'http://www.downforeveryoneorjustme.com/';
+  my $prepend = 'http://www.downforeveryoneorjustme.com/';
   my $query = $prepend . $what;
-#  print "Asking downforeveryoneorjustme for $query\n";
+  #  print "Asking downforeveryoneorjustme for $query\n";
   my $file = get "$query";
   if ( $file =~ m|<title>(.+)</title>|s ) {
     my $result = $1;
