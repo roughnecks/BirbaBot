@@ -1173,7 +1173,7 @@ sub irc_botcmd_sitedown {
   if ($what =~ m/^\s*(http\:\/\/)?(\www\.)?(.+\.[a-z]{2,3})$/) {
     $what = $2 . $3;
     print "WHAT IS: $what";
-    if ($what =~ m/.*downforeveryoneorjustme.*/) {
+    if ($what =~ m/www\.downforeveryoneorjustme\.com/) {
       bot_says($where, 'You just found egg #1: http://laltromondo.dynalias.net/~img/images/sitedown.png');
       return;
     }
