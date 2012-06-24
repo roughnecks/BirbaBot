@@ -78,13 +78,17 @@ sub notes_pending {
 }
 
 sub notes_del {
-  my ($dbname, $who, $rcpt) = @_;
+  my ($dbname, $sender, $rcpt) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  my $delete = $dbh->prepare('DELETE FROM notes WHERE recipient = ?');
-  my $query = $dbh->prepare('SELECT recipient FROM notes WHERE sender = ?');
-  $query->execute($who);
+  return "Wrong arguments" unless ($sender && $rcpt);
+  my $delete = 
+    $dbh->prepare('DELETE FROM notes WHERE recipient = ? AND sender = ?');
+  my $query = 
+    $dbh->prepare('SELECT recipient FROM notes WHERE recipient = ? AND sender = ?');
+  $query->execute($rcpt, $sender);
+  # if there something in the query, means that there's something to delete
   if (my @data = $query->fetchrow_array()) {
-    $delete->execute($rcpt);
+    $delete->execute($rcpt, $sender);
     $dbh->disconnect;
     return "Succesfully deleted pending notes to: $rcpt."
   } else {
