@@ -33,7 +33,7 @@ sub notes_add {
   my $date = localtime();
   $query->execute($date, $from, $to, $message);
   $dbh->disconnect;
-  return "Message \"$message\" for $to from $from on $date done";
+  return "Message \"$message\" for $to sent from $from on $date: stored";
 }
 
 =head2 notes_give($dbname, $who)
