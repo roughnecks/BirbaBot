@@ -484,10 +484,9 @@ sub irc_botcmd_notes {
   } elsif ($arg =~ /^\s*$/) {
     bot_says($where, notes_pending($dbname, $nick));
   } else {
-    my @array = split(" ", $arg);
-    my $subcmd = shift @array;
-    if (($subcmd eq 'del') && ($array[0]) && ($array[0] =~ m/^\s*\w+\s*$/)) {
-      bot_says($where, notes_del($dbname, $nick, $array[0]));
+    my ($subcmd, $fromwho) = split(/\s+/, $arg);
+    if (($subcmd eq 'del') && (defined $fromwho)) {
+      bot_says($where, notes_del($dbname, $nick, $fromwho));
       return
     } else { 
       bot_says($where, "Missing or invalid argument");
@@ -1319,10 +1318,9 @@ sub irc_botcmd_anotes {
   } elsif ($arg =~ /^\s*$/) {
     bot_says($where, anotes_pending($dbname));
   } else {
-    my @array = split(" ", $arg);
-    my $subcmd = shift @array;
-    if (($subcmd eq 'del') && ($array[0]) && ($array[0] =~ m/^\s*\w+\s*$/)) {
-      bot_says($where, anotes_del($dbname, $array[0]));
+    my ($subcmd, $fromwho) = split(/\s+/, $arg);
+    if (($subcmd eq 'del') && (defined $fromwho)) {
+      bot_says($where, anotes_del($dbname, $fromwho));
       return;
     } else {
       bot_says($where, "Missing or invalid argument");
