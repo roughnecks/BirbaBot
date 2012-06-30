@@ -37,7 +37,7 @@ use BirbaBot::Searches qw(search_google
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
-use BirbaBot::Notes qw(notes_add notes_give notes_pending notes_del);
+use BirbaBot::Notes qw(notes_add notes_give notes_pending anotes_pending notes_del anotes_del);
 use BirbaBot::Shorten qw(make_tiny_url);
 use BirbaBot::Quotes qw(ircquote_add 
 		    ircquote_del 
@@ -164,6 +164,7 @@ POE::Session->create(
 		     irc_socketerr
 		     irc_ping
 		     irc_kick
+		     irc_botcmd_anotes
 		     irc_botcmd_pull
 		     irc_botcmd_restart
 		     irc_botcmd_free
@@ -243,7 +244,8 @@ sub _start {
 	    uptime => 'Bot\'s uptime',
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
-            pull => 'Execute a git pull',									    
+            pull => 'Execute a git pull',
+            anotes => 'Admin search and deletetion of pending notes: without arguments list all the pending notes | "anotes del <nick>" Deletes all pending notes from "nick".'
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1304,6 +1306,31 @@ sub greetings_and_die {
   my @command = ('perl', $0, @ARGV);
   exec @command or die "can't exec myself: $!";
 }
+
+sub irc_botcmd_anotes {
+  my ($who, $where, $arg) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  unless (check_if_admin($who)) {
+    bot_says($where, "You need to be an admin, sorry");
+    return;
+  }
+  if (! defined $arg) {
+    bot_says($where, anotes_pending($dbname));
+  } elsif ($arg =~ /^\s*$/) {
+    bot_says($where, anotes_pending($dbname));
+  } else {
+    my @array = split(" ", $arg);
+    my $subcmd = shift @array;
+    if (($subcmd eq 'del') && ($array[0]) && ($array[0] =~ m/^\s*\w+\s*$/)) {
+      bot_says($where, anotes_del($dbname, $array[0]));
+      return;
+    } else {
+      bot_says($where, "Missing or invalid argument");
+    }
+  }
+}
+
+
 
 exit;
 

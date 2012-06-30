@@ -15,7 +15,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw(notes_add notes_give notes_pending notes_del);
+our @EXPORT_OK = qw(notes_add notes_give notes_pending anotes_pending notes_del anotes_del);
 
 our $VERSION = '0.01';
 
@@ -93,6 +93,42 @@ sub notes_del {
     return "Succesfully deleted pending notes to: $rcpt."
   } else {
     return "No pending notes to $rcpt found."
+  }
+}
+
+
+sub anotes_pending {
+  my ($dbname, $who) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $query = $dbh->prepare('SELECT sender FROM notes');
+  $query->execute;
+  my @out;
+  while (my $data = $query->fetchrow_array()) {
+    push @out, $data;
+  }
+  $dbh->disconnect;
+  if (@out) {
+    my $response = join (", ", @out);
+    return "Some notes are awaiting to be sent from: $response."
+  } else { return "No notes pending." }
+}
+
+sub anotes_del {
+  my ($dbname, $sender) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  return "Wrong arguments" unless ($sender);
+  my $delete = 
+    $dbh->prepare('DELETE FROM notes WHERE sender = ?');
+  my $query = 
+    $dbh->prepare('SELECT recipient FROM notes WHERE sender = ?');
+  $query->execute($sender);
+  # if there something in the query, means that there's something to delete
+  if (my @data = $query->fetchrow_array()) {
+    $delete->execute($sender);
+    $dbh->disconnect;
+    return "Succesfully deleted pending notes by: $sender."
+  } else {
+    return "No pending notes by $sender found."
   }
 }
 
