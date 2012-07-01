@@ -245,7 +245,7 @@ sub _start {
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
             pull => 'Execute a git pull',
-            anotes => 'Admin search and deletetion of pending notes: without arguments list all the pending notes | "anotes del <nick>" Deletes all pending notes from "nick".'
+            anotes => 'Admin search and deletion of pending notes: without arguments list all the pending notes | "anotes del <nick>" Deletes all pending notes from "nick".'
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
