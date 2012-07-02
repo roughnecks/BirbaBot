@@ -67,8 +67,13 @@ sub query_meteo {
   my %meteodata;
   my $intag;
   my $parser = new XML::Parser(Style => 'Tree');
-  my $data = $parser->parse($xml);
-  my $inforef = $data->[1]->[2];
+  my ($data, $inforef);
+  eval {
+    $data = $parser->parse($xml);
+    $inforef = $data->[1]->[2];
+  };
+  return "Problems with http://www.google.ca/ig/api?weather=$location : $@" 
+    if $@;
   my @collected;
   foreach my $item (@$inforef) {
     if (ref($item) eq 'ARRAY') {
