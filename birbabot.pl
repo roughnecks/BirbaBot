@@ -736,7 +736,7 @@ sub irc_notice {
   my ($who, $text) = @_[ARG0, ARG2];
   my $nick = parse_user($who);
   print "Notice from $who: $text", "\n";
-  if ( ($nick eq 'NickServ' ) && ( $text =~ m/^This\snickname\sis\sregistered.+$/) ) {
+  if ( ($nick eq 'NickServ' ) && ( $text =~ m/^This\snickname\sis\sregistered.+$/ || $text =~ m/^This\snick\sis\sowned\sby\ssomeone\selse\..+$/ ) ) {
     my $passwd = $botconfig{'nspassword'};
     $irc->yield( privmsg => "$nick", "IDENTIFY $passwd");
   }
