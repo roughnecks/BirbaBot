@@ -22,6 +22,7 @@ our @EXPORT_OK = qw(
                      get_youtube_title
 		     query_meteo
 		     search_uri
+		     url_del
 		  );
 
 our $VERSION = '0.01';
@@ -480,6 +481,24 @@ sub search_uri {
     return;
   } else {
     return "OLD!! $value[0] was last mentioned in $channel by $value[1] on $value[2]";
+  }
+}
+
+
+sub url_del {
+  my $dbname = $_[0];
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  # seleziono la data attuale meno 10 giorni
+  my $query = $dbh->prepare("SELECT Datetime('now','-10 days');");
+  $query->execute;
+  my @value = ($query->fetchrow_array());
+  if (! @value ) {
+    return;
+  } else {
+    my $del_query = $dbh->prepare("DELETE from URI where date <= ? ;");
+    $del_query->execute($value[0]);
+    $dbh->disconnect;
   }
 }
 
