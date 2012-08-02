@@ -84,6 +84,12 @@ sub create_bot_db {
             author  VARCHAR(30),
             phrase  TEXT);');
 
+  $dbh->do('CREATE TABLE IF NOT EXISTS URI (
+            url     TEXT UNIQUE,
+            chan    VARCHAR(30),
+            author  VARCHAR(30),
+            date    DATETIME);');
+
   $dbh->disconnect;
   return 1;
 }

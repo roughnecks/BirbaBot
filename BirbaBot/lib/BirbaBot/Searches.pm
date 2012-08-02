@@ -21,6 +21,7 @@ our @EXPORT_OK = qw(
 		     search_urban
                      get_youtube_title
 		     query_meteo
+		     search_uri
 		  );
 
 our $VERSION = '0.01';
@@ -463,7 +464,24 @@ sub process_urban {
   return \@output;
 }
 
-
+sub search_uri {
+  my ($dbname, $url, $nick, $channel) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  my $search = $dbh->prepare("SELECT url,author,date FROM URI where chan = ? AND url = ?");
+  $search->execute($channel, $url);
+  my @value = ($search->fetchrow_array());
+  if (! @value ) {
+    $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+    $dbh->do('PRAGMA foreign_keys = ON;');
+    my $query = $dbh->prepare("INSERT INTO URI (url, chan, author, date) VALUES (?, ?, ?, DATETIME('NOW'));");
+    $query->execute($url, $channel, $nick);
+    $dbh->disconnect;
+    return;
+  } else {
+    return "OLD!! $value[0] was last mentioned in $channel by $value[1] on $value[2]";
+  }
+}
 
 
 1;
