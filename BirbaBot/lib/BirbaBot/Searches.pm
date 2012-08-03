@@ -473,8 +473,6 @@ sub search_uri {
   $search->execute($channel, $url);
   my @value = ($search->fetchrow_array());
   if (! @value ) {
-    $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-    $dbh->do('PRAGMA foreign_keys = ON;');
     my $query = $dbh->prepare("INSERT INTO URI (url, chan, author, date) VALUES (?, ?, ?, DATETIME('NOW'));");
     $query->execute($url, $channel, $nick);
     $dbh->disconnect;
@@ -493,13 +491,9 @@ sub url_del {
   my $query = $dbh->prepare("SELECT Datetime('now','-10 days');");
   $query->execute;
   my @value = ($query->fetchrow_array());
-  if (! @value ) {
-    return;
-  } else {
-    my $del_query = $dbh->prepare("DELETE from URI where date <= ? ;");
-    $del_query->execute($value[0]);
-    $dbh->disconnect;
-  }
+  my $del_query = $dbh->prepare("DELETE from URI where date <= ? ;");
+  $del_query->execute($value[0]);
+  $dbh->disconnect;
 }
 
 
