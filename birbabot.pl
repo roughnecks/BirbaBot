@@ -539,7 +539,7 @@ sub irc_botcmd_kw {
       return
     } 
     bot_says($where, kw_add($dbname, $who, lc($1), $2));
-  } elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.+?)\s*$/)  {
+  } elsif ($arg =~ m/^\s*([^\s><]+)\s+is\s+(.+?)\s*$/)  {
     my $what = $2;
     if ($what =~ /^\s*$/) {
       bot_says($where, 'Missing argument.');
@@ -559,7 +559,7 @@ sub irc_botcmd_kw {
   } elsif (! defined $arg) {
     bot_says($where, kw_list($dbname));
   } else {
-    bot_says($where, 'Wrong syntax');
+    bot_says($where, 'Wrong syntax or character(s) not allowed');
   }
 }
 
