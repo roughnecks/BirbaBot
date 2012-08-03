@@ -237,7 +237,7 @@ sub _start {
             done => 'delete something to the channel TODO; done #id ',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
-            kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list',
+            kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list; kw> nick => spits kw to nick in channel; kw>> nick => privmsg nick with kw',
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
@@ -824,6 +824,18 @@ sub irc_public {
     if ( my ($kw) = $what =~ /^([^\s]+)\?\s*$/ ) {
       bot_says($channel, kw_query($dbname, lc($1)));
       return;
+    }
+    elsif ( my ($kw2) = $what =~ /^([-\w]+)>{1}\s+([^\s]+)\s*$/ ) {
+      my $target = $2;
+      if ($irc->is_channel_member($channel, $target)) {
+	bot_says($channel, "$target: ".kw_query($dbname, lc($1)));
+      }
+    }
+    elsif ( my ($kw3) = $what =~ /^([-\w]+)>{2}\s+([^\s]+)\s*$/ ) {
+      my $target = $2;
+      if ($irc->is_channel_member($channel, $target)) {
+	$irc->yield(privmsg => "$target", kw_query($dbname, lc($1)));
+      }
     }
     elsif ($what =~ /((AH){2,})/) {
       bot_says($channel, "AHAHAHAHAHAH!");
