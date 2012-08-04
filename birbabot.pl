@@ -828,13 +828,13 @@ sub irc_public {
     elsif ( my ($kw2) = $what =~ /^([^\s]+)\s+>{1}\s+([^\s]+)\s*$/ ) {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
-	bot_says($channel, "$target: ".kw_query($dbname, lc($1)));
+	bot_says($channel, "$target: ".kw_query($dbname, lc($1))) unless !(defined kw_query($dbname, lc($1)));
       }
     }
     elsif ( my ($kw3) = $what =~ /^([^\s]+)\s+>{2}\s+([^\s]+)\s*$/ ) {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
-	$irc->yield(privmsg => "$target", kw_query($dbname, lc($1)));
+	$irc->yield(privmsg => "$target", kw_query($dbname, lc($1))) unless !(defined kw_query($dbname, lc($1)));
       }
     }
     elsif ($what =~ /((AH){2,})/) {
