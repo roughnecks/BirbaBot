@@ -237,7 +237,7 @@ sub _start {
             done => 'delete something to the channel TODO; done #id ',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
-            kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list; kw> nick => spits kw to nick in channel; kw>> nick => privmsg nick with kw',
+            kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list; "key" > nick => spits key to nick in channel; "key" >> nick => privmsg nick with key',
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
@@ -539,7 +539,7 @@ sub irc_botcmd_kw {
       return
     } 
     bot_says($where, kw_add($dbname, $who, lc($1), $2));
-  } elsif ($arg =~ m/^\s*([^\s><]+)\s+is\s+(.+?)\s*$/)  {
+  } elsif ($arg =~ m/^\s*([^\s]+)\s+is\s+(.+?)\s*$/)  {
     my $what = $2;
     if ($what =~ /^\s*$/) {
       bot_says($where, 'Missing argument.');
@@ -559,7 +559,7 @@ sub irc_botcmd_kw {
   } elsif (! defined $arg) {
     bot_says($where, kw_list($dbname));
   } else {
-    bot_says($where, 'Wrong syntax or character(s) not allowed');
+    bot_says($where, 'Wrong syntax');
   }
 }
 
@@ -825,13 +825,13 @@ sub irc_public {
       bot_says($channel, kw_query($dbname, lc($1)));
       return;
     }
-    elsif ( my ($kw2) = $what =~ /^([^\s<>]+)>{1}\s+([^\s]+)\s*$/ ) {
+    elsif ( my ($kw2) = $what =~ /^([^\s]+)\s+>{1}\s+([^\s]+)\s*$/ ) {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
 	bot_says($channel, "$target: ".kw_query($dbname, lc($1)));
       }
     }
-    elsif ( my ($kw3) = $what =~ /^([^\s<>]+)>{2}\s+([^\s]+)\s*$/ ) {
+    elsif ( my ($kw3) = $what =~ /^([^\s]+)\s+>{2}\s+([^\s]+)\s*$/ ) {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
 	$irc->yield(privmsg => "$target", kw_query($dbname, lc($1)));
