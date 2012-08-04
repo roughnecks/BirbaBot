@@ -478,7 +478,7 @@ sub search_uri {
     $dbh->disconnect;
     return;
   } else {
-    return "OLD!! $value[0] was last mentioned in $channel by $value[1] on $value[2]";
+    return "OLD! $value[0] was last mentioned in $channel by $value[1] on $value[2] UTC";
   }
 }
 
