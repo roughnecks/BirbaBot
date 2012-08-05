@@ -832,7 +832,11 @@ sub irc_public {
       bot_says($channel, search_uri($dbname, $url, $nick, $channel));
       if ($url =~ m/youtube/) {
 	bot_says($channel, get_youtube_title($url));
-      };
+      }
+      if ($url =~ m/youtu\.be\/(.+)$/) {
+	my $newurl = "http://www.youtube.com/watch?v="."$1";
+	bot_says($channel, get_youtube_title($newurl));
+      }	
 
       next if (length($url) <= 60);
       next unless ($url =~ m/^(f|ht)tp/);
