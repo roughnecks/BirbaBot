@@ -103,6 +103,7 @@ sub kw_query {
   $query->execute($key);
   # here we get the results
   my @out;
+  my $redirect;
 
   while (my @data = $query->fetchrow_array()) {
     # here we process
@@ -113,12 +114,28 @@ sub kw_query {
       }
     }
   }
-  $dbh->disconnect;
-  if (@out) { 
-    return join(", or ", @out)
-  } else {
-    return 
+  
+  while ($out[0] =~ m/^\s*(<reply>)?\s*see\s+(.+)$/i) {
+    $redirect = $2;
+    my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
+    $queryn->execute($redirect);
+    while (my @data = $queryn->fetchrow_array()) {
+      # here we process
+      return unless @data;
+      if (@data) {
+	$out[0] = $data[0]
+      }
+    }
   }
+  $dbh->disconnect;
+  if (scalar @out == 1) {
+    if ($out[0] =~ m/^\s*<reply>\s*(.+)$/i) {
+      my $reply = $1;
+      return "$reply"
+    }
+  } elsif (scalar @out > 1) {
+    return join(", or ", @out)
+  } else { return }
 }
 
 sub kw_list {
