@@ -692,7 +692,7 @@ sub irc_001 {
 
     # we join our channels waiting a few secs
     foreach (@channels) {
-      $irc->delay( [ join => $_ ], 4 ); 
+      $irc->delay( [ join => $_ ], 10 ); 
     }
 
     # here we register the rss_sentinel
