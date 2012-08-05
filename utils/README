@@ -1,0 +1,25 @@
+## dpkg/#debian Bot database Import Utility
+
+This Utility can be used to import the factoids table from the mysql database of "dpkg",
+an IRC bot which runs in freenode/oftc #debian channels, to the sqlite database of BirbaBot.
+
+## How it works
+
+First you need to setup a mysql database and import dpkg's data.
+
+A nightly exported dump of dpkg's db can be found at: http://crito.ucr.edu/~dpkg/
+Save it to disk and gunzip it.
+Import apt_dump in your mysql databse like:
+
+$ mysql -u user -p dbname < apt_dump
+
+Then you need to stop BirbaBot, copy its sqlite db (birba.db) into this same dir where
+this README is located.
+
+Finally edit "dpkg_facts-import.pl" and set the custom variables for the sql connection handles.
+Make the script executable if it's not and run it:
+
+$ ./dpkg_facts-import.pl
+
+Copy the updated birba.db back to the root of BirbaBot, start the bot.
+
