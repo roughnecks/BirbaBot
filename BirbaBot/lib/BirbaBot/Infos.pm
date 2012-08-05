@@ -132,7 +132,7 @@ sub kw_query {
     if ($out[0] =~ m/^\s*<reply>\s*(.+)$/i) {
       my $reply = $1;
       return "$reply"
-    }
+    } else { return "$out[0]" }
   } elsif (scalar @out > 1) {
     return join(", or ", @out)
   } else { return }
