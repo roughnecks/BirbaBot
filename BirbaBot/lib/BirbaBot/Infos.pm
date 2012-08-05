@@ -16,7 +16,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
+our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list kw_find kw_delete_item karma_manage);
 
 our $VERSION = '0.01';
 
@@ -127,6 +127,25 @@ sub kw_list {
   $dbh->do('PRAGMA foreign_keys = ON;');
   my $query = $dbh->prepare("SELECT key FROM factoids;"); #key
   $query->execute();
+  # here we get the results
+  my @out;
+  while (my @data = $query->fetchrow_array()) {
+    push @out, $data[0]
+  }
+  $dbh->disconnect;
+  if (@out) {
+    my $output = "I know the following facts: " . join(", ", sort(@out));
+    return $output;
+  } else { return "Dunno about any fact; empty list." }
+}
+
+sub kw_find {
+  my ($dbname, $arg) = @_;
+  my $like = "\%$arg\%";
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  my $query = $dbh->prepare("SELECT key FROM factoids WHERE key LIKE ? ;"); #key
+  $query->execute($like);
   # here we get the results
   my @out;
   while (my @data = $query->fetchrow_array()) {

@@ -37,7 +37,7 @@ use BirbaBot::Searches qw(search_google
 			  search_uri
 			  url_del
 			);
-use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_delete_item karma_manage);
+use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_find kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
 use BirbaBot::Notes qw(notes_add notes_give notes_pending anotes_pending notes_del anotes_del);
 use BirbaBot::Shorten qw(make_tiny_url);
@@ -237,7 +237,7 @@ sub _start {
             done => 'delete something to the channel TODO; done #id ',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
-            kw => 'Manage the keywords: kw foo is bar; kw foo is also bar2/3; kw forget foo; kw delete foo 2/3; kw => gives you the facts list; "key" > nick => spits key to nick in channel; "key" >> nick => privmsg nick with key',
+            kw => 'Manage the keywords: kw [ new foo is bar | kw add foo is bar2/bar3 | kw forget foo | kw delete foo 2/3 | kw list foo ] "key" > nick => spits key to nick in channel; "key" >> nick => privmsg nick with key',
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
@@ -529,39 +529,6 @@ sub irc_botcmd_gv {
 }
 
 
-sub irc_botcmd_kw {
-  my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
-  print print_timestamp(), "$who, $where, $arg\n";
-  if ($arg =~ m/^\s*([\S]+)\s+is also\s+(.+?)\s*$/)  {
-    my $what = $2;
-    if ($what =~ /^\s*$/) {
-      bot_says($where, 'Missing argument.');
-      return
-    } 
-    bot_says($where, kw_add($dbname, $who, lc($1), $2));
-  } elsif ($arg =~ m/^\s*([\S]+)\s+is\s+(.+?)\s*$/)  {
-    my $what = $2;
-    if ($what =~ /^\s*$/) {
-      bot_says($where, 'Missing argument.');
-      return
-    } 
-    bot_says($where, kw_new($dbname, $who, lc($1), $2));
-  } elsif ($arg =~ m/^\s*forget\s*([\S]+)\s*$/) {
-    my $key = lc($1);
-    if (check_if_admin($who)) {
-      bot_says($where, kw_remove($dbname, $who, $key));
-      return;
-    } 
-    bot_says($where, "You're not a bot admin, sorry, I can't do that");
-    return;
-  } elsif ($arg =~ m/^\s*delete\s*([\S]+)\s+([23])\s*$/) {
-    bot_says($where, kw_delete_item($dbname, lc($1), $2));
-  } elsif (! defined $arg) {
-    bot_says($where, kw_list($dbname));
-  } else {
-    bot_says($where, 'Wrong syntax');
-  }
-}
 
 
 
@@ -821,17 +788,17 @@ sub irc_public {
     my ($auth, $spiterror) = check_if_fucker($sender, $who, $where, $what);
     return unless $auth;
 
-    if ( my ($kw) = $what =~ /^([^\s]+)\?\s*$/ ) {
+    if ( my ($kw) = $what =~ /^(.+)\?\s*$/ ) {
       bot_says($channel, kw_query($dbname, lc($1)));
       return;
     }
-    elsif ( my ($kw2) = $what =~ /^([^\s]+)\s+>{1}\s+([^\s]+)\s*$/ ) {
+    elsif ( my ($kw2) = $what =~ /^(.+)\s+>{1}\s+([^\s]+)\s*$/ ) {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
 	bot_says($channel, "$target: ".kw_query($dbname, lc($1))) unless !(defined kw_query($dbname, lc($1)));
       }
     }
-    elsif ( my ($kw3) = $what =~ /^([^\s]+)\s+>{2}\s+([^\s]+)\s*$/ ) {
+    elsif ( my ($kw3) = $what =~ /^(.+)\s+>{2}\s+([^\s]+)\s*$/ ) {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
 	$irc->yield(privmsg => "$target", kw_query($dbname, lc($1))) unless !(defined kw_query($dbname, lc($1)));
@@ -1351,6 +1318,62 @@ sub irc_botcmd_anotes {
   }
 }
 
+
+
+sub irc_botcmd_kw {
+  my ($who, $where, $arg) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  if (! $arg) {
+    bot_says($where, "$nick, Missing Arguments: ask me 'help kw'");
+    return
+  }
+  my @args = split(/ +/, $arg);
+  my $subcmd = shift(@args);
+  my $string = join (" ", @args);
+  if ($subcmd eq 'new') {
+    for ($string) {
+      if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_new($dbname, $who, lc($1), $2)) }
+      elsif (/^\s*(.+)\s+is\s*$/) { bot_says($where, "Missing Argument") }
+      else {bot_says($where, "Something is wrong") } # default
+    }
+  } elsif ($subcmd eq 'add') {
+    for ($string) {
+      if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_add($dbname, $who, lc($1), $2)) }
+      elsif (/^\s*(.+)\s+is\s*$/) { bot_says($where, "Missing Argument") }
+      else {bot_says($where, "Something is wrong") } # default
+    }
+  } elsif ($subcmd eq 'forget') {
+    for ($string) {
+      if (/^\s*(.+)\s*$/) { 
+	if (check_if_admin($who)) {
+	  bot_says($where, kw_remove($dbname, $who, lc($1)))
+	} else {
+	  bot_says($where, "Something is wrong, are you an admin?");
+	}
+      }
+      elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
+      else {bot_says($where, "Something is wrong, are you an admin?") } # default
+    }
+  } elsif ($subcmd eq 'delete') {
+    for ($string) {
+      if (/^\s*(.+)\s+([23])\s*$/) { bot_says($where, kw_delete_item($dbname, lc($1), $2)) }
+      elsif (/^\s*(.+)\s+$/) { bot_says($where, "Missing Argument") }
+      else {bot_says($where, "Something is wrong") } # default
+    }
+  } elsif ($subcmd eq 'find') {
+    if (is_where_a_channel($where)) {
+      bot_says($where, "$nick, this command works only in a query");
+      return
+    }
+    for ($string) {
+      if (/^\s*(.+)\s*$/) { bot_says($where, kw_find($dbname, lc($1))) }
+      elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
+      else {bot_says($where, "Something is wrong") } # default
+    } 
+  } elsif ($subcmd ne ['new'|'add'|'forget'|'delete']) { 
+      bot_says($where, "Wrong Subcommand: $subcmd\n")
+    }
+}
 
 
 exit;
