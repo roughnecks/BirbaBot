@@ -1,0 +1,38 @@
+## How to use special keywords
+
+Each factoid in BirbaBot can have at maximum 3 different definitions, like bar1, bar2 and bar3.
+Special keywords just works for the first key definition "bar1".
+
+The keywords are:
+
+1) <reply> $who
+2) <reply> see
+
+What do they do?
+
+1)
+
+"$who" gets evaluated and substituted with the nickname of the person who asks the factoid.
+The factoids value must always begin with the word "<reply>" for it to work.
+
+EXAMPLE:
+
+@kw new hello is <reply> hello $who!
+
+asking: hello?
+outputs: hello roughneks!
+
+2)
+
+The word "see" operates like a recursion and it is transparent to the user.
+The factoids value must always begin with the word "<reply>" for it to work.
+
+EXAMPLE:
+
+@kw new hi is <reply> see hello
+@kw new hello is Hello, how are you today?
+
+asking: hi?
+does a query against "hi" -> finds a "<reply> see" tag followed by "hello" -> does a new query against "hello" 
+outputs: Hello, how are you today?
+
