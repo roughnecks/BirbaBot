@@ -96,7 +96,10 @@ sub kw_delete_item {
 }
 
 sub kw_query {
-  my ($dbname, $key) = @_;
+  my ($dbname, $nick, $key) = @_;
+  if ($key =~ m/^cmd:.+$/) {
+    return "Commands not yet supported"
+  }
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
   my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
@@ -129,8 +132,14 @@ sub kw_query {
   }
   $dbh->disconnect;
   if (scalar @out == 1) {
-    if ($out[0] =~ m/^\s*<reply>\s*(.+)$/i) {
+    if ($out[0] =~ m/^.*<action>.*$/) {
+      return "Factoid Not Supported"
+    } elsif ($out[0] =~ m/^\s*<reply>\s*(.+)$/i) {
       my $reply = $1;
+      if ($reply =~ m/.*(\$who).*/g) {
+	$reply =~ s/\Q$1\E/$nick/;
+	return "$reply"
+      }
       return "$reply"
     } else { return "$out[0]" }
   } elsif (scalar @out > 1) {
