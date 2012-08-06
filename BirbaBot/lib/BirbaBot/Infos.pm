@@ -97,6 +97,7 @@ sub kw_delete_item {
 
 sub kw_query {
   my ($dbname, $nick, $key) = @_;
+  my $questionkey = "$key"."?";
   if ($key =~ m/^cmd:.+$/) {
     return "Commands not yet supported"
   }
@@ -110,7 +111,7 @@ sub kw_query {
 
   while (my @data = $query->fetchrow_array()) {
     # here we process
-    return "Dunno that" unless @data;
+    # return "Dunno that" unless @data;
     foreach my $result (@data) {
       if ($result) {
 	push @out, $result 
@@ -118,6 +119,20 @@ sub kw_query {
     }
   }
 
+  
+if (@out) {
+  print "array not empty\n"
+} else {
+  my $query2 = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
+  $query2->execute($questionkey);
+  while (my @newdata = $query2->fetchrow_array()) {
+    foreach my $newresult (@newdata) {
+      if ($newresult) {
+	push @out, $newresult;
+      }
+    }
+  }
+}
 
   if (scalar @out == 1) {  
     while ($out[0] =~ m/^\s*(<reply>){1}\s*see\s+(.+)$/i) {
