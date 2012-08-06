@@ -166,7 +166,7 @@ sub kw_list {
     my $output = "I know the following facts: " . join(", ", sort(@out));
     return $output;
   } elsif ((@out) && (scalar @out > 50)) {
-    my @facts = @out[0..70];
+    my @facts = @out[0..49];
     my $output = "I know too many facts to be all listed: " . join(", ", (sort @facts)) . "...";
     return $output;
   } else { return "Dunno about any fact; empty list." }
