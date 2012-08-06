@@ -118,6 +118,8 @@ sub kw_query {
     }
   }
 
+  $dbh->disconnect;
+
   if (scalar @out == 1) {  
     while ($out[0] =~ m/^\s*(<reply>)?\s*see\s+(.+)$/i) {
       $redirect = $2;
@@ -131,16 +133,13 @@ sub kw_query {
 	}
       }
     }
-  }
-  $dbh->disconnect;
-  if (scalar @out == 1) {
     if ($out[0] =~ m/^.*<action>.*$/) {
       return "Factoid Not Supported"
     } elsif ($out[0] =~ m/^\s*<reply>\s*(.+)$/i) {
       my $reply = $1;
       if ($reply =~ m/.*(\$who).*/g) {
-	$reply =~ s/\Q$1\E/$nick/;
-	return "$reply"
+        $reply =~ s/\Q$1\E/$nick/;
+        return "$reply"
       }
       return "$reply"
     } else { return "$out[0]" }
@@ -148,6 +147,7 @@ sub kw_query {
     return join(", or ", @out)
   } else { return }
 }
+
 
 sub kw_list {
   my ($dbname) = shift;
