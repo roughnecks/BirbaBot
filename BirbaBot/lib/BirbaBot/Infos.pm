@@ -118,10 +118,9 @@ sub kw_query {
     }
   }
 
-  $dbh->disconnect;
 
   if (scalar @out == 1) {  
-    while ($out[0] =~ m/^\s*(<reply>)?\s*see\s+(.+)$/i) {
+    while ($out[0] =~ m/^\s*(<reply>){1}\s*see\s+(.+)$/i) {
       $redirect = $2;
       my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
       $queryn->execute($redirect);
@@ -146,6 +145,8 @@ sub kw_query {
   } elsif (scalar @out > 1) {
     return join(", or ", @out)
   } else { return }
+  
+  $dbh->disconnect;
 }
 
 
