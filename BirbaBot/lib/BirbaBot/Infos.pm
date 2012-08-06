@@ -117,16 +117,18 @@ sub kw_query {
       }
     }
   }
-  
-  while ($out[0] =~ m/^\s*(<reply>)?\s*see\s+(.+)$/i) {
-    $redirect = $2;
-    my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
-    $queryn->execute($redirect);
-    while (my @data = $queryn->fetchrow_array()) {
-      # here we process
-      return unless @data;
-      if (@data) {
-	$out[0] = $data[0]
+
+  if (scalar @out == 1) {  
+    while ($out[0] =~ m/^\s*(<reply>)?\s*see\s+(.+)$/i) {
+      $redirect = $2;
+      my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
+      $queryn->execute($redirect);
+      while (my @data = $queryn->fetchrow_array()) {
+	# here we process
+	return unless @data;
+	if (@data) {
+	  $out[0] = $data[0]
+	}
       }
     }
   }
