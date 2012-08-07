@@ -16,7 +16,7 @@ our @ISA = qw(Exporter);
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 
-our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list kw_find kw_delete_item karma_manage);
+our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list kw_find kw_show kw_delete_item karma_manage);
 
 our $VERSION = '0.01';
 
@@ -179,7 +179,11 @@ sub kw_list {
   # here we get the results
   my @out;
   while (my @data = $query->fetchrow_array()) {
-    push @out, $data[0]
+    foreach my $result (@data) {
+      if ($result) {
+        push @out, $result
+      }
+    }
   }
   $dbh->disconnect;
   if ((@out) && (scalar @out <= 50)) {
@@ -202,13 +206,47 @@ sub kw_find {
   # here we get the results
   my @out;
   while (my @data = $query->fetchrow_array()) {
-    push @out, $data[0]
+    foreach my $result (@data) {
+      if ($result) {
+        push @out, $result
+      }
+    }
   }
   $dbh->disconnect;
   if (@out) {
     my $output = "I know the following facts: " . join(", ", sort(@out));
     return $output;
   } else { return "Dunno about any fact; empty list." }
+}
+
+sub kw_show {
+  my ($dbname, $arg) = @_;
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+  my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key LIKE ? ;"); #key
+  $query->execute($arg);
+  my @out;
+  while (my @data = $query->fetchrow_array()) {
+    foreach my $result (@data) {
+      if ($result) {
+        push @out, $result
+      }
+    }
+  }
+  $dbh->disconnect;
+  
+  if ((scalar @out) == 1) {
+    my $output = "keyword \"$arg\" has been stored with the following value: bar1 = $out[0]";
+    return $output;
+  } elsif ((scalar @out) == 2) {
+    my $output = "keyword \"$arg\" has been stored with the following values: bar1 is = $out[0] and bar2 is = $out[1]";
+    return $output;
+  } elsif ((scalar @out) == 3) {
+    my $output = "keyword \"$arg\" has been stored with the following values: bar1 is = $out[0], bar2 is = $out[1] and bar3 = $out[2]";
+    return $output;
+  } else { 
+    return "Something's wrong";
+  }
 }
 
 sub karma_manage {
