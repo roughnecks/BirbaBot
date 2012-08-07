@@ -137,14 +137,20 @@ if (@out) {
   if (scalar @out == 1) {  
     while ($out[0] =~ m/^\s*(<reply>){1}\s*see\s+(.+)$/i) {
       $redirect = $2;
-      my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
-      $queryn->execute($redirect);
-      while (my @data = $queryn->fetchrow_array()) {
-	# here we process
-	return unless @data;
-	if (@data) {
-	  $out[0] = $data[0];
+      if ("$key" eq "$redirect") {
+	my $egg2 = "Congratulations $nick, you've just discovered egg #2! ";
+	my $bad = "I foresee two possibilities. One, coming face to face with herself 30 years older would put her into shock and she'd simply pass out. Or two, the encounter could create a time paradox, the results of which could cause a chain reaction that would unravel the very fabric of the space time continuum, and destroy the entire universe! Granted, that's a worse case scenario. The destruction might in fact be very localized, limited to merely our own galaxy. [doc]";
+	return "$egg2"."$bad";
+      } else {
+	my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
+	$queryn->execute($redirect);
+	while (my @data = $queryn->fetchrow_array()) {
+	  # here we process
+	  return unless @data;
+	  if (@data) {
+	    $out[0] = $data[0];
 	  $dbh->disconnect;
+	  }
 	}
       }
     }
