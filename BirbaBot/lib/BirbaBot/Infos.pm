@@ -121,7 +121,7 @@ sub kw_query {
 
   
 if (@out) {
-  print "array not empty\n"
+  print "array not empty\n";
 } else {
   my $query2 = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
   $query2->execute($questionkey);
@@ -143,7 +143,8 @@ if (@out) {
 	# here we process
 	return unless @data;
 	if (@data) {
-	  $out[0] = $data[0]
+	  $out[0] = $data[0];
+	  $dbh->disconnect;
 	}
       }
     }
@@ -160,8 +161,6 @@ if (@out) {
   } elsif (scalar @out > 1) {
     return join(", or ", @out)
   } else { return }
-  
-  $dbh->disconnect;
 }
 
 

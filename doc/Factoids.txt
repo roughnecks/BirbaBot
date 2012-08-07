@@ -5,8 +5,8 @@ Special keywords just works for the first key definition "bar1".
 
 The keywords are:
 
-1) <reply> $who
-2) <reply> see
+1) <reply> $who  (addressing)
+2) <reply> see   (recursion)
 
 What do they do?
 

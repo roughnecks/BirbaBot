@@ -1379,7 +1379,7 @@ sub irc_botcmd_kw {
       if (/^\s*$/) { bot_says($where, kw_list($dbname)) }
       else { bot_says($where, "Listing does not accept other arguments" ) }
     } 
-  } elsif ($subcmd ne ['new'|'add'|'forget'|'delete'|'list']) { 
+  } elsif ($subcmd ne ['new'|'add'|'forget'|'delete'|'find'|'list']) { 
     bot_says($where, "Wrong Subcommand: $subcmd\n")
   }
 }
