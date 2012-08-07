@@ -186,6 +186,7 @@ POE::Session->create(
 		     irc_botcmd_todo
 		     irc_botcmd_done
 		     irc_botcmd_kw
+		     irc_botcmd_kwtell
 		     irc_botcmd_slap
 		     irc_botcmd_geoip
 		     irc_botcmd_lookup
@@ -238,6 +239,7 @@ sub _start {
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: [kw new] foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key',
+            kwtell => 'Asking factoids in query: kwtell < foo[?] >', 
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
@@ -1367,13 +1369,13 @@ sub irc_botcmd_kw {
   } elsif ($subcmd eq 'find') {
     if (is_where_a_channel($where)) {
       bot_says($where, "$nick, this command works only in a query");
-      return
-    }
+    } else {
     for ($string) {
       if (/^\s*(.+)\s*$/) { bot_says($where, kw_find($dbname, lc($1))) }
       elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
       else {bot_says($where, "Something is wrong") } # default
     } 
+  }
   } elsif ($subcmd eq 'list') {
     for ($string) {
       if (/^\s*$/) { bot_says($where, kw_list($dbname)) }
@@ -1381,6 +1383,26 @@ sub irc_botcmd_kw {
     } 
   } elsif ($subcmd ne ['new'|'add'|'forget'|'delete'|'find'|'list']) { 
     bot_says($where, "Wrong Subcommand: $subcmd\n")
+  }
+}
+
+
+sub irc_botcmd_kwtell {
+  my ($who, $where, $arg) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  if (is_where_a_channel($where)) {
+    bot_says($where, "$nick, this command works only in a query");
+    return;
+  } 
+  if ((! $arg) or ($arg =~ m/^\s*$/)) {
+    bot_says($where, "Missing or Invalid Argument.");
+    return;
+  } else {
+    for ($arg) {
+      if (/^\s*(.+\??)\s*$/) { bot_says($where, kw_query($dbname, $nick, lc($1))); return; }
+      #      elsif (/^\s*$/) { bot_says($where, "Missing Argument. arg= $arg\n") }
+      else { bot_says($where, "what?") }
+    }
   }
 }
 
