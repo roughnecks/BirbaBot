@@ -809,10 +809,6 @@ sub irc_public {
 	  bot_says($channel, "$target: ".kw_query($dbname, $nick, lc($1)));
 	} 
       }
-      else {
-	bot_says($channel, "Dunno about $target");
-	return;
-      }
     }
     elsif ( my ($kw3) = $what =~ /^(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
       my $target = $2;
