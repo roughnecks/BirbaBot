@@ -791,19 +791,42 @@ sub irc_public {
     return unless $auth;
 
     if ( my ($kw) = $what =~ /^(.+)\?\s*$/ ) {
-      bot_says($channel, kw_query($dbname, $nick, lc($1)));
-      return;
+      if ((kw_query($dbname, $nick, lc($1))) =~ m/^ACTION\s(.+)$/) {
+	$irc->yield(ctcp => $where, "ACTION $1");
+	return;
+      }	else {
+	bot_says($channel, kw_query($dbname, $nick, lc($1)));
+	return;
+      }
     }
     elsif ( my ($kw2) = $what =~ /^(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
-	bot_says($channel, "$target: ".kw_query($dbname, $nick, lc($1))) unless !(defined kw_query($dbname, $nick, lc($1)));
+	if ((! kw_query($dbname, $nick, lc($1))) or ((kw_query($dbname, $nick, lc($1))) =~ m/^ACTION\s(.+)$/)) {
+	  bot_says($channel, "$nick, that fact can't be told to $target; try \"kw show $kw2\" to see its content.");
+	  return;
+	} else {
+	  bot_says($channel, "$target: ".kw_query($dbname, $nick, lc($1)));
+	} 
+      }
+      else {
+	bot_says($channel, "Dunno about $target");
+	return;
       }
     }
     elsif ( my ($kw3) = $what =~ /^(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
-	$irc->yield(privmsg => "$target", kw_query($dbname, $nick, lc($1))) unless !(defined kw_query($dbname, $nick, lc($1)));
+	if ((! kw_query($dbname, $nick, lc($1))) or ((kw_query($dbname, $nick, lc($1))) =~ m/^ACTION\s(.+)$/)) {
+          bot_says($channel, "$nick, that fact can't be told to $target; try \"kw show $kw3\" to see its content.");
+	  return;
+	} else {
+	  $irc->yield(privmsg => "$target", kw_query($dbname, $nick, lc($1))) unless !(defined kw_query($dbname, $nick, lc($1)));
+	}
+      }
+      else {
+        bot_says($channel, "Dunno about $target");
+        return;
       }
     }
     elsif ($what =~ /((AH){2,})/) {

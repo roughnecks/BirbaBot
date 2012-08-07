@@ -154,8 +154,9 @@ if (@out) {
 	}
       }
     }
-    if ($out[0] =~ m/^.*<action>.*$/) {
-      return "Factoid Not Supported"
+    if ($out[0] =~ m/^\s*<action>\s*(.+)$/i) {
+      my $reply = $1;
+      return "ACTION $1";
     } elsif ($out[0] =~ m/^\s*<reply>\s*(.+)$/i) {
       my $reply = $1;
       if ($reply =~ m/.*(\$who).*/g) {
