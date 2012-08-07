@@ -237,7 +237,7 @@ sub _start {
             done => 'delete something to the channel TODO; done #id ',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
-            kw => 'Manage the keywords: kw [ new foo is bar | kw add foo is bar2/bar3 | kw forget foo | kw delete foo 2/3 | kw list | kw find foo (query only) ] "key" > nick => spits key to nick in channel; "key" >> nick => privmsg nick with key',
+            kw => 'Manage the keywords: [kw new] foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key',
 	    meteo => 'Query the weather for location',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
