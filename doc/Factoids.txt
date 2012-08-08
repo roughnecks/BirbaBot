@@ -7,14 +7,15 @@ The keywords are:
 
 1) <reply> $who  (addressing)
 2) <reply> see   (recursion)
-3) <action>
+3) <action>      (ctcp action)
 
 What do they do?
 
 1)
 
-"$who" gets evaluated and substituted with the nickname of the person who asks the factoid.
-The factoids value must always begin with the word "<reply>" for it to work.
+"$who" gets evaluated and substituted with the nickname of the person who asked the factoid.
+The factoid's value must always begin with the keyword "<reply>" and the factoid must have ONLY
+ one definition (bar1) for it to work.
 
 EXAMPLE:
 
@@ -26,7 +27,8 @@ outputs: hello roughneks!
 2)
 
 The word "see" operates like a recursion and it is transparent to the user.
-The factoids value must always begin with the word "<reply>" for it to work.
+The factoid's value must always begin with the keyword "<reply> see" and the factoid must have ONLY
+ one definition (bar1) for it to work.
 
 EXAMPLE:
 
@@ -40,7 +42,8 @@ outputs: Hello, how are you today?
 3)
 
 The keyword <action> triggers the bot to spit a factoid while doing a "ctcp action".
-The factoids value must always begin with the word "<action>" for it to work.
+The factoid's value must always begin with the keyword "<action>" and the factoid must have ONLY
+ one definition (bar1) for it to work.
 
 EXAMPLE
 
