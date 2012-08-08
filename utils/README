@@ -1,4 +1,5 @@
 ## dpkg/#debian Bot database Import Utility
+dpkg_facts-import.pl
 
 This Utility can be used to import the factoids table from the mysql database of "dpkg",
 an IRC bot which runs in freenode/oftc #debian channels, to the sqlite database of BirbaBot.
@@ -22,4 +23,31 @@ Make the script executable if it's not and run it:
 $ ./dpkg_facts-import.pl
 
 Copy the updated birba.db back to the root of BirbaBot, start the bot.
+
+## dpkg/#debian Bot database Save-To-Disk Utility
+dpkg_facts-save.pl
+
+
+This Utility can be used to import the factoids from the mysql database of "dpkg",
+an IRC bot which runs in freenode/oftc #debian channels, to a text file.
+The purpose is having a clean source to (eventually) parse.
+
+## How it works
+
+Data is taken from a mysql db as with the Import Utility seen before.
+You need again to prepare a mysql database from the apt_dump file,
+touch a "dpkg_facts" file in this very same directory and edit the
+script filling the database credentials.
+
+Then you can launch the script:
+
+$ ./dpkg_facts-save.pl
+
+Each line of the "dpkg_facts" text file will be formatted as follow:
+
+keyword ,,, value
+
+I used "3 commas" as separator between keys and values because it should grant 
+enough safety when parsing the content of values (i don't think you would find 
+some value containg 3 consecutive commas (at least i hope).
 
