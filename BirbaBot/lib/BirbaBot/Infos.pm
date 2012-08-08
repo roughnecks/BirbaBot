@@ -217,7 +217,7 @@ sub kw_find {
   if (@out) {
     my $output = "I know the following facts: " . join(", ", sort(@out));
     return $output;
-  } else { return "Dunno about any fact; empty list." }
+  } else { return "Dunno about any matching fact; empty list." }
 }
 
 sub kw_show {
