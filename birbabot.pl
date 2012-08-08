@@ -111,6 +111,8 @@ my %botconfig = (
 		 'nspassword' => 'nopass',
 		 'tail' => {},
 		 'ignored_lines' => [],
+		 'relay_source' => [],
+		 'relay_dest' => [],
 		);
 
 # initialize the local storage
@@ -138,6 +140,9 @@ my @channels = @{$botconfig{'channels'}};
 my @adminregexps = process_admin_list(@{$botconfig{'admins'}});
 
 my @fuckers = @{$botconfig{'fuckers'}};
+
+my $relay_source = $botconfig{'relay_source'};
+my $relay_dest = $botconfig{'relay_dest'};
 
 # when we start, we check if we have all the tables.  By no means this
 # guarantees that the tables are correct. Devs, I'm looking at you
@@ -785,6 +790,16 @@ sub irc_public {
     my $nick = ( split /!/, $who )[0];
     my $channel = $where->[0];
 #    print print_timestamp(), "$nick said $what in $channel\n";
+
+    if (($relay_source) && ($relay_dest)) {
+      if ($channel eq $relay_source) {
+	foreach ($what) {
+	  bot_says($relay_dest, "$relay_source/$nick: $what")
+	}
+      }
+    }
+
+
     add_nick($nick, "on $channel saying: $what");
 
     my ($auth, $spiterror) = check_if_fucker($sender, $who, $where, $what);
