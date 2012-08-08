@@ -56,7 +56,7 @@ use HTML::Entities;
 
 use POE;
 use POE::Component::Client::DNS;
-use POE::Component::IRC::Common qw(parse_user l_irc);
+use POE::Component::IRC::Common qw(parse_user l_irc irc_to_utf8);
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
 use Storable;
@@ -794,6 +794,7 @@ sub irc_public {
     if (($relay_source) && ($relay_dest)) {
       if ($channel eq $relay_source) {
 	foreach ($what) {
+	  $what = irc_to_utf8($what);
 	  bot_says($relay_dest, "$relay_source/$nick: $what")
 	}
       }
