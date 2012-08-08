@@ -171,7 +171,7 @@ POE::Session->create(
 		     irc_botcmd_restart
 		     irc_botcmd_free
 		     irc_botcmd_uptime
-		     irc_botcmd_sitedown
+		     irc_botcmd_isdown
 		     irc_botcmd_wikiz
 		     irc_botcmd_remind
 		     irc_botcmd_version
@@ -245,7 +245,7 @@ sub _start {
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
 	    choose => 'Do a random guess | Takes 2 or more arguments: choose <choice1> <choice2> <choice#n>',
 	    version => 'Show from which git branch we are running the bot. Do not use without git',
-            sitedown => 'Check whether a website is up or down | sitedown <domain>',									       
+            isdown => 'Check whether a website is up or down | isdown <domain>',									       
 	    uptime => 'Bot\'s uptime',
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
@@ -1183,7 +1183,7 @@ sub irc_botcmd_wikiz {
   }
 }
 
-sub irc_botcmd_sitedown {
+sub irc_botcmd_isdown {
   my ($where, $what) = @_[ARG1, ARG2];
   return unless is_where_a_channel($where);
   if ($what =~ m/^\s*(http\:\/\/)?(\www\.)?([a-zA-Z0-9][\w\.-]+\.[a-z]{2,4})\s*$/) {
