@@ -797,7 +797,7 @@ sub irc_public {
       if ($channel eq $relay_source) {
 	foreach ($what) {
 	  $what = irc_to_utf8($what);
-	  bot_says($relay_dest, "$relay_source/$nick: $what")
+	  bot_says($relay_dest, "\[$relay_source/$nick\]: $what")
 	}
       }
     }
@@ -806,7 +806,7 @@ sub irc_public {
       if ($channel eq $relay_dest) {
 	foreach ($what) {
 	  $what = irc_to_utf8($what);
-	  bot_says($relay_source, "$relay_dest/$nick: $what")
+	  bot_says($relay_source, "\[$relay_dest/$nick\]: $what")
 	}
       }
     }
