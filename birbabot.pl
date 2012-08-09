@@ -325,8 +325,8 @@ sub bot_says {
   
 sub irc_botcmd_karma {
   my ($where, $arg) = @_[ARG1, ARG2];
-  $arg =~ s/\s*//g;
   if ($arg) {
+    $arg =~ s/\s*//g;
     bot_says($where, karma_manage($dbname, $arg));
     return;
   } else {

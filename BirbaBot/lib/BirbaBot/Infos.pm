@@ -252,7 +252,7 @@ sub kw_show {
 
 sub karma_manage {
   my ($dbname, $nick, $action) = @_;
-  print "arguments for karma_manage: ", join(':', @_), "\n";
+  # print "arguments for karma_manage: ", join(':', @_), "\n";
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
   unless ($nick) {
@@ -263,9 +263,17 @@ sub karma_manage {
       push @reply, $data[0] . " => " . $data[1];
     }
     $dbh->disconnect;
-    print "disconnected db";
-    return join(", ", @reply);
+    # print "disconnected db";
+
+    if ((@reply) && ((scalar @reply) <= 15)) {
+      return join(", ", @reply);
+    } elsif ((@reply) && ((scalar @reply) > 15)) {
+      my @karmas = join(", ", @reply[0..15]);
+      return "Too many karmas stored to be all printed: "."@karmas";
+    } else { return "Karma list empty" }
   }
+
+
   unless ($action) {
     my $query = $dbh->prepare('SELECT level FROM karma WHERE nick = ?;');
     $query->execute($nick);
@@ -274,7 +282,7 @@ sub karma_manage {
       $reply = $nick . " has karma " . $data[0];
     }
     $dbh->disconnect;
-    print "disconnected db";
+    # print "disconnected db";
     if ($reply) {
       return $reply;
     } else {
