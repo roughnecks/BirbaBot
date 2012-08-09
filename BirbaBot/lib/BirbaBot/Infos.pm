@@ -266,11 +266,11 @@ sub karma_manage {
     # print "disconnected db";
 
     if ((@reply) && ((scalar @reply) <= 15)) {
-      return join(", ", @reply);
+      return join(", ", (sort @reply));
     } elsif ((@reply) && ((scalar @reply) > 15)) {
-      my @karmas = join(", ", @reply[0..15]);
+      my @karmas = join(", ", sort (@reply[0..15]));
       return "Too many karmas stored to be all printed: "."@karmas";
-    } else { return "Karma list empty" }
+    } else { return "Karma list is empty." }
   }
 
 
