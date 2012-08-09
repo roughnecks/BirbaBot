@@ -24,6 +24,8 @@ $ ./dpkg_facts-import.pl
 
 Copy the updated birba.db back to the root of BirbaBot, start the bot.
 
+------------------------------------------------------------------------------------------------
+
 ## dpkg/#debian Bot database Save-To-Disk Utility
 dpkg_facts-save.pl
 
@@ -50,4 +52,26 @@ keyword ,,, value
 I used "3 commas" as separator between keys and values because it should grant 
 enough safety when parsing the content of values (i don't think you would find 
 some value containg 3 consecutive commas (at least i hope).
+
+------------------------------------------------------------------------------------------------
+
+## dpkg/#debian Bot database Export-From-Disk Utility
+dpkg_facts-export.pl
+
+This utility can be used to export previously saved data by dpkg_facts-save.pl into 
+the BirbaBot sqlite database.
+Its purpose is using a text file which can be edited/parsed before starting the export.
+
+## How it works
+
+The dpkg_facts saved to disk with the previus utility is read line by line and factoids 
+are saved back to a sqlite db.
+
+You need to stop BirbaBot, copy its sqlite db (birba.db) into this same dir where
+this README is located and prepare the dpkg_facts file, always in this directory.
+
+Once you have the (maybe parsed) source file - dpkg_facts - and the destination db file,
+you can launch the utility:
+
+$ ./dpkg_facts-export.pl
 
