@@ -1033,7 +1033,7 @@ sub _default {
             push( @output, '[' . join(', ', @$arg ) . ']' );
         }
         else {
-            push ( @output, "'$arg'" );
+            push ( @output, "'$arg'" ) unless (! $arg);
         }
     }
     print print_timestamp(), join ' ', @output, "\n";
