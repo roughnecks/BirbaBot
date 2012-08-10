@@ -820,33 +820,36 @@ sub irc_public {
     if ( $what =~ /^(.+)\?\s*$/ ) {
       print "info: requesting keyword $1\n";
       my $kw = $1;
-      if ((kw_query($dbname, $nick, lc($kw))) && (kw_query($dbname, $nick, lc($kw)) =~ m/^ACTION\s(.+)$/)) {
+      my $query = (kw_query($dbname, $nick, lc($kw)));
+      if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
 	$irc->yield(ctcp => $where, "ACTION $1");
 	return;
-      }	elsif ((kw_query($dbname, $nick, lc($kw)))) {
-	bot_says($channel, kw_query($dbname, $nick, lc($kw)));
+      }	elsif ($query) {
+	bot_says($channel, $query);
 	return;
       }
     }
-    elsif ( my ($kw2) = $what =~ /^(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
+    elsif ( my ($kw) = $what =~ /^(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
       my $target = $2;
+      my $query = (kw_query($dbname, $nick, lc($1)));
       if ($irc->is_channel_member($channel, $target)) {
-	if ((! kw_query($dbname, $nick, lc($1))) or ((kw_query($dbname, $nick, lc($1))) =~ m/^ACTION\s(.+)$/)) {
-	  bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw2\" to see its content.");
+	if ((! $query) or ( $query =~ m/^ACTION\s(.+)$/ )) {
+	  bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw\" to see its content.");
 	  return;
 	} else {
-	  bot_says($channel, "$target: ".kw_query($dbname, $nick, lc($1)));
+	  bot_says($channel, "$target: "."$query");
 	} 
       }
     }
-    elsif ( my ($kw3) = $what =~ /^(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
+    elsif ( my ($kw2) = $what =~ /^(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
       my $target = $2;
+      my $query = (kw_query($dbname, $nick, lc($1)));
       if ($irc->is_channel_member($channel, $target)) {
-	if ((! kw_query($dbname, $nick, lc($1))) or ((kw_query($dbname, $nick, lc($1))) =~ m/^ACTION\s(.+)$/)) {
-          bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw3\" to see its content.");
+	if ((! $query ) or ($query =~ m/^ACTION\s(.+)$/)) {
+          bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw2\" to see its content.");
 	  return;
 	} else {
-	  $irc->yield(privmsg => "$target", kw_query($dbname, $nick, lc($1))) unless !(defined kw_query($dbname, $nick, lc($1)));
+	  $irc->yield(privmsg => "$target", "$kw2 is $query");
 	}
       }
       else {
