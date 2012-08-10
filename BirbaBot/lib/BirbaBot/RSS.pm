@@ -284,9 +284,9 @@ sub rss_fetch {
       }
       $output{$feedname} = \@outputfeed;
       my $endtime  = localtime();
-      print "Parsing and insertions in $feedname finished on $endtime";
+      print "Parsing and insertions in $feedname finished on $endtime\n";
  #     print Dumper(\%linksinrss);
-      print "Starting db cleaning...";
+      print "Starting db cleaning...\n";
       my $syncdb = $dbh->prepare('SELECT id,url FROM feeds WHERE f_handle = ?;');
       my $cleandb = $dbh->prepare('DELETE FROM feeds WHERE id = ?');
       $syncdb->execute($feedname);
