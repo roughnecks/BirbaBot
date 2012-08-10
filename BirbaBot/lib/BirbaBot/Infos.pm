@@ -60,7 +60,7 @@ sub kw_remove {
   my $query = $dbh->prepare("SELECT key FROM factoids WHERE key=?;"); #key
   $query->execute($key);
   my $value = ($query->fetchrow_array());
-  if ($value eq $key) { 
+  if (($value) && ($value eq $key)) { 
     $del->execute($key);
     $dbh->disconnect;
     return "I completely forgot $key";
@@ -121,7 +121,7 @@ sub kw_query {
 
   
 if (@out) {
-  print "array not empty\n";
+  print "info: array not empty\n";
 } else {
   my $query2 = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
   $query2->execute($questionkey);

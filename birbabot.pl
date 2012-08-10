@@ -830,7 +830,7 @@ sub irc_public {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
 	if ((! kw_query($dbname, $nick, lc($1))) or ((kw_query($dbname, $nick, lc($1))) =~ m/^ACTION\s(.+)$/)) {
-	  bot_says($channel, "$nick, that fact can't be told to $target; try \"kw show $kw2\" to see its content.");
+	  bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw2\" to see its content.");
 	  return;
 	} else {
 	  bot_says($channel, "$target: ".kw_query($dbname, $nick, lc($1)));
@@ -841,7 +841,7 @@ sub irc_public {
       my $target = $2;
       if ($irc->is_channel_member($channel, $target)) {
 	if ((! kw_query($dbname, $nick, lc($1))) or ((kw_query($dbname, $nick, lc($1))) =~ m/^ACTION\s(.+)$/)) {
-          bot_says($channel, "$nick, that fact can't be told to $target; try \"kw show $kw3\" to see its content.");
+          bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw3\" to see its content.");
 	  return;
 	} else {
 	  $irc->yield(privmsg => "$target", kw_query($dbname, $nick, lc($1))) unless !(defined kw_query($dbname, $nick, lc($1)));
