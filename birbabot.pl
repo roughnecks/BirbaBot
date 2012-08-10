@@ -817,12 +817,14 @@ sub irc_public {
     my ($auth, $spiterror) = check_if_fucker($sender, $who, $where, $what);
     return unless $auth;
 
-    if ( my ($kw) = $what =~ /^(.+)\?\s*$/ ) {
-      if ((kw_query($dbname, $nick, lc($1))) =~ m/^ACTION\s(.+)$/) {
+    if ( $what =~ /^(.+)\?\s*$/ ) {
+      print "info: requesting keyword $1\n";
+      my $kw = $1;
+      if ((kw_query($dbname, $nick, lc($kw))) && (kw_query($dbname, $nick, lc($kw)) =~ m/^ACTION\s(.+)$/)) {
 	$irc->yield(ctcp => $where, "ACTION $1");
 	return;
-      }	else {
-	bot_says($channel, kw_query($dbname, $nick, lc($1)));
+      }	elsif ((kw_query($dbname, $nick, lc($kw)))) {
+	bot_says($channel, kw_query($dbname, $nick, lc($kw)));
 	return;
       }
     }
