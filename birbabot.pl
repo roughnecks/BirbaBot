@@ -1433,7 +1433,7 @@ sub irc_botcmd_kw {
     for ($string) {
       if (/^\s*(.+)\s*$/) { bot_says($where, kw_show($dbname, lc($1))) }
       elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
-      else {bot_says($where, "Something is wrong") } # default
+      else {bot_says($where, "Something is wrong, probably that fact does not exist.") } # default
     }
   } elsif ($subcmd ne ['new'|'add'|'forget'|'delete'|'find'|'list'|'show']) { 
     bot_says($where, "Wrong Subcommand: $subcmd\n")
