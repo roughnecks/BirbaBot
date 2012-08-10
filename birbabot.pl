@@ -113,7 +113,8 @@ my %botconfig = (
 		 'ignored_lines' => [],
 		 'relay_source' => [],
 		 'relay_dest' => [],
-		 'twoways_relay' => [], 
+		 'twoways_relay' => [],
+		 'msg_log' => [],
 		);
 
 # initialize the local storage
@@ -145,6 +146,7 @@ my @fuckers = @{$botconfig{'fuckers'}};
 my $relay_source = $botconfig{'relay_source'};
 my $relay_dest = $botconfig{'relay_dest'};
 my $twoways_relay = $botconfig{'twoways_relay'};
+my $msg_log = $botconfig{'msg_log'};
 
 # when we start, we check if we have all the tables.  By no means this
 # guarantees that the tables are correct. Devs, I'm looking at you
@@ -791,7 +793,10 @@ sub irc_public {
     my ($sender, $who, $where, $what) = @_[SENDER, ARG0 .. ARG2];
     my $nick = ( split /!/, $who )[0];
     my $channel = $where->[0];
-#    print print_timestamp(), "$nick said $what in $channel\n";
+
+    if ($msg_log == 1) {
+      print print_timestamp(), "$nick/$channel: $what\n";
+    }
 
     if (($relay_source) && ($relay_dest)) {
       if ($channel eq $relay_source) {
