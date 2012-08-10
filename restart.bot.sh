@@ -10,7 +10,12 @@ if [ ! -d "$botdir/logs" ]; then
 	mkdir -p "$botdir/logs"
 fi
 
-logfile=$botdir/logs/birba-`date +%F`.log
+logfile=$botdir/logs/birba.log
+
+if [ -f "$logfile" ]; then 
+cat $logfile >> $logfile-`date +%F`;
+cat /dev/null > $logfile;
+fi
 
 if [ ! -f "$botdir/birba.pid" ]; then
     cd $botdir
