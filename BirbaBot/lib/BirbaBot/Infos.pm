@@ -162,6 +162,9 @@ if (@out) {
       if ($reply =~ m/.*(\$who).*/g) {
         $reply =~ s/\Q$1\E/$nick/;
         return "$reply"
+      } elsif ($reply =~ m/.*(\$nick).*/g) {
+	$reply =~ s/\Q$1\E/$nick/;
+	return "$reply"
       }
       return "$reply"
     } else { return "$out[0]" }
