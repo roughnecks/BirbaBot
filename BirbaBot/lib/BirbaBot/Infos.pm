@@ -159,13 +159,10 @@ if (@out) {
       return "ACTION $1";
     } elsif ($out[0] =~ m/^\s*<reply>\s*(.+)$/i) {
       my $reply = $1;
-      if ($reply =~ m/.*(\$who).*/g) {
+      if (($reply =~ m/.*(\$who).*/g) or ($reply =~ m/.*(\$nick).*/g)) {
         $reply =~ s/\Q$1\E/$nick/;
         return "$reply"
-      } elsif ($reply =~ m/.*(\$nick).*/g) {
-	$reply =~ s/\Q$1\E/$nick/;
-	return "$reply"
-      }
+      }      
       return "$reply"
     } else { return "$out[0]" }
   } elsif (scalar @out > 1) {
