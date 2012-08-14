@@ -12,9 +12,9 @@ fi
 
 logfile=$botdir/logs/birba.log
 
-if [ -f "$logfile" ]; then 
+if [ -f "$logfile" ]; then
 cat $logfile >> $logfile-`date +%F`;
-cat /dev/null > $logfile;
+: > $logfile;
 fi
 
 if [ ! -f "$botdir/birba.pid" ]; then
