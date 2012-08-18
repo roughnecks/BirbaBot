@@ -98,9 +98,6 @@ sub kw_delete_item {
 sub kw_query {
   my ($dbname, $nick, $key) = @_;
   my $questionkey = "$key"."?";
-  if ($key =~ m/^cmd:.+$/) {
-    return "Commands not yet supported"
-  }
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
   my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
@@ -142,6 +139,8 @@ if (@out) {
 	my $bad = "I foresee two possibilities. One, coming face to face with herself 30 years older would put her into shock and she'd simply pass out. Or two, the encounter could create a time paradox, the results of which could cause a chain reaction that would unravel the very fabric of the space time continuum, and destroy the entire universe! Granted, that's a worse case scenario. The destruction might in fact be very localized, limited to merely our own galaxy. [doc]";
 	return "$egg2"."$bad";
       } else {
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+	$dbh->do('PRAGMA foreign_keys = ON;');
 	my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
 	$queryn->execute($redirect);
 	while (my @data = $queryn->fetchrow_array()) {
