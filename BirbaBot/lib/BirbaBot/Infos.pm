@@ -121,7 +121,7 @@ sub kw_query {
     if ($out[0] =~ m/\|\|/) {
       @possibilities= split (/\|\|/, $out[0]);
     }
-    elsif ($out[0] =~ m/^\s*(<reply>)?\s*\((.+\|.+)\)\s*$/) {
+    elsif ($out[0] =~ m/^\s*(<reply>)?\s*\((.+\|.+)\)\s*$/i) {
       my $possibilities_string = $2;
       @possibilities = split (/\|/, $possibilities_string);
     }
@@ -152,9 +152,9 @@ sub kw_query {
       }
     }
     my $reply = $out[0];
-    $reply =~ s/\$(who|nick)/$nick/g;
-    $reply =~ s/^\s*<action>/ACTION /;
-    $reply =~ s/^\s*<reply>//;
+    $reply =~ s/\$(who|nick)/$nick/gi;
+    $reply =~ s/^\s*<action>/ACTION /i;
+    $reply =~ s/^\s*<reply>//i;
     return $reply;
   } else {
     return join(", or ", @out)
