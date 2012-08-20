@@ -132,29 +132,36 @@ sub kw_query {
   }
 
   if (scalar @out == 1) {
-    if ($out[0] =~ m/.+\|\|.+/) {
-      my @possibilities = split (/\|\|/, $out[0]);
+    my @possibilities;
+    if ($out[0] =~ m/\|\|/) {
+      @possibilities= split (/\|\|/, $out[0]);
+    }
+    elsif ($out[0] =~ m/^\s*\((.+\|.+)\)\s*$/) {
+      my $possibilities_string = $1;
+      @possibilities = split (/\|/, $possibilities_string);
+    }
+    if (scalar @possibilities > 1) {
       my $number = scalar @possibilities;
       my $random = int(rand($number));
       $out[0] = $possibilities[$random];
-      while ($out[0] =~ m/^\s*(<reply>){1}\s*see\s+(.+)$/i) {
-	$redirect = $2;
-	if ("$key" eq "$redirect") {
-	  my $egg2 = "Congratulations $nick, you've just discovered egg #2! ";
-	  my $bad = "I foresee two possibilities. One, coming face to face with herself 30 years older would put her into shock and she'd simply pass out. Or two, the encounter could create a time paradox, the results of which could cause a chain reaction that would unravel the very fabric of the space time continuum, and destroy the entire universe! Granted, that's a worse case scenario. The destruction might in fact be very localized, limited to merely our own galaxy. [doc]";
-	  return "$egg2"."$bad";
-	} else {
-	  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-	  $dbh->do('PRAGMA foreign_keys = ON;');
-	  my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
-	  $queryn->execute($redirect);
-	  while (my @data = $queryn->fetchrow_array()) {
-	    # here we process
-	    return unless @data;
-	    if (@data) {
-	      $out[0] = $data[0];
-	      $dbh->disconnect;
-	    }
+    }
+    while ($out[0] =~ m/^\s*(<reply>){1}\s*see\s+(.+)$/i) {
+      $redirect = $2;
+      if ("$key" eq "$redirect") {
+	my $egg2 = "Congratulations $nick, you've just discovered egg #2! ";
+	my $bad = "I foresee two possibilities. One, coming face to face with herself 30 years older would put her into shock and she'd simply pass out. Or two, the encounter could create a time paradox, the results of which could cause a chain reaction that would unravel the very fabric of the space time continuum, and destroy the entire universe! Granted, that's a worse case scenario. The destruction might in fact be very localized, limited to merely our own galaxy. [doc]";
+	return "$egg2"."$bad";
+      } else {
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+	$dbh->do('PRAGMA foreign_keys = ON;');
+	my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
+	$queryn->execute($redirect);
+	while (my @data = $queryn->fetchrow_array()) {
+	  # here we process
+	  return unless @data;
+	  if (@data) {
+	    $out[0] = $data[0];
+	    $dbh->disconnect;
 	  }
 	}
       }
