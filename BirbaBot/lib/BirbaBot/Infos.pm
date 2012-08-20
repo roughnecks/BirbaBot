@@ -166,18 +166,11 @@ sub kw_query {
 	}
       }
     }
-
-    if ($out[0] =~ m/^\s*<action>\s*(.+)$/i) {
-      my $reply = $1;
-      return "ACTION $1";
-    } elsif ($out[0] =~ m/^\s*<reply>\s*(.+)$/i) {
-      my $reply = $1;
-      if (($reply =~ m/.*(\$who).*/g) or ($reply =~ m/.*(\$nick).*/g)) {
-        $reply =~ s/\Q$1\E/$nick/;
-        return "$reply"
-      }      
-      return "$reply"
-    } else { return "$out[0]" }
+    my $reply = $out[0];
+    $reply =~ s/\$(who|nick)/$nick/g;
+    $reply =~ s/^\s*<action>/ACTION /;
+    $reply =~ s/^\s*<reply>//;
+    return $reply;
   } elsif (scalar @out > 1) {
     return join(", or ", @out)
   } else { return }
