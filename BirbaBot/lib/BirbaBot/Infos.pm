@@ -154,7 +154,7 @@ sub kw_query {
     my $reply = $out[0];
     $reply =~ s/\$(who|nick)/$nick/gi;
     $reply =~ s/^\s*<action>/ACTION /i;
-    $reply =~ s/^\s*<reply>//i;
+    $reply =~ s/^\s*<reply>\s*//i;
     return $reply;
   } else {
     return join(", or ", @out)
