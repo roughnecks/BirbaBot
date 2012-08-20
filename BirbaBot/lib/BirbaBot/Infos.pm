@@ -97,39 +97,24 @@ sub kw_delete_item {
 
 sub kw_query {
   my ($dbname, $nick, $key) = @_;
-  my $questionkey = "$key"."?";
+  my $questionkey = $key . '?';
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
-  my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
-  $query->execute($key);
+  my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids 
+                             WHERE key = ? OR key = ?;");
+  $query->execute($key, $questionkey);
   # here we get the results
   my @out;
   my $redirect;
 
   while (my @data = $query->fetchrow_array()) {
-    # here we process
-    # return "Dunno that" unless @data;
     foreach my $result (@data) {
       if ($result) {
 	push @out, $result 
       }
     }
   }
-
-  
-  if (@out) {
-    print "info: array not empty\n";
-  } else {
-    my $query2 = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
-    $query2->execute($questionkey);
-    while (my @newdata = $query2->fetchrow_array()) {
-      foreach my $newresult (@newdata) {
-	if ($newresult) {
-	  push @out, $newresult;
-	}
-      }
-    }
-  }
+  return unless @out;
 
   if (scalar @out == 1) {
     my @possibilities;
@@ -171,9 +156,9 @@ sub kw_query {
     $reply =~ s/^\s*<action>/ACTION /;
     $reply =~ s/^\s*<reply>//;
     return $reply;
-  } elsif (scalar @out > 1) {
+  } else {
     return join(", or ", @out)
-  } else { return }
+  }
 }
 
 
