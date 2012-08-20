@@ -121,8 +121,8 @@ sub kw_query {
     if ($out[0] =~ m/\|\|/) {
       @possibilities= split (/\|\|/, $out[0]);
     }
-    elsif ($out[0] =~ m/^\s*\((.+\|.+)\)\s*$/) {
-      my $possibilities_string = $1;
+    elsif ($out[0] =~ m/^\s*(<reply>)?\s*\((.+\|.+)\)\s*$/) {
+      my $possibilities_string = $2;
       @possibilities = split (/\|/, $possibilities_string);
     }
     if (scalar @possibilities > 1) {
