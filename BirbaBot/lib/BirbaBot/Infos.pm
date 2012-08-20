@@ -117,19 +117,19 @@ sub kw_query {
   }
 
   
-if (@out) {
-  print "info: array not empty\n";
-} else {
-  my $query2 = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
-  $query2->execute($questionkey);
-  while (my @newdata = $query2->fetchrow_array()) {
-    foreach my $newresult (@newdata) {
-      if ($newresult) {
-	push @out, $newresult;
+  if (@out) {
+    print "info: array not empty\n";
+  } else {
+    my $query2 = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key=?;"); #key
+    $query2->execute($questionkey);
+    while (my @newdata = $query2->fetchrow_array()) {
+      foreach my $newresult (@newdata) {
+	if ($newresult) {
+	  push @out, $newresult;
+	}
       }
     }
   }
-}
 
   if (scalar @out == 1) {
     if ($out[0] =~ m/.+\|\|.+/) {
