@@ -21,8 +21,6 @@ our @EXPORT_OK = qw(
 		     search_urban
                      get_youtube_title
 		     query_meteo
-		     search_uri
-		     url_del
 		  );
 
 our $VERSION = '0.01';
@@ -463,37 +461,6 @@ sub process_urban {
 		    ignore_elements => ['script', 'style'],
 		   )->parse($rawtext) || return "Something went wrong: $!\n";;
   return \@output;
-}
-
-sub search_uri {
-  my ($dbname, $url, $nick, $channel) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
-  my $search = $dbh->prepare("SELECT url,author,date FROM URI where chan = ? AND url = ?");
-  $search->execute($channel, $url);
-  my @value = ($search->fetchrow_array());
-  if (! @value ) {
-    my $query = $dbh->prepare("INSERT INTO URI (url, chan, author, date) VALUES (?, ?, ?, DATETIME('NOW'));");
-    $query->execute($url, $channel, $nick);
-    $dbh->disconnect;
-    return;
-  } else {
-    return "OLD! $value[0] was last mentioned in $channel by $value[1] on $value[2] UTC";
-  }
-}
-
-
-sub url_del {
-  my $dbname = $_[0];
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
-  # seleziono la data attuale meno 10 giorni
-  my $query = $dbh->prepare("SELECT Datetime('now','-10 days');");
-  $query->execute;
-  my @value = ($query->fetchrow_array());
-  my $del_query = $dbh->prepare("DELETE from URI where date <= ? ;");
-  $del_query->execute($value[0]);
-  $dbh->disconnect;
 }
 
 

@@ -34,8 +34,6 @@ use BirbaBot::Searches qw(search_google
 			  search_bash
 			  search_urban
 			  get_youtube_title
-			  search_uri
-			  url_del
 			);
 use BirbaBot::Infos qw(kw_add kw_new kw_query kw_remove kw_list kw_find kw_show kw_delete_item karma_manage);
 use BirbaBot::Todo  qw(todo_add todo_remove todo_list todo_rearrange);
@@ -215,7 +213,6 @@ POE::Session->create(
                     irc_ctcp_action
 		     rss_sentinel
 		     tail_sentinel
-		     url_sentinel
 		     dns_response) ],
     ],
 );
@@ -709,7 +706,6 @@ sub irc_001 {
     # here we register the rss_sentinel
     $kernel->delay_set("tail_sentinel", 20);  # first run after 20 seconds
     $kernel->delay_set("rss_sentinel", 40);  # first run after 40 seconds
-    $kernel->delay_set("url_sentinel", 200);  # first run after 200 seconds
     $lastpinged = time();
     return;
 }
@@ -887,7 +883,6 @@ sub irc_public {
     while (@longurls) {
       my $url = shift @longurls;
 #      print "Found $url\n";
-      bot_says($channel, search_uri($dbname, $url, $nick, $channel));
       if ($url =~ m/youtube/) {
 	bot_says($channel, get_youtube_title($url));
       }
@@ -1027,11 +1022,6 @@ sub tail_sentinel {
   $kernel->delay_set("tail_sentinel", 60)
 }
 
-sub url_sentinel {
-  my ($kernel, $sender) = @_[KERNEL, SENDER];
-  url_del($dbname);
-  $kernel->delay_set("url_sentinel", 86400)
-}
 
 # We registered for all events, this will produce some debug info.
 sub _default {
