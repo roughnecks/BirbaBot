@@ -5,7 +5,7 @@ Special keywords just works for the first key definition "bar1".
 
 The keywords are:
 
-1) <reply> $who  (addressing)
+1) $nick | $who  (addressing)
 2) <reply> see   (recursion)
 3) <action>      (ctcp action)
 
@@ -13,16 +13,16 @@ What do they do?
 
 1)
 
-"$who" gets evaluated and substituted with the nickname of the person who asked the factoid.
-The factoid's value must always begin with the keyword "<reply>" and the factoid must have ONLY
- one definition (bar1) for it to work.
+"$who" or "$nick" get evaluated and substituted with the nickname of the person who asked the factoid.
+The factoid must have ONLY one definition (bar1) for it to work. bar2/3 which contain such variables
+will be told without interpolation.
 
 EXAMPLE:
 
-@kw new hello is <reply> hello $who!
+@kw new hello is hello $who!
 
 asking: hello?
-outputs: hello roughneks!
+outputs: hello roughnecks!
 
 2)
 
