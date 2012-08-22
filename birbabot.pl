@@ -10,6 +10,7 @@
 use strict;
 use warnings;
 
+use Cwd;
 use LWP::Simple;
 use File::Spec;
 use File::Path qw(make_path);
@@ -115,6 +116,10 @@ my %botconfig = (
 		 'msg_log' => [],
 		);
 
+my %debconfig = (
+		'debrels' => {},
+		);
+
 # initialize the local storage
 my $localdir = File::Spec->catdir('data','rss');
 make_path($localdir) unless (-d $localdir);
@@ -125,12 +130,15 @@ my $debug = $ARGV[1];
 show_help() unless $config_file;
 
 ### configuration checking 
-my ($botconf, $serverconf) = LoadFile($config_file);
+my ($botconf, $serverconf, $debconf) = LoadFile($config_file);
 override_defaults(\%serverconfig, $serverconf);
 override_defaults(\%botconfig, $botconf);
+override_defaults(\%debconfig, $debconf);
+
 
 print "Bot options: ", Dumper(\%botconfig),
-  "Server options: ", Dumper(\%serverconfig);
+  "Server options: ", Dumper(\%serverconfig),
+  "Debian Releases: ", Dumper(\%debconfig);
 
 my $dbname = $botconfig{'dbname'};
 
@@ -204,6 +212,8 @@ POE::Session->create(
 		     irc_botcmd_imdb
 		     irc_botcmd_quote
 		     irc_botcmd_meteo
+		     irc_botcmd_debget
+		     irc_botcmd_deb
 		     irc_public
                     irc_join
                     irc_part
@@ -253,6 +263,8 @@ sub _start {
 	    version => 'Show from which git branch we are running the bot. Do not use without git',
             isdown => 'Check whether a website is up or down | isdown <domain>',									       
 	    uptime => 'Bot\'s uptime',
+            debget => 'Fetch full lists of Debian packages and store them.',									       
+            deb => 'Query for versions of debian pakage | Usage: deb <package_name>',
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
             pull => 'Execute a git pull',
@@ -1461,6 +1473,75 @@ sub irc_botcmd_kwmsg {
 }
 
 
+sub irc_botcmd_debget {
+  my ($who, $where) = @_[ARG0, ARG1];
+  my $nick = parse_user($who);
+  return unless (check_if_op($where, $nick) or check_if_admin($who));  
+
+  my $cwd = getcwd();
+  my $path = File::Spec->catdir($cwd, 'debs');
+  make_path("$path") unless (-d $path);
+
+  my $what = $debconfig{debrels};
+  return unless (%$what);
+  foreach my $item (keys %{$what}) {
+    print "Saving $item ..\n";
+    my $link = $what->{$item};
+    my $list = get $link;
+    my $file = File::Spec->catfile($path, $item);
+    store(\$list, $file);
+  }
+  bot_says($where, "debget executed succesfully, files saved.");
+}
+
+
+sub irc_botcmd_deb {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  my $cwd = getcwd();
+  my $path = File::Spec->catdir($cwd, 'debs');
+  
+  my @files;
+  my @items;
+  my @versions;
+  my $what = $debconfig{debrels};
+  return unless (%$what);
+  if ($arg =~ m/^\s*(\S+)\s*/) {
+    my $pack = $1;
+    foreach my $item (sort (keys %{$what})) {
+      my $file = File::Spec->catfile($path, $item);
+      push(@versions, parse_debfiles($file, $pack));
+      push(@items, sort($item));
+    }
+  }
+  my %hash;
+  @hash{@items} = @versions;
+  my @out;
+  while ( my ($key, $value) = each(%hash) ) {
+    push(@out, "$key => $value") unless !($value);
+  }
+  my $result = join(', ', sort(@out));
+  bot_says($where, $result);
+}
+
+
+sub parse_debfiles {
+  my ($file, $pack) = @_;
+
+  open (my $fh, "<", $file) or die "Could not open $file: $!";
+  my @lines = grep (/\Q$pack/, <$fh>);
+  close $fh;
+  return unless (@lines);
+  my %hash;
+  while (@lines) {
+    my $item = shift(@lines);
+    if ($item =~ m/^(\S+)\s\((.+)\)\s.+$/) {
+      my $key = $1;
+      my $val = $2;
+      $hash{$key} = $val;
+    }
+  }
+  return $hash{$pack};
+}
 
 exit;
 
