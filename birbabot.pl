@@ -1503,7 +1503,8 @@ sub irc_botcmd_deb {
   my ($where, $arg) = @_[ARG1, ARG2];
   my $cwd = getcwd();
   my $path = File::Spec->catdir($cwd, 'debs');
-  
+  my $bbold = "\x{0002}";
+  my $ebold = "\x{000F}";
   my @out;
   my $relfiles = $debconfig{debrels};
   return unless (@$relfiles);
@@ -1519,7 +1520,7 @@ sub irc_botcmd_deb {
     my $file = File::Spec->catfile($path, $rel->{rel});
     my $result = parse_debfiles($file, $pack);
     if ($result) {
-      push @out, $rel->{rel} . ' => ' . $result;
+      push @out, $bbold . $rel->{rel} . $ebold . ' => ' . $result;
     }
   }
   if (@out) {
