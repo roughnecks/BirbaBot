@@ -117,7 +117,7 @@ my %botconfig = (
 		);
 
 my %debconfig = (
-		'debrels' => {},
+		'debrels' => [],
 		);
 
 # initialize the local storage
@@ -1479,14 +1479,22 @@ sub debget_sentinel {
   my $path = File::Spec->catdir($cwd, 'debs');
   make_path("$path") unless (-d $path);
 
-  my $what = $debconfig{debrels};
-  return unless (%$what);
-  foreach my $item (keys %{$what}) {
-    print "Saving $item ..\n";
-    my $link = $what->{$item};
-    my $list = get $link;
-    my $file = File::Spec->catfile($path, $item);
-    store(\$list, $file);
+  my @debrels = @{$debconfig{debrels}};
+  return unless @debrels;
+  foreach my $rel (@debrels) {
+    print "Saving ", $rel->{rel}, "..\n";
+    my $list = get $rel->{url}; 
+    # WARNING! THE CONTENT IS GZIPPED, BUT UNCOMPRESSED BY GET
+    my $file = File::Spec->catfile($path, $rel);
+    eval {
+      open (my $fh, '>:encoding(utf8)', $file)
+	or die "Cannot print relfile $!\n";
+      print $fh $list;
+      close $fh;
+    };
+    print $@ if $@;
+    # force the memory freeing;
+    undef $list;
   }
   $kernel->delay_set("debget_sentinel", 43200 ); #updates every 12H
   print "debget executed succesfully, files saved.\n";
@@ -1498,48 +1506,47 @@ sub irc_botcmd_deb {
   my $cwd = getcwd();
   my $path = File::Spec->catdir($cwd, 'debs');
   
-  my @files;
-  my @items;
-  my @versions;
-  my $what = $debconfig{debrels};
-  return unless (%$what);
+  my @out;
+  my $relfiles = $debconfig{debrels};
+  return unless (@$relfiles);
+  my $pack;
   if ($arg =~ m/^\s*(\S+)\s*/) {
-    my $pack = $1;
-    foreach my $item (sort (keys %{$what})) {
-      my $file = File::Spec->catfile($path, $item);
-      push(@versions, parse_debfiles($file, $pack));
-      push(@items, $item);
+    $pack = $1;
+  } else {
+    bot_says($where, "Invalid argument");
+    return;
+  }
+  foreach my $rel (@$relfiles) {
+    next unless ($rel->{rel} and $rel->{url});
+    my $file = File::Spec->catfile($path, $rel->{rel});
+    my $result = parse_debfiles($file, $pack);
+    if ($result) {
+      push @out, $rel->{rel} . ' => ' . $result;
     }
   }
-  my %hash;
-  @hash{@items} = @versions;
-  my @out;
-  while ( my ($key, $value) = each(%hash) ) {
-    push(@out, "$key => $value") unless !($value);
+  if (@out) {
+    bot_says($where,  join(', ', @out));
+  } else {
+    bot_says($where, "No packs for $pack");
   }
-  my $result = join(', ', sort(@out));
-  bot_says($where, $result);
 }
+
 
 
 sub parse_debfiles {
   my ($file, $pack) = @_;
-
-  open (my $fh, "<", $file) or die "Could not open $file: $!";
-  my @lines = grep (/\Q$pack/, <$fh>);
-  close $fh;
-  return unless (@lines);
-  my %hash;
-  while (@lines) {
-    my $item = shift(@lines);
-    if ($item =~ m/^(\S+)\s\((.+)\)\s.+$/) {
-      my $key = $1;
-      my $val = $2;
-      $hash{$key} = $val;
+  open (my $fh, "<:encoding(utf8)", $file) or die "Could not open $file: $!";
+  my $foundmatch;
+  while (<$fh>) {
+    if (m/^\Q$pack\E\s\((.+)\)\s.+$/) {
+      $foundmatch = $1;
+      last;
     }
   }
-  return $hash{$pack};
+  close $fh;
+  return $foundmatch;
 }
 
 exit;
+
 
