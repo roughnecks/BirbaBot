@@ -1490,7 +1490,7 @@ sub debget_sentinel {
     my @command = ('curl', '-s', '--compressed',
 		   '--output', $file);
     system @command;
-    print "executed", join(" ", @command);
+    print "executed ", join(" ", @command), "\n";
   }
   $kernel->delay_set("debget_sentinel", 43200 ); #updates every 12H
   print "debget executed succesfully, files saved.\n";
