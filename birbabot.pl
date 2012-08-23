@@ -1488,9 +1488,11 @@ sub debget_sentinel {
     my $file = File::Spec->catfile($path, $rel->{rel});
     $ENV{PATH} = "/bin:/usr/bin"; # Minimal PATH.
     my @command = ('curl', '-s', '--compressed',
-		   '--output', $file);
-    system @command;
-    print "executed ", join(" ", @command), "\n";
+		   '--output', $file, $rel->{url});
+    print "Trying ", join(" ", @command, "\n");
+    system(@command) == 0 
+      or print 
+	"failed ", join(" ", @command), "\n";
   }
   $kernel->delay_set("debget_sentinel", 43200 ); #updates every 12H
   print "debget executed succesfully, files saved.\n";
