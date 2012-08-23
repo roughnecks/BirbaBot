@@ -1486,16 +1486,11 @@ sub debget_sentinel {
     print "Saving ", $rel->{rel}, "..\n";
     # WARNING! THE CONTENT IS GZIPPED, BUT UNCOMPRESSED BY GET
     my $file = File::Spec->catfile($path, $rel->{rel});
-    eval {
-      open (my $fh, '>:encoding(utf8)', $file)
-	or die "Cannot print relfile $!\n";
-      my $list = get $rel->{url}; 
-      print $fh $list;
-      # force the memory freeing;
-      undef $list;
-      close $fh;
-    };
-    print $@ if $@;
+    $ENV{PATH} = "/bin:/usr/bin"; # Minimal PATH.
+    my @command = ('curl', '-s', '--compressed',
+		   '--output', $file);
+    system @command;
+    print "executed", join(" ", @command);
   }
   $kernel->delay_set("debget_sentinel", 43200 ); #updates every 12H
   print "debget executed succesfully, files saved.\n";
