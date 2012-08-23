@@ -212,7 +212,6 @@ POE::Session->create(
 		     irc_botcmd_imdb
 		     irc_botcmd_quote
 		     irc_botcmd_meteo
-		     irc_botcmd_debget
 		     irc_botcmd_deb
 		     irc_public
                     irc_join
@@ -223,6 +222,7 @@ POE::Session->create(
                     irc_ctcp_action
 		     rss_sentinel
 		     tail_sentinel
+		     debget_sentinel
 		     dns_response) ],
     ],
 );
@@ -263,7 +263,6 @@ sub _start {
 	    version => 'Show from which git branch we are running the bot. Do not use without git',
             isdown => 'Check whether a website is up or down | isdown <domain>',									       
 	    uptime => 'Bot\'s uptime',
-            debget => 'Fetch full lists of Debian packages and store them.',									       
             deb => 'Query for versions of debian pakage | Usage: deb <package_name>',
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
@@ -718,6 +717,7 @@ sub irc_001 {
     # here we register the rss_sentinel
     $kernel->delay_set("tail_sentinel", 20);  # first run after 20 seconds
     $kernel->delay_set("rss_sentinel", 40);  # first run after 40 seconds
+    $kernel->delay_set("debget_sentinel", 180);  # first run after 180 seconds
     $lastpinged = time();
     return;
 }
@@ -1473,13 +1473,8 @@ sub irc_botcmd_kwmsg {
 }
 
 
-sub irc_botcmd_debget {
-  my ($who, $where) = @_[ARG0, ARG1];
-  my $nick = parse_user($who);
-    unless ( check_if_op($where, $nick) or check_if_admin($who) ) {
-      bot_says($where, "Sorry, You need to be a bot admin or a channel operator.");
-      return;
-    }
+sub debget_sentinel {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $cwd = getcwd();
   my $path = File::Spec->catdir($cwd, 'debs');
   make_path("$path") unless (-d $path);
@@ -1493,7 +1488,8 @@ sub irc_botcmd_debget {
     my $file = File::Spec->catfile($path, $item);
     store(\$list, $file);
   }
-  bot_says($where, "debget executed succesfully, files saved.");
+  $kernel->delay_set("debget_sentinel", 43200 ); #updates every 12H
+  print "debget executed succesfully, files saved.\n";
 }
 
 
