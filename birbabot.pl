@@ -1482,10 +1482,11 @@ sub debget_sentinel {
   my @debrels = @{$debconfig{debrels}};
   return unless @debrels;
   foreach my $rel (@debrels) {
+    next unless ($rel->{rel} and $rel->{url});
     print "Saving ", $rel->{rel}, "..\n";
     my $list = get $rel->{url}; 
     # WARNING! THE CONTENT IS GZIPPED, BUT UNCOMPRESSED BY GET
-    my $file = File::Spec->catfile($path, $rel);
+    my $file = File::Spec->catfile($path, $rel->{rel});
     eval {
       open (my $fh, '>:encoding(utf8)', $file)
 	or die "Cannot print relfile $!\n";
