@@ -1476,8 +1476,10 @@ sub irc_botcmd_kwmsg {
 sub irc_botcmd_debget {
   my ($who, $where) = @_[ARG0, ARG1];
   my $nick = parse_user($who);
-  return unless (check_if_op($where, $nick) or check_if_admin($who));  
-
+    unless ( check_if_op($where, $nick) or check_if_admin($who) ) {
+      bot_says($where, "Sorry, You need to be a bot admin or a channel operator.");
+      return;
+    }
   my $cwd = getcwd();
   my $path = File::Spec->catdir($cwd, 'debs');
   make_path("$path") unless (-d $path);
@@ -1510,7 +1512,7 @@ sub irc_botcmd_deb {
     foreach my $item (sort (keys %{$what})) {
       my $file = File::Spec->catfile($path, $item);
       push(@versions, parse_debfiles($file, $pack));
-      push(@items, sort($item));
+      push(@items, $item);
     }
   }
   my %hash;
