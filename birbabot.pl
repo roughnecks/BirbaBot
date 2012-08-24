@@ -254,7 +254,7 @@ sub _start {
             done => 'delete something from the channel TODO; done #id',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
-            kw => 'Manage the keywords: [kw new] foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw show] foo | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key. For special keywords usage please read the doc/Factoids.txt help file',
+            kw => 'Manage the keywords: [kw new] foo is bar | [kw new] "foo is bar" is yes, probably foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw show] foo | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key. For special keywords usage please read the doc/Factoids.txt help file',
             kwmsg => 'Asking factoids in query: kwmsg < foo[?] >', 
 	    meteo => 'Query the weather for location | meteo <city>',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
@@ -1396,9 +1396,18 @@ sub irc_botcmd_kw {
   my $string = join (" ", @args);
   if ($subcmd eq 'new') {
     for ($string) {
-      if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_new($dbname, $who, lc($1), $2)) }
-      elsif (/^\s*(.+)\s+is\s*$/) { bot_says($where, "Missing Argument") }
-      else {bot_says($where, "Something is wrong") } # default
+      if (/^\s*"(.+?)"\s+is+(.+?)\s*$/) {
+	bot_says($where, kw_new($dbname, $who, lc($1), $2))
+      }
+      elsif (/^\s*(.+?)\s+is\s+(.+?)\s*$/) {
+	bot_says($where, kw_new($dbname, $who, lc($1), $2))
+      }
+      elsif (/^\s*(.+)\s+is\s*$/) {
+	bot_says($where, "Missing Argument")
+      }
+      else {
+	bot_says($where, "Something is wrong")
+      }
     }
   } elsif ($subcmd eq 'add') {
     for ($string) {
