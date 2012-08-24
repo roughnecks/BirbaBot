@@ -109,36 +109,6 @@ sub rss_add_new {
 
 
 
-
-=head2
-
- # our queries
-  my $add_to_rss_query = 'INSERT INTO rss VALUES (?, ?);'; # f_handle & url
-
-  # f_handle, channel, active
-  my $add_to_channels_query = 'INSERT INTO channels VALUES (?, ?);'; # f_handle & f_channel
-
-  # connect
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
-
-  # do the 2 queries
-  my $rssq = $dbh->prepare($add_to_rss_query);
-  $rssq->execute($feedname, $url);
-
-  my $chanq = $dbh->prepare($add_to_channels_query);
-  $chanq->execute($feedname, $channel);
-
-  # we should return the errors, but for now go without
-  $dbh->disconnect;
-  
-  return "Added $feedtitle ($url) as $feedname";
-}
-
-
-=cut
-
-
 =head2 rss_delete_feed($dbname, $feedname, $channel)
 
 Stop to output the feeds $feedname on channel $channel, using $dbname
