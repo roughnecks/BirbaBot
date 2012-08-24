@@ -55,15 +55,15 @@ outputs: * Birba lols :)
 
 QUOTING
 
-Normally, the word 'is' is considered a separator between the keyword
-and the definition. In some case, you may want to include this word in the keyword. In this case you must quote the definition with "".
+Normally, the word 'is' is considered a separator between the keyword and the definition. 
+In some case, you may want to include this word in the keyword. In this case you must quote the definition with "".
 
 EXAMPLE
 
-@kw new "what the time is it" is I don't know
-asking: what the time is it?
+@kw new "what time is it" is I don't know
+asking: what time is it?
 bot replies: I don't know
 
-Without quoting you would get 'what the time' => 'it is I don't know' 
+Without quoting you would get 'what time' => 'it is I don't know' 
 
 
