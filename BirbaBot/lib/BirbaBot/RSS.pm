@@ -68,7 +68,51 @@ sub rss_add_new {
   my $feedtitle = $rssfeed->title;
   return "$url doesn't look like an RSS" unless $feedtitle;
 
-  # our queries
+  # check if url exists in db
+  my $rss_check = 'SELECT f_handle FROM rss WHERE url = ?';
+  # check if feed exists in channel
+  my $chanfeed_check = 'SELECT f_handle FROM channels WHERE f_channel = ?';
+
+  # connect
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  $dbh->do('PRAGMA foreign_keys = ON;');
+
+  # do the query
+  my $rssc = $dbh->prepare($rss_check);
+  $rssc->execute($url);
+
+  my $chanfc = $dbh->prepare($chanfeed_check);
+  $chanfc->execute($channel);
+
+  if (my @data = $rssc->fetchrow_array()) {
+    my $alias = $data[0];
+    my @chanfeed = $chanfc->fetchrow_array();
+      if ((@chanfeed) && ($chanfeed[0] eq $alias)) {
+	return "RSS feed already existent in $channel with alias $alias"; 
+      } else {
+	my $add_to_channels_query = 'INSERT INTO channels VALUES (?, ?);';
+	my $chanq = $dbh->prepare($add_to_channels_query);
+	$chanq->execute($alias, $channel);
+	return "RSS feed already existent in database, added it with alias $alias";
+      }
+  } else {
+    my $add_to_rss_query = 'INSERT INTO rss VALUES (?, ?);';
+    my $rssq = $dbh->prepare($add_to_rss_query);
+    $rssq->execute($feedname, $url);
+    my $add_to_channels_query = 'INSERT INTO channels VALUES (?, ?);';
+    my $chanq = $dbh->prepare($add_to_channels_query);
+    $chanq->execute($feedname, $channel);
+    return "Added $feedtitle ($url) as $feedname";
+  }
+  $dbh->disconnect;
+}
+
+
+
+
+=head2
+
+ # our queries
   my $add_to_rss_query = 'INSERT INTO rss VALUES (?, ?);'; # f_handle & url
 
   # f_handle, channel, active
@@ -90,6 +134,10 @@ sub rss_add_new {
   
   return "Added $feedtitle ($url) as $feedname";
 }
+
+
+=cut
+
 
 =head2 rss_delete_feed($dbname, $feedname, $channel)
 
