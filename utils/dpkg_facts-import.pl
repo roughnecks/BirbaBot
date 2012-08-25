@@ -37,14 +37,22 @@ print "Succesfully connected to the sqlite database $dbname\n";
 
 # Find all of the facts
 my @all_factoids = $schema->resultset('Factoids')->all;
+print "Starting importer..\n";
+
 # Cycle through facts and get keys/values to be imported in the sqlited db
 foreach my $fact (@all_factoids) {
 my $key = $fact->factoid_key;
 my $value = $fact->factoid_value;
 
 my $query = $dbh->prepare("INSERT INTO factoids (nick, key, bar1) VALUES (?, ?, ?);");
-$query->execute('roughnecks', $key, $value);
+$query->execute('dpkg', $key, $value);
 }
+print "Importing finished.\n";
+
+print "Starting deletion..\n";
+# delete non-supported facts
+my $delete = $dbh->prepare('DELETE FROM factoids WHERE key LIKE \'cmd:%\' or bar1 LIKE \'%$randnick%\';');
+$delete->execute();
+print "Deletion finished.\n";
 
 $dbh->disconnect;
-
