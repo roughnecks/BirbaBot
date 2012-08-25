@@ -24,6 +24,12 @@ $ ./dpkg_facts-import.pl
 
 Copy the updated birba.db back to the root of BirbaBot, start the bot.
 
+** note
+
+If you added some facts before running the importer, they will not be overwritten and you'll see
+a failed execution query, like this:
+DBD::SQLite::st execute failed: column key is not unique at ./dpkg_facts-import.pl line 48.
+
 ------------------------------------------------------------------------------------------------
 
 ## dpkg/#debian Bot database Save-To-Disk Utility
