@@ -201,7 +201,6 @@ POE::Session->create(
 		     irc_botcmd_todo
 		     irc_botcmd_done
 		     irc_botcmd_kw
-		     irc_botcmd_kwmsg
 		     irc_botcmd_slap
 		     irc_botcmd_geoip
 		     irc_botcmd_lookup
@@ -214,6 +213,7 @@ POE::Session->create(
 		     irc_botcmd_meteo
 		     irc_botcmd_deb
 		     irc_public
+		     irc_msg
                     irc_join
                     irc_part
                     irc_quit
@@ -255,7 +255,6 @@ sub _start {
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: [kw new] foo is bar | [kw new] "foo is bar" is yes, probably foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw show] foo | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key. For special keywords usage please read the doc/Factoids.txt help file',
-            kwmsg => 'Asking factoids in query: kwmsg < foo[?] >', 
 	    meteo => 'Query the weather for location | meteo <city>',							       
             imdb => 'Query the Internet Movie Database (If you want to specify a year, put it at the end). Alternatively, takes one argument, an id or link, to fetch more data.',
 	    quote => 'Manage the quotes: quote [ add <text> | del <number> | <number> | rand | last | find <argument> ]',
@@ -922,6 +921,25 @@ sub irc_public {
     return;
 }
 
+sub irc_msg {
+  my ($who, $what) = @_[ARG0, ARG2];
+  my $nick = parse_user($who);
+  
+  if ( $what =~ /^(.+)\?\s*$/ ) {
+    print "info: requesting keyword $1\n";
+    my $kw = $1;
+    my $query = (kw_query($dbname, $nick, lc($kw)));
+    if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
+      $irc->yield(ctcp => $nick, "ACTION $1");
+      return;
+    } elsif ($query) {
+      bot_says($nick, $query);
+    return;
+    }
+  }
+}
+
+
 sub add_nick {
   my ($nick, $msg) = @_;
   $seen->{l_irc($nick)} = [time, $msg];
@@ -1456,28 +1474,6 @@ sub irc_botcmd_kw {
     }
   } elsif ($subcmd ne ['new'|'add'|'forget'|'delete'|'find'|'list'|'show']) { 
     bot_says($where, "Wrong Subcommand: $subcmd\n")
-  }
-}
-
-
-sub irc_botcmd_kwmsg {
-  my ($who, $where, $arg) = @_[ARG0..$#_];
-  my $nick = parse_user($who);
-  if (is_where_a_channel($where)) {
-    bot_says($where, "$nick, this command works only in a query");
-    return;
-  } 
-  if ((! $arg) or ($arg =~ m/^\s*$/)) {
-    bot_says($where, "Missing or Invalid Argument.");
-    return;
-  } elsif ((kw_query($dbname, $nick, lc($arg)) =~ m/^ACTION\s(.+)$/)) {
-    $irc->yield(ctcp => $where, "ACTION $1");
-    return;
-  } else {
-    for ($arg) {
-      if (/^\s*(.+\??)\s*$/) { bot_says($where, kw_query($dbname, $nick, lc($1))); return; }
-      else { bot_says($where, "what?") }
-    }
   }
 }
 

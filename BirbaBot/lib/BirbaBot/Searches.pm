@@ -72,6 +72,8 @@ sub query_meteo {
     $data = $parser->parse($xml);
     $inforef = $data->[1]->[2];
   };
+  print Dumper(\$data);
+  print $xml if $@;
   return "Problems with http://www.google.ca/ig/api?weather=$location : $@" 
     if $@;
   my @collected;
