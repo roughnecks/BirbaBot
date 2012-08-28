@@ -268,7 +268,7 @@ sub _start {
             isdown => 'Check whether a website is up or down | isdown <domain>',									       
 	    uptime => 'Bot\'s uptime',
             deb => 'Query for versions of debian pakage | Usage: deb <package_name>',
-            debsearch => 'Find packages matching <string> | deb-search <string>',									       
+            debsearch => 'Find packages matching <string> | debsearch <string>',									       
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
             pull => 'Execute a git pull',
