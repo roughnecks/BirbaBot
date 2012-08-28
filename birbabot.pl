@@ -212,6 +212,7 @@ POE::Session->create(
 		     irc_botcmd_quote
 		     irc_botcmd_meteo
 		     irc_botcmd_deb
+		     irc_botcmd_debsearch
 		     irc_public
 		     irc_msg
                     irc_join
@@ -263,6 +264,7 @@ sub _start {
             isdown => 'Check whether a website is up or down | isdown <domain>',									       
 	    uptime => 'Bot\'s uptime',
             deb => 'Query for versions of debian pakage | Usage: deb <package_name>',
+            debsearch => 'Find packages matching <string> | deb-search <string>',									       
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
             pull => 'Execute a git pull',
@@ -1535,8 +1537,6 @@ sub irc_botcmd_deb {
   }
 }
 
-
-
 sub parse_debfiles {
   my ($file, $pack) = @_;
   open (my $fh, "<:encoding(utf8)", $file) or die "Could not open $file: $!";
@@ -1550,6 +1550,11 @@ sub parse_debfiles {
   close $fh;
   return $foundmatch;
 }
+
+sub irc_botcmd_debsearch {
+return "melmothX lamero";
+}
+
 
 exit;
 
