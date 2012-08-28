@@ -80,8 +80,8 @@ sub deb_pack_search {
   };
   @results = refine_results($arg, \%out);
   return "No matches" unless @results;
-  if ((scalar @results) > 50) {
-    splice @results, 49;
+  if ((scalar @results) > 20) {
+    splice @results, 19;
     push @results, "and more...."
   };
   return "Found packs: " . join(", ", @results);
