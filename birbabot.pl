@@ -47,6 +47,8 @@ use BirbaBot::Quotes qw(ircquote_add
 		    ircquote_find
 		    ircquote_num);
 use BirbaBot::Tail qw(file_tail);
+use BirbaBot::Debian qw(deb_pack_versions deb_pack_search);
+
 
 use URI::Find;
 use URI::Escape;
@@ -153,6 +155,8 @@ my $relay_source = $botconfig{'relay_source'};
 my $relay_dest = $botconfig{'relay_dest'};
 my $twoways_relay = $botconfig{'twoways_relay'};
 my $msg_log = $botconfig{'msg_log'};
+
+my $debian_relfiles_base = File::Spec->catdir(getcwd(), 'debs');
 
 # when we start, we check if we have all the tables.  By no means this
 # guarantees that the tables are correct. Devs, I'm looking at you
@@ -1508,51 +1512,26 @@ sub debget_sentinel {
 
 sub irc_botcmd_deb {
   my ($where, $arg) = @_[ARG1, ARG2];
-  my $cwd = getcwd();
-  my $path = File::Spec->catdir($cwd, 'debs');
-  my $bbold = "\x{0002}";
-  my $ebold = "\x{000F}";
-  my @out;
-  my $relfiles = $debconfig{debrels};
-  return unless (@$relfiles);
-  my $pack;
-  if ($arg =~ m/^\s*(\S+)\s*/) {
-    $pack = $1;
-  } else {
-    bot_says($where, "Invalid argument");
-    return;
-  }
-  foreach my $rel (@$relfiles) {
-    next unless ($rel->{rel} and $rel->{url});
-    my $file = File::Spec->catfile($path, $rel->{rel});
-    my $result = parse_debfiles($file, $pack);
-    if ($result) {
-      push @out, $bbold . $rel->{rel} . $ebold . ' => ' . $result;
-    }
-  }
+  return unless $arg =~ m/\S/;
+  my @out = deb_pack_versions($arg,
+			      $debian_relfiles_base, 
+			      $debconfig{debrels});
   if (@out) {
     bot_says($where,  join(', ', @out));
   } else {
-    bot_says($where, "No packs for $pack");
+    bot_says($where, "No packs for $arg");
   }
 }
 
-sub parse_debfiles {
-  my ($file, $pack) = @_;
-  open (my $fh, "<:encoding(utf8)", $file) or die "Could not open $file: $!";
-  my $foundmatch;
-  while (<$fh>) {
-    if (m/^\Q$pack\E\s\((.+)\)\s.+$/) {
-      $foundmatch = $1;
-      last;
-    }
-  }
-  close $fh;
-  return $foundmatch;
-}
 
 sub irc_botcmd_debsearch {
-return "melmothX lamero";
+  my ($where, $arg) = @_[ARG1, ARG2];
+  my $result = deb_pack_search($arg, $debian_relfiles_base, $debconfig{debrels});
+  if ($result) {
+    bot_says($where, $result);
+  } else {
+    bot_says($where, "No result found");
+  }
 }
 
 
