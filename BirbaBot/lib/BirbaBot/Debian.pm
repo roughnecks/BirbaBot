@@ -122,7 +122,16 @@ sub refine_results {
   my @terms = split(/\s+/, $arg);
   my $first = shift @terms; # the first one is already checked
   # next 
-  my @got = sort(keys %$matches);
+  my @got;
+  my @notexact;
+  foreach my $res (sort(keys %$matches)) {
+    if ($res =~ m/^\Q$first\E/) {
+      push @got, $res;
+    } else {
+      push @notexact, $res;
+    }
+  }
+  push @got, @notexact;
   # return now if there is only one term
   return @got unless (@terms);
 
