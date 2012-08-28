@@ -72,13 +72,13 @@ sub deb_pack_search {
     my $file = File::Spec->catfile($path, $rel->{rel});
     push @results, parse_debfiles($file, $pack);
   }
-  print "Search results: ", @results;
+  # print "Search results: ", @results;
   my %out;
   while (@results) {
     my $pack = shift(@results);
     $out{$pack} = 1;
   };
-  @results = sort (keys %out);
+  @results = refine_results($arg, \%out);
   return "No matches" unless @results;
   if ((scalar @results) > 50) {
     splice @results, 49;
@@ -104,7 +104,7 @@ sub parse_debfiles {
       }
     } else {
       if ($line =~ m/^(^\S*?\Q$pack\E\S*)\s/i) {
-	print "Found $1 for $pack\n";
+	# print "Found $1 for $pack\n";
 	push @packs, $1;
       }
     }
@@ -117,6 +117,39 @@ sub parse_debfiles {
   }
 }
 
+sub refine_results {
+  my ($arg, $matches) = @_;
+  my @terms = split(/\s+/, $arg);
+  my $first = shift @terms; # the first one is already checked
+  # next 
+  my @got = sort(keys %$matches);
+  # return now if there is only one term
+  return @got unless (@terms);
+
+  my @refined;
+  while (@got) {
+    my $candidate = shift(@got);
+    # print "Examining $candidate...\n";
+    my $c = 0;
+
+    foreach my $term (@terms) {
+      if ($candidate =~ /\Q$term\E/) {
+	# if there is a match, increment
+	$c++
+      }
+    }
+    # now, we compare the scalar @terms with with $c
+
+    # print 'Check: ', $c, "\n";
+    if ($c == (scalar @terms)) {
+      push @refined, $candidate;
+      # print "FOUND ",  $candidate, "\n";;
+    } else {
+      # print "... $c ...";
+    }
+  }
+  return @refined;
+}
 
 
 1;
