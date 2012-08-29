@@ -497,7 +497,8 @@ sub yahoo_meteo {
     if ($key eq 'yweather:location') {
       my $location = shift @$infos;
       push @collected, "Meteo for " . $location->[0]->{city} . " " .
-      $location->[0]->{country} . ".";
+	$location->[0]->{region} . " " .
+	  $location->[0]->{country} . ".";
     }
     if ($key eq 'item') {
       my $found = shift @$infos;
