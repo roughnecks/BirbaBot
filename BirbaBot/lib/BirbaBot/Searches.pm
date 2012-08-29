@@ -21,11 +21,13 @@ our @EXPORT_OK = qw(
 		     search_urban
                      get_youtube_title
 		     query_meteo
+		     yahoo_meteo
 		  );
 
 our $VERSION = '0.01';
 
 use LWP::UserAgent;
+use LWP::Simple;
 use HTTP::Response;
 use HTTP::Request::Common;
 use Encode;
@@ -463,6 +465,22 @@ sub process_urban {
 		    ignore_elements => ['script', 'style'],
 		   )->parse($rawtext) || return "Something went wrong: $!\n";;
   return \@output;
+}
+
+
+sub yahoo_meteo {
+  my $location = $_[0];
+  print Dumper(\$location);
+  my $woeid = get "http://laltromondo.dynalias.net/yahoo/yahoo.php?city=$location";
+  print Dumper(\$woeid);
+  my $url = "http://weather.yahooapis.com/forecastrss?w=$woeid&u=c";
+  my $feed = XML::Feed->parse(URI->new($url))
+    or die XML::Feed->errstr;
+  #    return $feed->title;
+  for my $entry ($feed->entries) {
+    my $content = $entry->content;
+    print $content->body;
+  }
 }
 
 
