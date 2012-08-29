@@ -218,7 +218,6 @@ POE::Session->create(
 		     irc_botcmd_meteo
 		     irc_botcmd_deb
 		     irc_botcmd_debsearch
-		     irc_botcmd_weather
 		     irc_public
 		     irc_msg
                     irc_join
@@ -271,7 +270,6 @@ sub _start {
 	    uptime => 'Bot\'s uptime',
             deb => 'Query for versions of debian pakage | Usage: deb <package_name>',
             debsearch => 'Find packages matching <string> | debsearch <string>',									       
-            weather => 'Query Yahoo Weather Service for location | weather <city>',
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
             pull => 'Execute a git pull',
@@ -304,9 +302,7 @@ sub irc_botcmd_meteo {
     return
   }
   print "Asking the weatherman\n";
-  my $result = query_meteo($arg);
-  $result =~ s/\;\s*$/./;
-  bot_says($where, $result);
+  bot_says($where, yahoo_meteo($arg));
   return;
 }
 
@@ -1537,11 +1533,6 @@ sub irc_botcmd_debsearch {
   }
 }
 
-
-sub irc_botcmd_weather {
-  my ($where, $arg) = @_[ARG1, ARG2];
-  bot_says($where, yahoo_meteo($arg));
-}
 
 
 exit;

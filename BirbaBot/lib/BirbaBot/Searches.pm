@@ -5,6 +5,7 @@ package BirbaBot::Searches;
 use 5.010001;
 use strict;
 use warnings;
+use utf8;
 
 require Exporter;
 
@@ -469,20 +470,54 @@ sub process_urban {
 
 
 sub yahoo_meteo {
-  my $location = $_[0];
-  print Dumper(\$location);
+  my $location = shift;
+  $location = uri_escape($location);
   my $woeid = get "http://laltromondo.dynalias.net/yahoo/yahoo.php?city=$location";
-  print Dumper(\$woeid);
-  my $url = "http://weather.yahooapis.com/forecastrss?w=$woeid&u=c";
-  my $feed = XML::Feed->parse(URI->new($url))
-    or die XML::Feed->errstr;
-  #    return $feed->title;
-  for my $entry ($feed->entries) {
-    my $content = $entry->content;
-    print $content->body;
+  my $key;
+  if ($woeid =~ m/(\d+)/) {
+    $key = $1;
+  } else {
+    return "No match for $location";
   }
-}
+  my $url = "http://weather.yahooapis.com/forecastrss?w=$key&u=c";
+  my $rawxml = get $url;
+#  print $rawxml;
+  my $parser = new XML::Parser(Style => 'Tree');
+  my $tree;
+  eval {
+    $tree = $parser->parse($rawxml);
+  };
+  return "parsing failed: $@" if $@;
+  my $infos = $tree->[1]->[4];
 
+  # start crazy parsing
+  my @collected;
+  while (@$infos) {
+    my $key = shift @$infos;
+    if ($key eq 'yweather:location') {
+      my $location = shift @$infos;
+      push @collected, "Meteo for " . $location->[0]->{city} . " " .
+      $location->[0]->{country} . ".";
+    }
+    if ($key eq 'item') {
+      my $found = shift @$infos;
+      while (@$found) {
+	my $info = shift @$found;
+	if ($info eq 'yweather:condition') {
+	  my $cond = shift @$found;
+	  push @collected, 'Current: ' . $cond->[0]->{text} . " " .
+	    $cond->[0]->{temp} . "°";
+	} elsif ($info eq 'yweather:forecast') {
+	  my $fore = shift @$found;
+	  push @collected, $fore->[0]->{day} . ": " . $fore->[0]->{text} . " " .
+	    $fore->[0]->{low} . "/" . $fore->[0]->{high} . "°";
+	}
+      }
+      last
+    }
+  }
+  return join(" ", @collected);
+}
 
 1;
 
