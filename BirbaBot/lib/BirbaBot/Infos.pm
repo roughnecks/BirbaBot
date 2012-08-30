@@ -215,7 +215,7 @@ sub kw_show {
   my ($dbname, $arg) = @_;
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
   $dbh->do('PRAGMA foreign_keys = ON;');
-  my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key LIKE ? ;"); #key
+  my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key = ? ;"); #key
   $query->execute($arg);
   my @out;
   while (my @data = $query->fetchrow_array()) {
@@ -237,7 +237,7 @@ sub kw_show {
     my $output = "keyword \"$arg\" has been stored with the following values: bar1 is = $out[0], bar2 is = $out[1] and bar3 = $out[2]";
     return $output;
   } else { 
-    return "Something's wrong";
+    return "I think there's no fact named \"$arg\".";
   }
 }
 
