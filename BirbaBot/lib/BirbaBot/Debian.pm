@@ -98,7 +98,7 @@ sub parse_debfiles {
   while (<$fh>) {
     my $line = $_;
     if ($exact) {
-      if ($line =~ m/^\Q$pack\E\s\((.+)\)\s.+$/i) {
+      if ($line =~ m/^\Q$pack\E\s+\((.+?)\)\s.+$/i) {
 	$foundmatch = $1;
 	last;
       }
