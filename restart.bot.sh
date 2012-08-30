@@ -12,13 +12,10 @@ fi
 
 logfile=$botdir/logs/birba.log
 
-if [ -f "$logfile" ]; then
-cat $logfile >> $logfile-`date +%F`;
-: > $logfile;
-fi
+cd $botdir || exit 2
 
+# the bot never started, as there is no birba.pid, so append to logfile
 if [ ! -f "$botdir/birba.pid" ]; then
-    cd $botdir
     exec nohup perl birbabot.pl $1 >> "$logfile" 2>&1 &
 fi
 
@@ -26,9 +23,18 @@ pid=$(cat $botdir/birba.pid)
 
 if kill -0 $pid > /dev/null 2>&1 ; then
     exit
-else
-    cd $botdir
-    echo -n $(date) >> "$logfile"
-    echo "Bot restarted by $0" >> "$logfile"
-    exec nohup perl birbabot.pl $1 >> "$logfile" 2>&1 &
 fi
+
+# rotate the logs
+if [ -f "$logfile" ]; then
+    cat $logfile >> $logfile-`date +%F`;
+    : > $logfile;
+fi
+
+echo -n $(date) >> "$logfile"
+echo "Bot restarted by $0" >> "$logfile"
+exec nohup perl birbabot.pl $1 >> "$logfile" 2>&1 &
+
+
+
+
