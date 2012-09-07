@@ -149,11 +149,9 @@ What do they do?
 
 EXAMPLE:
 
-@kw new hello is hello $who!
-
-asking: hello?
-
-outputs: hello roughnecks!
+    @kw new hello is hello $who!
+    asking: hello?
+    outputs: hello roughnecks!
 
 2)
 
@@ -161,15 +159,11 @@ The word "see" operates like a recursion and it is transparent to the user. The 
 
 EXAMPLE:
 
-@kw new hi is <reply> see hello
-
-@kw new hello is Hello, how are you today?
-
-asking: hi?
-
-does a query against "hi" -> finds a "<reply> see" tag followed by "hello" -> does a new query against "hello" 
-
-outputs: Hello, how are you today?
+    @kw new hi is <reply> see hello
+    @kw new hello is Hello, how are you today?
+    asking: hi?
+    does a query against "hi" -> finds a "<reply> see" tag followed by "hello" -> does a new query against "hello" 
+    outputs: Hello, how are you today?
 
 3)
 
@@ -177,13 +171,10 @@ The keyword <action> triggers the bot to spit a factoid while doing a "ctcp acti
 
 EXAMPLE
 
-@kw new smile is <action> lols :)
-
-asking: smile?
-
-the bot performs a ctcp action
-
-outputs: * Birba lols :)
+    @kw new smile is <action> lols :)
+    asking: smile?
+    the bot performs a ctcp action
+    outputs: * Birba lols :)
 
 
 QUOTING
@@ -192,16 +183,11 @@ Normally, the word 'is' is considered a separator between the keyword and the de
 
 EXAMPLE
 
-@kw new "what time is it" is I don't know
-
-asking: what time is it?
-
-bot replies: I don't know
+    @kw new "what time is it" is I don't know
+    asking: what time is it?
+    bot replies: I don't know
 
 Without quoting you would get 'what time' => 'it is I don't know'
-
-
-******
 
 
 Contacts
