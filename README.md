@@ -1,7 +1,7 @@
 BirbaBot, a POE Powered IRC Bot
 ===============================
 
-![birbabot](https://github.com/roughnecks/BirbaBot/tree/master/files/birba.jpg)
+![birbabot](https://raw.github.com/roughnecks/BirbaBot/master/files/birba.jpg)
 
 About
 -----
@@ -30,8 +30,8 @@ Installation
     libxml-feed-perl                       XML::Feed
     libjson-any-perl                       JSON::Any
     liburi-find-perl                       URI::Find
-    libyaml-perl			   YAML::Any
-    libsocket6-perl			   Socket6	## with perl >= 5.14 this module is not needed
+    libyaml-perl                           YAML::Any
+    libsocket6-perl                        Socket6	## with perl >= 5.14 this module is not needed
     ------------------------------------------------------------------
 
 Copy files/example.conf to some_file.conf in the bot root directory and modify it.
@@ -49,6 +49,7 @@ If you would like to see output in console window, start the bot with:
 If you want to check if the bot crashed/stopped and reload it automatically use "restart.bot.sh" with cron;
 
 * cron example:
+
 
     5,20,35,50 * * * * /home/user/birbabot/restart.bot.sh /home/user/birbabot/bot.conf
 
