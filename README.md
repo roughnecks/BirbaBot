@@ -106,25 +106,17 @@ anotes, bash, choose, deb, debsearch, done, free, g, geoip, gi, gv, imdb, isdown
 
 "Manage the keywords: [kw new] foo is bar | [kw new] "foo is bar" is yes, probably foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw show] foo | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key. For special keywords usage please read the doc/Factoids.txt help file"
 
-Keywords have been refactored since V.1.6 to be almost compatible with [infobot](http://www.infobot.org/guide-0.43.x.html) - see the Factoids.txt help below.
+**Keywords have been refactored since V.1.6 to be almost compatible with** [infobot](http://www.infobot.org/guide-0.43.x.html) - see the Factoids.txt help below.
 
 * Subcommands: new - add - delete - forget - list - show - find
 
-1. new (store a new fact)
+1. new (store a new fact): @kw new BirbaBot is A POE Powered IRC Perl Bot
 
-@kw new BirbaBot is A POE Powered IRC Perl Bot
+2. add (add another definition to an existing fact - up to 3): @kw add BirbaBot is a cat, see http://it.wikipedia.org/wiki/Birba
 
-2. add (add another definition to an existing fact - up to 3)
+3. delete (remove a definition from a fact who has many): @kw delete BirbaBot 2 (definition 2 will be purged from BirbaBot fact)
 
-@kw add BirbaBot is a cat, see http://it.wikipedia.org/wiki/Birba
-
-3. delete (remove a definition from a fact who has many)
-
-@kw delete BirbaBot 2 (definition 2 will be purged from BirbaBot fact)
-
-4. forget (completely forget about fact and all of its definitions)
-
-@kw forget BirbaBot
+4. forget (completely forget about fact and all of its definitions): @kw forget BirbaBot
 
 * Asking the bot for a factoid:
 
