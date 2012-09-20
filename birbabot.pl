@@ -1018,6 +1018,7 @@ sub rss_sentinel {
   if (($currentime - $lastpinged) > 200) {
     print print_timestamp(), "no ping in more then 200 secs, checking\n";
     $irc->yield( userhost => $serverconfig{nick} );
+    $lastpinged = time();
     $kernel->delay_set("rss_sentinel", $botconfig{rsspolltime});
     return
   }
