@@ -13,6 +13,8 @@ use warnings;
 use Cwd;
 use LWP::Simple;
 use File::Spec;
+use File::Temp qw//;
+use File::Copy;
 use File::Path qw(make_path);
 use Data::Dumper;
 use File::Basename;
@@ -1018,6 +1020,7 @@ sub rss_sentinel {
   if (($currentime - $lastpinged) > 200) {
     print print_timestamp(), "no ping in more then 200 secs, checking\n";
     $irc->yield( userhost => $serverconfig{nick} );
+    $lastpinged = time();
     $kernel->delay_set("rss_sentinel", $botconfig{rsspolltime});
     return
   }
@@ -1497,12 +1500,16 @@ sub debget_sentinel {
     # WARNING! THE CONTENT IS GZIPPED, BUT UNCOMPRESSED BY GET
     my $file = File::Spec->catfile($path, $rel->{rel});
     $ENV{PATH} = "/bin:/usr/bin"; # Minimal PATH.
-    my @command = ('curl', '-s', '--compressed',
-		   '--output', $file, $rel->{url});
+    my $tmpfile = File::Temp->new();
+    my @command = ('curl', '-s', '--compressed', '--connect-timeout', '10',
+		   '--max-time', '120',
+		   '--output', $tmpfile->filename, $rel->{url});
     print "Trying ", join(" ", @command, "\n");
-    system(@command) == 0 
-      or print 
-	"failed ", join(" ", @command), "\n";
+    if (system(@command) == 0) {
+      copy($tmpfile->filename, $file)
+    } else {
+      print "failed ", join(" ", @command), "\n";
+    }
   }
   $kernel->delay_set("debget_sentinel", 43200 ); #updates every 12H
   print "debget executed succesfully, files saved.\n";
