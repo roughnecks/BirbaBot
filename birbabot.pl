@@ -901,7 +901,7 @@ sub irc_public {
     while (@longurls) {
       my $url = shift @longurls;
 #      print "Found $url\n";
-      if ($url =~ m/youtube/) {
+      if ($url =~ m/^https?:\/\/(www\.)?youtube/) {
 	bot_says($channel, get_youtube_title($url));
       }
       if ($url =~ m/youtu\.be\/(.+)$/) {
@@ -909,7 +909,7 @@ sub irc_public {
 	bot_says($channel, get_youtube_title($newurl));
       }	
 
-      next if (length($url) <= 60);
+      next if (length($url) <= 65);
       next unless ($url =~ m/^(f|ht)tp/);
       my $reply = $nick . "'s url: " . make_tiny_url($url);
       bot_says($channel, $reply);
