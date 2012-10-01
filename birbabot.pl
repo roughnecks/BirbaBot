@@ -1499,6 +1499,7 @@ sub debget_sentinel {
     my $file = File::Spec->catfile($path, $rel->{rel});
     $ENV{PATH} = "/bin:/usr/bin"; # Minimal PATH.
     my @command = ('curl', '-s', '--compressed',
+		   '--connect-timeout', '5', '--max-time', '120',
 		   '--output', $file, $rel->{url});
     print "Trying ", join(" ", @command, "\n");
     system(@command) == 0 
