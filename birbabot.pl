@@ -119,6 +119,7 @@ my %botconfig = (
 		 'relay_dest' => [],
 		 'twoways_relay' => [],
 		 'msg_log' => [],
+		 'kw_prefix' => '',
 		);
 
 my %debconfig = (
@@ -808,10 +809,12 @@ sub irc_public {
     my $nick = ( split /!/, $who )[0];
     my $channel = $where->[0];
 
+    # debug log
     if ($msg_log == 1) {
       print print_timestamp(), "$nick/$channel: $what\n";
     }
 
+    # relay stuff
     if (($relay_source) && ($relay_dest)) {
       if ($channel eq $relay_source) {
 	foreach ($what) {
@@ -829,58 +832,33 @@ sub irc_public {
 	}
       }
     }
-
-
+    # seen stuff
     add_nick($nick, "on $channel saying: $what");
 
+    # if it's a fucker, do nothing
     my ($auth, $spiterror) = check_if_fucker($sender, $who, $where, $what);
     return unless $auth;
 
-    if ( $what =~ /^(.+)\?\s*$/ ) {
-      print "info: requesting keyword $1\n";
-      my $kw = $1;
-      my $query = (kw_query($dbname, $nick, lc($kw)));
-      if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
-	$irc->yield(ctcp => $where, "ACTION $1");
-	return;
-      }	elsif ($query) {
-	bot_says($channel, $query);
-	return;
-      }
-    }
-    elsif ( my ($kw) = $what =~ /^(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
-      my $target = $2;
-      my $query = (kw_query($dbname, $nick, lc($1)));
-      if ($irc->is_channel_member($channel, $target)) {
-	if ((! $query) or ( $query =~ m/^ACTION\s(.+)$/ )) {
-	  bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw\" to see its content.");
-	  return;
-	} else {
-	  bot_says($channel, "$target: "."$query");
-	} 
-      }
-    }
-    elsif ( my ($kw2) = $what =~ /^(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
-      my $target = $2;
-      my $query = (kw_query($dbname, $nick, lc($1)));
-      if ($irc->is_channel_member($channel, $target)) {
-	if ((! $query ) or ($query =~ m/^ACTION\s(.+)$/)) {
-          bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw2\" to see its content.");
-	  return;
-	} else {
-	  $irc->yield(privmsg => "$target", "$kw2 is $query");
+    # keywords
+    if ($botconfig{'kw_prefix'}) {
+      if (index($what, $botconfig{'kw_prefix'}) == 0) {
+	# strip the prefix and pass all to the subroutine
+	my $querystripped = substr($what, 1);
+	if ((index($querystripped, '>')) < 0) {
+	  # simulate the question for the poor bastards using the kw_prefix
+	  $querystripped .= '?';
 	}
+	return _kw_manage_request($querystripped, $nick, $where, $channel)
       }
-      else {
-        bot_says($channel, "Dunno about $target");
-        return;
-      }
+    } else {
+      _kw_manage_request($what, $nick, $where, $channel)
     }
-    elsif ($what =~ /((AH){2,})/) {
+    
+    if ($what =~ /((AH){2,})/) {
       bot_says($channel, "AHAHAHAHAHAH!");
       return;
     }
-    elsif ($what =~ /^\s*([^\s]+)(\+\+|--)\s*$/) {
+    if ($what =~ /^\s*([^\s]+)(\+\+|--)\s*$/) {
       my $karmanick = $1;
       my $karmaaction = $2;
       if ($karmanick eq $nick) {
@@ -1538,6 +1516,52 @@ sub irc_botcmd_debsearch {
   } else {
     bot_says($where, "No result found");
   }
+}
+
+
+### keyword stuff
+
+sub _kw_manage_request {
+  my ($what, $nick, $where, $channel) = @_;
+  print_timestamp(join ":", @_);
+  if ( $what =~ /^(.+)\?\s*$/ ) {
+    print "info: requesting keyword $1\n";
+    my $kw = $1;
+    my $query = (kw_query($dbname, $nick, lc($kw)));
+    if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
+      $irc->yield(ctcp => $where, "ACTION $1");
+      return;
+    } elsif ($query) {
+      bot_says($channel, $query);
+      return;
+    }
+  } elsif ( my ($kw) = $what =~ /^(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
+    my $target = $2;
+    my $query = (kw_query($dbname, $nick, lc($1)));
+    if ($irc->is_channel_member($channel, $target)) {
+      if ((! $query) or ( $query =~ m/^ACTION\s(.+)$/ )) {
+	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw\" to see its content.");
+	return;
+      } else {
+	bot_says($channel, "$target: "."$query");
+      } 
+    }
+  } elsif ( my ($kw2) = $what =~ /^(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
+    my $target = $2;
+    my $query = (kw_query($dbname, $nick, lc($1)));
+    if ($irc->is_channel_member($channel, $target)) {
+      if ((! $query ) or ($query =~ m/^ACTION\s(.+)$/)) {
+	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw2\" to see its content.");
+	return;
+      } else {
+	$irc->yield(privmsg => $target, "$kw2 is $query");
+      }
+    } else {
+      bot_says($channel, "Dunno about $target");
+      return;
+    }
+  }
+  return;
 }
 
 
