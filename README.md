@@ -131,6 +131,10 @@ BirbaBot?
 1. In channel: BirbaBot > john
 2. In query: BirbaBot >> john
 
+#### Config Option
+
+Starting from commit "625f093166858d7c2dea45e48e00bbd62237cf75" pushed on Fri, 5 Oct 2012 16:01:01 +0000, the bot has a new config option: kw_prefix (in the bot config section, see example.conf). Setting a prefix (hey dude, if you set the same for the bot and the keywords you're too dumb to run a bot) disable the question parsing; so, if the kw_prefix is set to "!", "ping?" doesn't query the bot, but "!ping" does.
+
 #### Factoids usage notes
 
 Each factoid in BirbaBot can have at maximum 3 different definitions, like bar1, bar2 and bar3. Special keywords just works for the first key definition "bar1".
