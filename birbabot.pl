@@ -1208,7 +1208,7 @@ sub irc_botcmd_wikiz {
     bot_says($where, 'Missing Argument');
     return
     } else {
-      @out = grep ( /\Q$arg\E/ , @formatlist );
+      @out = grep ( /\Q$arg\E/i , @formatlist );
     }
   # looping through the output of matching urls, clean some shit and spit to channel
 
