@@ -254,7 +254,7 @@ sub _start {
             gv => 'Do a search on google videos.',
             bash => 'Get a random quote from bash.org - Optionally accepts one number as argument: bash <number>',
             urban => 'Get definitions from the urban dictionary | "urban url <word>" asks for the url',
-            karma => 'Get the karma of a user | karma [ nick ]',
+            karma => 'Get the karma of a user | karma  <nick>',
             math => 'Do simple math (* / % - +). Example: math 3 * 3',
             seen => 'Search for a user: seen <nick>',
             note => 'Send a note to a user: note <nick> <message>',
@@ -347,7 +347,9 @@ sub irc_botcmd_karma {
     bot_says($where, karma_manage($dbname, $arg));
     return;
   } else {
-    bot_says($where, karma_manage($dbname));
+    # don't output everything
+    # bot_says($where, karma_manage($dbname));
+    return
   }
 }
 
@@ -858,7 +860,7 @@ sub irc_public {
       bot_says($channel, "AHAHAHAHAHAH!");
       return;
     }
-    if ($what =~ /^\s*([^\s]+)(\+\+|--)\s*$/) {
+    if ($what =~ /^\s*([^\s]+)(\+\+|--)(\s+#.+)?\s*$/) {
       my $karmanick = $1;
       my $karmaaction = $2;
       if ($karmanick eq $nick) {
