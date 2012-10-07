@@ -48,7 +48,7 @@ my $bbold = "\x{0002}";
 my $ebold = "\x{000F}";
 
 
-=head2 add_new_rss($dbname, $feedname, $channel, $url)
+=head2 add_new_rss($dbh, $feedname, $channel, $url)
 
 This function adds a new feed to watch, taking the dbname, the
 feedname, the channel to output and the url to watch.
@@ -57,7 +57,7 @@ feedname, the channel to output and the url to watch.
 
 
 sub rss_add_new {
-  my ($dbname, $feedname, $channel, $url) = @_;
+  my ($dbh, $feedname, $channel, $url) = @_;
 
   # sanity check
   return 0 unless ($feedname =~ m/^\w+$/s);
@@ -74,8 +74,8 @@ sub rss_add_new {
   my $chanfeed_check = 'SELECT f_handle FROM channels WHERE f_channel = ?';
 
   # connect
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+
+
 
   # do the query
   my $rssc = $dbh->prepare($rss_check);
@@ -104,25 +104,25 @@ sub rss_add_new {
     $chanq->execute($feedname, $channel);
     return "Added $feedtitle ($url) as $feedname";
   }
-  $dbh->disconnect;
+
 }
 
 
 
-=head2 rss_delete_feed($dbname, $feedname, $channel)
+=head2 rss_delete_feed($dbh, $feedname, $channel)
 
-Stop to output the feeds $feedname on channel $channel, using $dbname
+Stop to output the feeds $feedname on channel $channel, using $dbh
 If the rss is not more watched, remove it from rss and feeds too.
 
 =cut 
 
 sub rss_delete_feed {
-  my ($dbname, $feedname, $channel) = @_;
+  my ($dbh, $feedname, $channel) = @_;
   my $reply;
   my $excode = 0;
   # connect
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+
+
   
   my $check_del = $dbh->prepare("SELECT * FROM channels WHERE f_handle = ? AND f_channel = ?;");
   $check_del->execute($feedname, $channel);
@@ -149,19 +149,19 @@ sub rss_delete_feed {
     $reply .= " and purged";
     $excode = 1;
   }
-  $dbh->disconnect;
+
   return ($reply, $excode);
 }
 
 
 sub rss_get_my_feeds {
-  my ($dbname, $datadir) = @_;
-  my $feeds = rss_fetch($dbname, $datadir);
-  return dispatch_feeds($dbname, $feeds);
+  my ($dbh, $datadir) = @_;
+  my $feeds = rss_fetch($dbh, $datadir);
+  return dispatch_feeds($dbh, $feeds);
 }
 
 
-=head2 get_the_rss_to_fetch($dbname)
+=head2 get_the_rss_to_fetch($dbh)
 
 Query the db to see which urls we need to fetch
 
@@ -169,8 +169,8 @@ Query the db to see which urls we need to fetch
 
 
 sub get_the_rss_to_fetch {
-  my $dbname = shift;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my $dbh = shift;
+
   my $sth = $dbh->prepare('SELECT DISTINCT url, f_handle FROM rss;');
   $sth->execute();
   my %rsses;
@@ -179,12 +179,12 @@ sub get_the_rss_to_fetch {
     my $value = $data[0];
     $rsses{$rss} = $value;
   }
-  $dbh->disconnect;
+
   return %rsses
 }
 
 
-=head2 rss_fetch($dbname, $datadir)
+=head2 rss_fetch($dbh, $datadir)
 
 It fetches the feeds, dumps them in the db, and return an hash reference like this:
      
@@ -205,14 +205,14 @@ So the next step is to dispatch the feed to the relative channels
 
 
 sub rss_fetch {
-  my ($dbname, $datadir) = @_;
+  my ($dbh, $datadir) = @_;
   $| = 1;
   # initialize the user agent
   my %output;
-  my %urls = get_the_rss_to_fetch($dbname);
+  my %urls = get_the_rss_to_fetch($dbh);
 
   # here we open the db;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "");
+
 
   # and here we start the routineca
   foreach my $feedname (keys %urls) {
@@ -319,12 +319,12 @@ sub rss_fetch {
       print "Done on $ftime\n"
     }
   }
-  $dbh->disconnect;
+
   print "RSS fetching and parsing done\n";
   return \%output;
 }
 
-=head2 dispatch_feeds($dbname, $hashref)
+=head2 dispatch_feeds($dbh, $hashref)
 
 Take as argument the db name, and the output of rss_fetch.
 
@@ -334,8 +334,8 @@ Query the db to see where the the feeds should go, parse them and output a hash 
 
 
 sub dispatch_feeds {
-  my ($dbname, $hashref) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $hashref) = @_;
+
   my $processed_feeds = process_feeds($hashref);
   my $sth = $dbh->prepare('SELECT f_channel FROM channels WHERE f_handle = ?');
   my %output;
@@ -356,7 +356,7 @@ sub dispatch_feeds {
       }
     }
   }
-  $dbh->disconnect;
+
   return \%output;
 }
 
@@ -397,9 +397,9 @@ sub process_feeds {
   return \%output;
 }
 
-=head2 rss_give_latest($dbname, $feed)
+=head2 rss_give_latest($dbh, $feed)
 
-Query the DB $dbname for the latest RSS feeds tagged $feed. Return an
+Query the DB $dbh for the latest RSS feeds tagged $feed. Return an
 array of replies. If $feed is not provided, just list the latest 5
 feeds. If you need more, get a newsreader, ok?
 
@@ -407,11 +407,11 @@ feeds. If you need more, get a newsreader, ok?
 
 
 sub rss_give_latest {
-  my ($dbname, $feed) = @_;
+  my ($dbh, $feed) = @_;
   my @list;
   
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+
+
 
   # prepare the query
   my $query;
@@ -436,15 +436,15 @@ sub rss_give_latest {
     push @list, $string;
   }
   # disconnect
-  $dbh->disconnect;
+
   return @list;
 }
 
 sub rss_list {
-  my ($dbname, $channel) = @_;
+  my ($dbh, $channel) = @_;
   my @watched;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+
+
   
   my $query = $dbh->prepare("SELECT rss.f_handle, rss.url FROM rss INNER JOIN channels ON rss.f_handle = channels.f_handle WHERE f_channel = ?;");
   $query->execute($channel);
@@ -452,7 +452,7 @@ sub rss_list {
     my $reply = $bbold . $data[0] . $ebold . " (" . $data[1] . ")";
     push @watched, $reply;
   }
-  $dbh->disconnect;
+
   if (@watched) {
     return join(" ", @watched);
   } else {
@@ -461,13 +461,13 @@ sub rss_list {
 }
 
 sub rss_clean_unused_feeds {
-  my ($dbname, $channels) = @_;
+  my ($dbh, $channels) = @_;
   my %joinchan;
   foreach my $chan (@$channels) {
     $joinchan{$chan} = 1;
   }
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+
+
   my $query = $dbh->prepare('SELECT f_handle,f_channel FROM channels');
   $query->execute();
   my @to_delete;
@@ -478,11 +478,11 @@ sub rss_clean_unused_feeds {
       push @to_delete, [$feed, $channel];
     }
   }
-  $dbh->disconnect;
+
   foreach my $delete (@to_delete) {
     print "Deleting ",  $delete->[0], " on ", $delete->[1], 
       " because we are not joining it\n";
-    rss_delete_feed($dbname, $delete->[0], $delete->[1]);
+    rss_delete_feed($dbh, $delete->[0], $delete->[1]);
   }
 }
 

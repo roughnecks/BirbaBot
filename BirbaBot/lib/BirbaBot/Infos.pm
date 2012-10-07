@@ -21,10 +21,7 @@ our @EXPORT_OK = qw(kw_add kw_new kw_query kw_remove kw_list kw_find kw_show kw_
 our $VERSION = '0.01';
 
 sub kw_new {
-  my ($dbname, $who, $key, $value) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
-
+  my ($dbh, $who, $key, $value) = @_;
   my $query = $dbh->prepare("INSERT INTO factoids (nick, key, bar1) VALUES (?, ?, ?);"); #nick, key, value1
   $query->execute($who, $key, $value);
   my $reply;
@@ -38,42 +35,32 @@ sub kw_new {
   } else {
     $reply = "Okki"
   }
-  $dbh->disconnect;
   return $reply;
 }
 
 sub kw_add {
-  my ($dbname, $who, $key, $value) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+  my ($dbh, $who, $key, $value) = @_;
   my $query = $dbh->prepare("UPDATE factoids SET bar2 = CASE WHEN bar2 IS NULL THEN ? WHEN bar2 IS NOT NULL THEN (SELECT bar2 FROM factoids where key = ?) END, bar3 = CASE WHEN bar2 IS NOT NULL AND bar3 IS NULL THEN ? WHEN bar2 IS NULL THEN (SELECT bar3 FROM factoids where key = ?) WHEN bar3 IS NOT NULL THEN (SELECT bar3 FROM factoids where key = ?) END WHERE key = ?;"); #bar2, bar3, key
   $query->execute($value, $key, $value, $key, $key, $key);
-  $dbh->disconnect;
   return "Added $value to $key"
 }
 
 sub kw_remove {
-  my ($dbname, $who, $key) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+  my ($dbh, $who, $key) = @_;
   my $del = $dbh->prepare("DELETE FROM factoids WHERE key=?;"); #key
   my $query = $dbh->prepare("SELECT key FROM factoids WHERE key=?;"); #key
   $query->execute($key);
   my $value = ($query->fetchrow_array());
   if (($value) && ($value eq $key)) { 
     $del->execute($key);
-    $dbh->disconnect;
     return "I completely forgot $key";
   } else { 
     return "Sorry, dunno about $key"; 
-    $dbh->disconnect;
   }
 }
 
 sub kw_delete_item {
-  my ($dbname, $key, $position) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+  my ($dbh, $key, $position) = @_;
   my $check;
   if ($position == 2) {
     $check = $dbh->prepare("SELECT bar2 FROM factoids WHERE key = ? ;");
@@ -91,15 +78,12 @@ sub kw_delete_item {
     $query = $dbh->prepare("UPDATE factoids SET bar3 = NULL WHERE key = ? ;");
   }
   $query->execute($key);
-  $dbh->disconnect;
   return "I forgot that $key is $value";
 }
 
 sub kw_query {
-  my ($dbname, $nick, $key) = @_;
+  my ($dbh, $nick, $key) = @_;
   my $questionkey = $key . '?';
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
   my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids 
                              WHERE key = ? OR key = ?;");
   $query->execute($key, $questionkey);
@@ -137,8 +121,6 @@ sub kw_query {
 	my $bad = "I foresee two possibilities. One, coming face to face with herself 30 years older would put her into shock and she'd simply pass out. Or two, the encounter could create a time paradox, the results of which could cause a chain reaction that would unravel the very fabric of the space time continuum, and destroy the entire universe! Granted, that's a worse case scenario. The destruction might in fact be very localized, limited to merely our own galaxy. [doc]";
 	return "$egg2"."$bad";
       } else {
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-	$dbh->do('PRAGMA foreign_keys = ON;');
 	my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
 	$queryn->execute($redirect);
 	while (my @data = $queryn->fetchrow_array()) {
@@ -146,7 +128,6 @@ sub kw_query {
 	  return unless @data;
 	  if (@data) {
 	    $out[0] = $data[0];
-	    $dbh->disconnect;
 	  }
 	}
       }
@@ -163,9 +144,9 @@ sub kw_query {
 
 
 sub kw_list {
-  my ($dbname) = shift;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+  my ($dbh) = shift;
+
+
   my $query = $dbh->prepare("SELECT key FROM factoids;"); #key
   $query->execute();
   # here we get the results
@@ -177,7 +158,6 @@ sub kw_list {
       }
     }
   }
-  $dbh->disconnect;
   if ((@out) && (scalar @out <= 50)) {
     my $output = "I know the following facts: " . join(", ", sort(@out));
     return $output;
@@ -189,10 +169,10 @@ sub kw_list {
 }
 
 sub kw_find {
-  my ($dbname, $arg) = @_;
+  my ($dbh, $arg) = @_;
   my $like = "\%$arg\%";
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+
+
   my $query = $dbh->prepare("SELECT key FROM factoids WHERE key LIKE ? ;"); #key
   $query->execute($like);
   # here we get the results
@@ -204,7 +184,7 @@ sub kw_find {
       }
     }
   }
-  $dbh->disconnect;
+
   if (@out) {
     my $output = "I know the following facts: " . join(", ", sort(@out));
     return $output;
@@ -212,9 +192,9 @@ sub kw_find {
 }
 
 sub kw_show {
-  my ($dbname, $arg) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+  my ($dbh, $arg) = @_;
+
+
   my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids WHERE key = ? ;"); #key
   $query->execute($arg);
   my @out;
@@ -225,7 +205,7 @@ sub kw_show {
       }
     }
   }
-  $dbh->disconnect;
+
   
   if ((scalar @out) == 1) {
     my $output = "keyword \"$arg\" has been stored with the following value: bar1 = $out[0]";
@@ -242,10 +222,10 @@ sub kw_show {
 }
 
 sub karma_manage {
-  my ($dbname, $nick, $action) = @_;
+  my ($dbh, $nick, $action) = @_;
   # print "arguments for karma_manage: ", join(':', @_), "\n";
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
-  $dbh->do('PRAGMA foreign_keys = ON;');
+
+
   unless ($nick) {
     my @reply;
     my $query = $dbh->prepare('SELECT nick, level FROM karma');
@@ -253,7 +233,7 @@ sub karma_manage {
     while (my @data = $query->fetchrow_array()) {
       push @reply, $data[0] . " => " . $data[1];
     }
-    $dbh->disconnect;
+
     # print "disconnected db";
 
     if ((@reply) && ((scalar @reply) <= 15)) {
@@ -272,7 +252,7 @@ sub karma_manage {
     while (my @data = $query->fetchrow_array()) {
       $reply = $nick . " has karma " . $data[0];
     }
-    $dbh->disconnect;
+
     # print "disconnected db";
     if ($reply) {
       return $reply;
@@ -295,7 +275,7 @@ sub karma_manage {
 
   my $currenttime = time();
   if (($currenttime - $lastupdate) < 60) {
-    $dbh->disconnect;
+
     return "Karma for $nick updated less then one minute ago";
   }
   
@@ -308,7 +288,7 @@ sub karma_manage {
   }
   
   $updatevalue->execute($level, $currenttime, $nick);
-  $dbh->disconnect;
+
   return "Karma for $nick is now $level";
 }
 

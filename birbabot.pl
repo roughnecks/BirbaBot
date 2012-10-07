@@ -147,6 +147,12 @@ print "Bot options: ", Dumper(\%botconfig),
   "Debian Releases: ", Dumper(\%debconfig);
 
 my $dbname = $botconfig{'dbname'};
+my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", "", "",
+		       { AutoCommit => 1, 
+			 # 'sqlite_unicode' => 1
+		       });
+$dbh->do('PRAGMA foreign_keys = ON;') or die "Can't operate on the DB\n";
+undef $dbname;
 
 my @channels = @{$botconfig{'channels'}};
 
@@ -164,10 +170,10 @@ my $debian_relfiles_base = File::Spec->catdir(getcwd(), 'debs');
 
 # when we start, we check if we have all the tables.  By no means this
 # guarantees that the tables are correct. Devs, I'm looking at you
-create_bot_db($dbname) or die "Errors while updating db tables";
+create_bot_db($dbh) or die "Errors while updating db tables";
 
 # be sure that the feeds are in the channels we join
-rss_clean_unused_feeds($dbname, \@channels);
+rss_clean_unused_feeds($dbh, \@channels);
 
 my $starttime = time;
 
@@ -344,11 +350,11 @@ sub irc_botcmd_karma {
   my ($where, $arg) = @_[ARG1, ARG2];
   if ($arg) {
     $arg =~ s/\s*//g;
-    bot_says($where, karma_manage($dbname, $arg));
+    bot_says($where, karma_manage($dbh, $arg));
     return;
   } else {
     # don't output everything
-    # bot_says($where, karma_manage($dbname));
+    # bot_says($where, karma_manage($dbh));
     return
   }
 }
@@ -441,12 +447,12 @@ sub irc_botcmd_rss {
   my @args = split / +/, $arg;
   my ($action, $feed, $url) = @args;
   if ($action eq 'list') {
-    my $reply = rss_list($dbname, $where);
+    my $reply = rss_list($dbh, $where);
     bot_says($where, $reply);
     return;
   }
   elsif ($action eq 'show') {
-    my @replies = rss_give_latest($dbname, $feed);
+    my @replies = rss_give_latest($dbh, $feed);
     foreach my $line (@replies) {
       bot_says($where, $line);
     }
@@ -459,11 +465,11 @@ sub irc_botcmd_rss {
   }
   if (($action eq 'add') &&
       $feed && $url) {
-    my $reply = rss_add_new($dbname, $feed, $where, $url);
+    my $reply = rss_add_new($dbh, $feed, $where, $url);
     bot_says($where, "$reply");
   }
   elsif (($action eq 'del') && $feed) {
-    my ($reply, $purged) = rss_delete_feed($dbname, $feed, $where);
+    my ($reply, $purged) = rss_delete_feed($dbh, $feed, $where);
     if ($reply) {
       bot_says($where, $reply);
       if ($purged && ($feed =~ m/^\w+$/)) {
@@ -499,7 +505,7 @@ sub irc_botcmd_note {
     my $nick = (split /!/, $_[ARG0])[0];
     my ($where, $arg) = @_[ARG1, ARG2];
     if ($arg =~ m/\s*([^\s]+)\s+(.+)\s*$/) {
-      bot_says($where, notes_add($dbname, $nick, $1, $2))
+      bot_says($where, notes_add($dbh, $nick, $1, $2))
     }
     else {
       bot_says($where, "Uh? Try note nick here goes the message")
@@ -511,13 +517,13 @@ sub irc_botcmd_notes {
   my ($who, $where, $arg) = @_[ARG0..$#_];
   my $nick = parse_user($who);
   if (! defined $arg) {
-    bot_says($where, notes_pending($dbname, $nick));
+    bot_says($where, notes_pending($dbh, $nick));
   } elsif ($arg =~ /^\s*$/) {
-    bot_says($where, notes_pending($dbname, $nick));
+    bot_says($where, notes_pending($dbh, $nick));
   } else {
     my ($subcmd, $fromwho) = split(/\s+/, $arg);
     if (($subcmd eq 'del') && (defined $fromwho)) {
-      bot_says($where, notes_del($dbname, $nick, $fromwho));
+      bot_says($where, notes_del($dbh, $nick, $fromwho));
       return
     } else { 
       bot_says($where, "Missing or invalid argument");
@@ -583,11 +589,11 @@ sub irc_botcmd_done {
   my $nick = (split /!/, $_[ARG0])[0];
   #  bot_says($chan, $irc->nick_channel_modes($chan, $nick));
   unless (check_if_op($chan, $nick) or check_if_admin($who)) {
-    bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
+    bot_says($chan, "You're not a channel operator. " . todo_list($dbh, $chan));
     return
   }
   if ($arg =~ m/^([0-9]+)$/) {
-    bot_says($chan, todo_remove($dbname, $chan, $1));      
+    bot_says($chan, todo_remove($dbh, $chan, $1));      
   } else {
     bot_says($chan, "Give the numeric index to delete the todo")
   }
@@ -602,7 +608,7 @@ sub irc_botcmd_todo {
 	  ($irc->nick_channel_modes($chan, $nick) =~ m/[aoq]/)
 	  or check_if_admin($who))
     {
-    bot_says($chan, "You're not a channel operator. " . todo_list($dbname, $chan));
+    bot_says($chan, "You're not a channel operator. " . todo_list($dbh, $chan));
     return
   }
    my @commands_args;
@@ -618,26 +624,26 @@ sub irc_botcmd_todo {
     $todo = join " ", @commands_args;
   }
   if ($task eq "list") {
-    bot_says($chan, todo_list($dbname, $chan));
+    bot_says($chan, todo_list($dbh, $chan));
   } 
   elsif ($task eq "add") {
-    bot_says($chan, todo_add($dbname, $chan, $todo))
+    bot_says($chan, todo_add($dbh, $chan, $todo))
   }
   elsif (($task eq "del") or 
 	 ($task eq "delete") or
 	 ($task eq "remove") or
 	 ($task eq "done")) {
     if ($todo =~ m/^([0-9]+)$/) {
-      bot_says($chan, todo_remove($dbname, $chan, $1));      
+      bot_says($chan, todo_remove($dbh, $chan, $1));      
     } else {
       bot_says($chan, "Give the numeric index to delete the todo")
     }
   }
   elsif ($task eq "rearrange") {
-    bot_says($chan, todo_rearrange($dbname, $chan))
+    bot_says($chan, todo_rearrange($dbh, $chan))
   }
   else {
-    bot_says($chan, todo_list($dbname, $chan));
+    bot_says($chan, todo_list($dbh, $chan));
   }
   return
 }
@@ -776,7 +782,7 @@ sub irc_ctcp_action {
 sub irc_join {
     my $nick = parse_user($_[ARG0]);
     my $chan = $_[ARG1];
-    my @notes = notes_give($dbname, $nick);
+    my @notes = notes_give($dbh, $nick);
     add_nick($nick, "joining $chan");
     while (@notes) {
       bot_says($nick, shift(@notes));
@@ -872,7 +878,7 @@ sub irc_public {
 	return;
       }
       else {
-	bot_says($channel, karma_manage($dbname, $karmanick, $karmaaction));
+	bot_says($channel, karma_manage($dbh, $karmanick, $karmaaction));
 	return;
       }
     }
@@ -915,7 +921,7 @@ sub irc_msg {
   if ( $what =~ /^(.+)\?\s*$/ ) {
     print "info: requesting keyword $1\n";
     my $kw = $1;
-    my $query = (kw_query($dbname, $nick, lc($kw)));
+    my $query = (kw_query($dbh, $nick, lc($kw)));
     if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
       $irc->yield(ctcp => $nick, "ACTION $1");
       return;
@@ -976,17 +982,17 @@ sub irc_botcmd_quote {
   my $string = join (" ", @args);
   my $reply;
   if ($subcmd eq 'add' && $string =~ /.+/) {
-    $reply = ircquote_add($dbname, $who, $where, $string)
+    $reply = ircquote_add($dbh, $who, $where, $string)
   } elsif ($subcmd eq 'del' && $string =~ /.+/) {
-    $reply = ircquote_del($dbname, $who, $where, $string)
+    $reply = ircquote_del($dbh, $who, $where, $string)
   } elsif ($subcmd eq 'rand') {
-    $reply = ircquote_rand($dbname, $where)
+    $reply = ircquote_rand($dbh, $where)
   } elsif ($subcmd eq 'last') {
-    $reply = ircquote_last($dbname, $where)
+    $reply = ircquote_last($dbh, $where)
   } elsif ($subcmd =~ m/([0-9]+)/) {
-    $reply = ircquote_num($dbname, $1, $where)
+    $reply = ircquote_num($dbh, $1, $where)
   } elsif ($subcmd eq 'find' && $string =~ /.+/) {
-    $reply = ircquote_find($dbname, $where, $string)
+    $reply = ircquote_find($dbh, $where, $string)
   } else {
     $reply = "command not supported"
   }
@@ -1005,7 +1011,7 @@ sub rss_sentinel {
     return
   }
   print print_timestamp(), "Starting fetching RSS...\n";
-  my $feeds = rss_get_my_feeds($dbname, $localdir);
+  my $feeds = rss_get_my_feeds($dbh, $localdir);
   foreach my $channel (keys %$feeds) {
     foreach my $feed (@{$feeds->{$channel}}) {
       $irc->yield( privmsg => $channel => $feed);
@@ -1374,13 +1380,13 @@ sub irc_botcmd_anotes {
     return;
   }
   if (! defined $arg) {
-    bot_says($where, anotes_pending($dbname));
+    bot_says($where, anotes_pending($dbh));
   } elsif ($arg =~ /^\s*$/) {
-    bot_says($where, anotes_pending($dbname));
+    bot_says($where, anotes_pending($dbh));
   } else {
     my ($subcmd, $fromwho) = split(/\s+/, $arg);
     if (($subcmd eq 'del') && (defined $fromwho)) {
-      bot_says($where, anotes_del($dbname, $fromwho));
+      bot_says($where, anotes_del($dbh, $fromwho));
       return;
     } else {
       bot_says($where, "Missing or invalid argument");
@@ -1403,10 +1409,10 @@ sub irc_botcmd_kw {
   if ($subcmd eq 'new') {
     for ($string) {
       if (/^\s*"(.+?)"\s+is+(.+?)\s*$/) {
-	bot_says($where, kw_new($dbname, $who, lc($1), $2))
+	bot_says($where, kw_new($dbh, $who, lc($1), $2))
       }
       elsif (/^\s*(.+?)\s+is\s+(.+?)\s*$/) {
-	bot_says($where, kw_new($dbname, $who, lc($1), $2))
+	bot_says($where, kw_new($dbh, $who, lc($1), $2))
       }
       elsif (/^\s*(.+)\s+is\s*$/) {
 	bot_says($where, "Missing Argument")
@@ -1417,7 +1423,7 @@ sub irc_botcmd_kw {
     }
   } elsif ($subcmd eq 'add') {
     for ($string) {
-      if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_add($dbname, $who, lc($1), $2)) }
+      if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_add($dbh, $who, lc($1), $2)) }
       elsif (/^\s*(.+)\s+is\s*$/) { bot_says($where, "Missing Argument") }
       else {bot_says($where, "Something is wrong") } # default
     }
@@ -1425,7 +1431,7 @@ sub irc_botcmd_kw {
     for ($string) {
       if (/^\s*(.+)\s*$/) { 
 	if (check_if_admin($who)) {
-	  bot_says($where, kw_remove($dbname, $who, lc($1)))
+	  bot_says($where, kw_remove($dbh, $who, lc($1)))
 	} else {
 	  bot_says($where, "Something is wrong, are you an admin?");
 	}
@@ -1435,7 +1441,7 @@ sub irc_botcmd_kw {
     }
   } elsif ($subcmd eq 'delete') {
     for ($string) {
-      if (/^\s*(.+)\s+([23])\s*$/) { bot_says($where, kw_delete_item($dbname, lc($1), $2)) }
+      if (/^\s*(.+)\s+([23])\s*$/) { bot_says($where, kw_delete_item($dbh, lc($1), $2)) }
       elsif (/^\s*(.+)\s+$/) { bot_says($where, "Missing Argument") }
       else {bot_says($where, "Something is wrong") } # default
     }
@@ -1444,19 +1450,19 @@ sub irc_botcmd_kw {
       bot_says($where, "$nick, this command works only in a query");
     } else {
     for ($string) {
-      if (/^\s*(.+)\s*$/) { bot_says($where, kw_find($dbname, lc($1))) }
+      if (/^\s*(.+)\s*$/) { bot_says($where, kw_find($dbh, lc($1))) }
       elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
       else {bot_says($where, "Something is wrong") } # default
     } 
   }
   } elsif ($subcmd eq 'list') {
     for ($string) {
-      if (/^\s*$/) { bot_says($where, kw_list($dbname)) }
+      if (/^\s*$/) { bot_says($where, kw_list($dbh)) }
       else { bot_says($where, "Listing does not accept other arguments" ) }
     } 
   } elsif ($subcmd eq 'show') {
     for ($string) {
-      if (/^\s*(.+)\s*$/) { bot_says($where, kw_show($dbname, lc($1))) }
+      if (/^\s*(.+)\s*$/) { bot_says($where, kw_show($dbh, lc($1))) }
       elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
       else {bot_says($where, "Something is wrong, probably that fact does not exist.") } # default
     }
@@ -1529,7 +1535,7 @@ sub _kw_manage_request {
   if ( $what =~ /^(.+)\?\s*$/ ) {
     print "info: requesting keyword $1\n";
     my $kw = $1;
-    my $query = (kw_query($dbname, $nick, lc($kw)));
+    my $query = (kw_query($dbh, $nick, lc($kw)));
     if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
       $irc->yield(ctcp => $where, "ACTION $1");
       return;
@@ -1539,7 +1545,7 @@ sub _kw_manage_request {
     }
   } elsif ( my ($kw) = $what =~ /^(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
     my $target = $2;
-    my $query = (kw_query($dbname, $nick, lc($1)));
+    my $query = (kw_query($dbh, $nick, lc($1)));
     if ($irc->is_channel_member($channel, $target)) {
       if ((! $query) or ( $query =~ m/^ACTION\s(.+)$/ )) {
 	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw\" to see its content.");
@@ -1550,7 +1556,7 @@ sub _kw_manage_request {
     }
   } elsif ( my ($kw2) = $what =~ /^(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
     my $target = $2;
-    my $query = (kw_query($dbname, $nick, lc($1)));
+    my $query = (kw_query($dbh, $nick, lc($1)));
     if ($irc->is_channel_member($channel, $target)) {
       if ((! $query ) or ($query =~ m/^ACTION\s(.+)$/)) {
 	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw2\" to see its content.");
@@ -1567,7 +1573,7 @@ sub _kw_manage_request {
 }
 
 
-
+$dbh->disconnect;
 exit;
 
 

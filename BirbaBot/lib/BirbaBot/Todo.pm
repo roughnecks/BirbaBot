@@ -18,38 +18,38 @@ our @EXPORT_OK = qw(todo_add todo_remove todo_list todo_rearrange);
 
 our $VERSION = '0.01';
 
-=head2 todo_add($dbname, $channel, $todo)
+=head2 todo_add($dbh, $channel, $todo)
 
-Add the string $todo to $dbname for the channel $channel. Return a
+Add the string $todo to $dbh for the channel $channel. Return a
 string telling what we did
 
 =cut
 
 sub todo_add {
-  my ($dbname, $channel, $todo) = @_;
+  my ($dbh, $channel, $todo) = @_;
   print @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+
   my $query = $dbh->prepare("SELECT MAX(id) FROM todo WHERE chan = ?");
   $query->execute($channel);
   my $id = ($query->fetchrow_array())[0];
   $id++;
   my $insert = $dbh->prepare("INSERT INTO todo VALUES (?, ?, ?);");
   $insert->execute($id, $channel, $todo);
-  $dbh->disconnect;
+
   return "Added $todo to the TODO list for $channel";
 }
 
-=head2 todo_remove($dbname, $channel, $id)
+=head2 todo_remove($dbh, $channel, $id)
 
-Remove the field with id $id from $dbname for the channel $channel. Return a
+Remove the field with id $id from $dbh for the channel $channel. Return a
 string telling what we did.
 
 =cut
 
 sub todo_remove {
-  my ($dbname, $channel, $id) = @_;
-  return unless ($dbname && $channel && $id);
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $channel, $id) = @_;
+  return unless ($dbh && $channel && $id);
+
   my $test = $dbh->prepare("SELECT id FROM todo WHERE chan = ? AND id = ?;");
   $test->execute($channel, $id);
   unless ($test->fetchrow_array()) {
@@ -61,29 +61,29 @@ sub todo_remove {
   if ($query->err) {
     $reply = "Something went wrong. Or *you* are a lamer, or *I* am drunk"
   }
-  $dbh->disconnect;
+
   return $reply
 }
 
 
 
 
-=head2 todo_list($dbname, $channel)
+=head2 todo_list($dbh, $channel)
 
-List the values in $dbname for channel $channel. Return the todos.
+List the values in $dbh for channel $channel. Return the todos.
 
 =cut
 
 sub todo_list {
-  my ($dbname, $channel) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $channel) = @_;
+
   my $query = $dbh->prepare("SELECT id, todo FROM todo WHERE chan = ?");
   $query->execute($channel);
   my $reply;
   while (my @data = $query->fetchrow_array()) {
     $reply .= "(" .  $data[0] . ")" . " " . $data[1] . " ";
   }
-  $dbh->disconnect;
+
   if ($reply) {
     return "Todo for $channel: $reply";
   } else {
@@ -92,17 +92,17 @@ sub todo_list {
 }
 
 
-=head2 todo_rearrange($dbname, $channel)
+=head2 todo_rearrange($dbh, $channel)
 
-Rearrange the fields in $dbname for $channel, to get progressive ids.
+Rearrange the fields in $dbh for $channel, to get progressive ids.
 Return the new list of todo.
 
 =cut
 
 sub todo_rearrange {
-  my ($dbname, $channel) = @_;
+  my ($dbh, $channel) = @_;
   my @new;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+
   # first, we extract all the fields 
   my $query = $dbh->prepare("SELECT todo FROM todo WHERE chan = ?");
   $query->execute($channel);
@@ -119,7 +119,7 @@ sub todo_rearrange {
     $insert->execute($id, $channel, $todo);
     $id++;
   }
-  return todo_list($dbname, $channel);
+  return todo_list($dbh, $channel);
 }
 
 1;

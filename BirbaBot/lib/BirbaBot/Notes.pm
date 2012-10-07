@@ -19,33 +19,33 @@ our @EXPORT_OK = qw(notes_add notes_give notes_pending anotes_pending notes_del 
 
 our $VERSION = '0.01';
 
-=head2 notes_add($dbname, $from, $to, $message)
+=head2 notes_add($dbh, $from, $to, $message)
 
-Add the string $todo to $dbname for the channel $channel. Return a
+Add the string $todo to $dbh for the channel $channel. Return a
 string telling what we did
 
 =cut
 
 sub notes_add {
-  my ($dbname, $from, $to, $message) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $from, $to, $message) = @_;
+
   my $query = $dbh->prepare('INSERT INTO notes (date, sender, recipient, message) VALUES (?,?,?,?);'); #key
   my $date = localtime();
   $query->execute($date, $from, $to, $message);
-  $dbh->disconnect;
+
   return "Message \"$message\" for $to sent from $from on $date: stored";
 }
 
-=head2 notes_give($dbname, $who)
+=head2 notes_give($dbh, $who)
 
-Remove the field with id $id from $dbname for the channel $channel. Return a
+Remove the field with id $id from $dbh for the channel $channel. Return a
 string telling what we did.
 
 =cut
 
 sub notes_give {
-  my ($dbname, $who) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $who) = @_;
+
   my $query = $dbh->prepare('SELECT sender,message,date FROM notes WHERE recipient = ?');
   my $delete = $dbh->prepare('DELETE FROM notes WHERE recipient = ?');
   $query->execute($who);
@@ -57,20 +57,20 @@ sub notes_give {
   if (@out) {
     $delete->execute($who);
   }
-  $dbh->disconnect;
+
   return @out; 
 }
 
 sub notes_pending {
-  my ($dbname, $who) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $who) = @_;
+
   my $query = $dbh->prepare('SELECT recipient FROM notes WHERE sender = ?');
   $query->execute($who);
   my @out;
   while (my $data = $query->fetchrow_array()) {
     push @out, $data;
   }
-  $dbh->disconnect;
+
   if (@out) {
     my $response = join (", ", @out);
     return "Some notes are awaiting to be sent to: $response."
@@ -78,8 +78,8 @@ sub notes_pending {
 }
 
 sub notes_del {
-  my ($dbname, $sender, $rcpt) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $sender, $rcpt) = @_;
+
   return "Wrong arguments" unless ($sender && $rcpt);
   my $delete = 
     $dbh->prepare('DELETE FROM notes WHERE recipient = ? AND sender = ?');
@@ -89,7 +89,7 @@ sub notes_del {
   # if there something in the query, means that there's something to delete
   if (my @data = $query->fetchrow_array()) {
     $delete->execute($rcpt, $sender);
-    $dbh->disconnect;
+
     return "Succesfully deleted pending notes to: $rcpt."
   } else {
     return "No pending notes to $rcpt found."
@@ -98,15 +98,15 @@ sub notes_del {
 
 
 sub anotes_pending {
-  my ($dbname, $who) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $who) = @_;
+
   my $query = $dbh->prepare('SELECT sender FROM notes');
   $query->execute;
   my @out;
   while (my $data = $query->fetchrow_array()) {
     push @out, $data;
   }
-  $dbh->disconnect;
+
   if (@out) {
     my $response = join (", ", @out);
     return "Some notes are awaiting to be sent from: $response."
@@ -114,8 +114,8 @@ sub anotes_pending {
 }
 
 sub anotes_del {
-  my ($dbname, $sender) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $sender) = @_;
+
   return "Wrong arguments" unless ($sender);
   my $delete = 
     $dbh->prepare('DELETE FROM notes WHERE sender = ?');
@@ -125,7 +125,7 @@ sub anotes_del {
   # if there something in the query, means that there's something to delete
   if (my @data = $query->fetchrow_array()) {
     $delete->execute($sender);
-    $dbh->disconnect;
+
     return "Succesfully deleted pending notes by: $sender."
   } else {
     return "No pending notes by $sender found."

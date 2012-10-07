@@ -27,11 +27,7 @@ Create the bot database tables
 =cut
 
 sub create_bot_db {
-  my $dbname = shift;
-  return 0 unless $dbname;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","") or 
-    return 0;
-
+  my $dbh = shift;
   $dbh->do('PRAGMA foreign_keys = ON;');
 
   $dbh->do('CREATE TABLE IF NOT EXISTS rss (
@@ -83,8 +79,6 @@ sub create_bot_db {
             chan    VARCHAR(30),
             author  VARCHAR(30),
             phrase  TEXT);');
-
-  $dbh->disconnect;
   return 1;
 }
 

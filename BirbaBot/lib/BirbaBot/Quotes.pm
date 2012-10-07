@@ -26,22 +26,22 @@ our @EXPORT_OK = qw(ircquote_add
 
 our $VERSION = '0.01';
 
-=head2 ircquote_add($dbname, $who, $where, $string)
+=head2 ircquote_add($dbh, $who, $where, $string)
 
 Add the quote $string to the quote db, with author $who and channel $where
 
 =cut
 
 sub ircquote_add {
-  my ($dbname, $who, $where, $string) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $who, $where, $string) = @_;
+
   my $query = $dbh->prepare('INSERT INTO quotes (id, chan, author, phrase) VALUES (NULL, ?, ?, ?);');
   $query->execute($where, $who, $string);
   my $idquery = $dbh->prepare('SELECT id FROM quotes WHERE chan = ? ORDER BY id DESC LIMIT 1;');
   $idquery->execute($where);
   my $id = $idquery->fetchrow_array();
   my $errorcode = $query->err;
-  $dbh->disconnect;
+
   if ($errorcode) {
     return "DB transation ended with error $errorcode";
   } else {
@@ -49,14 +49,14 @@ sub ircquote_add {
   }
 }
 
-=head2 ircquote_del($dbname, $who, $where, $string)
+=head2 ircquote_del($dbh, $who, $where, $string)
 
 Delete the quote with id $string if the author and $who match.
 
 =cut
 
 sub ircquote_del {
-  my ($dbname, $who, $where, $string) = @_;
+  my ($dbh, $who, $where, $string) = @_;
   my $id;
   my $reply;
   if ($string =~ m/([0-9]+)/) {
@@ -65,7 +65,7 @@ sub ircquote_del {
     return "Illegal characters in deletion command";
   }
   
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+
   my $checkquery = $dbh->prepare('SELECT author,phrase FROM quotes WHERE id = ?');
   my $delquery = $dbh->prepare('DELETE FROM quotes WHERE id = ?;');
 
@@ -87,45 +87,45 @@ sub ircquote_del {
   } else {
     $reply = "No such quote"
   }
-  $dbh->disconnect;
+
   return $reply;
 }
 
-=head2 ircquote_rand($dbname, $where)
+=head2 ircquote_rand($dbh, $where)
 
 Get a random quote for channel $where
 
 =cut
 
 sub ircquote_rand {
-  my ($dbname, $where) = @_;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+  my ($dbh, $where) = @_;
+
   my $queryids = $dbh->prepare('SELECT id FROM quotes WHERE chan = ?;');
   $queryids->execute($where);
   my @quotesid;
   while (my @ids = $queryids->fetchrow_array()) {
     push @quotesid, $ids[0];
   }
-  $dbh->disconnect;
+
   return "No quotes!" unless @quotesid;
 
   my $total = 
   my $random = int(rand(scalar @quotesid));
   print "Picked random quote with id $random\n";
   my $choosen = $quotesid[$random];
-  return ircquote_num($dbname, $choosen, $where);
+  return ircquote_num($dbh, $choosen, $where);
 }
 
-=head2 ircquote_last($dbname, $where);
+=head2 ircquote_last($dbh, $where);
 
 Get the latest quote for channel $where
 
 =cut
 
 sub ircquote_last {
-  my ($dbname, $where) = @_;
+  my ($dbh, $where) = @_;
   my $reply;
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+
   my $query = $dbh->prepare('SELECT id,author,phrase FROM quotes WHERE chan = ? ORDER BY id DESC LIMIT 1;');
   $query->execute($where);
   my ($id, $author, $phrase) = $query->fetchrow_array();
@@ -136,19 +136,19 @@ sub ircquote_last {
   } else {
     $reply = "No quotes!";
   }
-  $dbh->disconnect;
+
   return $reply;
 }
 
 
-=head2 ircquote_find($dbname, $where, $string);
+=head2 ircquote_find($dbh, $where, $string);
 
 Find a quote with $string inside for channel $where
 
 =cut
 
 sub ircquote_find {
-  my ($dbname, $where, $string) = @_;
+  my ($dbh, $where, $string) = @_;
   my $reply;
   { use locale;
     $string =~ s/\W/%/g;
@@ -156,7 +156,7 @@ sub ircquote_find {
     $string =~ s/%%+/%/g;
     print "Using $string for query";
   }
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+
   my $query = $dbh->prepare('SELECT id,phrase FROM quotes WHERE chan = ? AND phrase LIKE ?;');
   $query->execute($where, $string);
   # find all
@@ -165,7 +165,7 @@ sub ircquote_find {
     
     push @output, [$quotes[0], $quotes[1] ];
   }
-  $dbh->disconnect;
+
 #  print Dumper(\@output);
   return "No quotes!" unless $output[0]->[1];
   $reply = '[' . $output[0]->[0] . '] ' . $output[0]->[1] . ". ";
@@ -178,14 +178,14 @@ sub ircquote_find {
   return $reply;
 }
 
-=head2 ircquote_num($dbname, $num);
+=head2 ircquote_num($dbh, $num);
 
 Add the quote $string to the quote db, with author $who and channel $where
 
 =cut
 
 sub ircquote_num {
-  my ($dbname, $num, $where) = @_;
+  my ($dbh, $num, $where) = @_;
   #  print Dumper(\@_);
   my $reply;
   $num = $_[1];
@@ -194,7 +194,7 @@ sub ircquote_num {
   } else {
     return "Invalid character $num for quotes"
   }
-  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname","","");
+
   my $query = $dbh->prepare('SELECT author,phrase FROM quotes WHERE id = ? and chan = ?');
   $query->execute($num, $where);
   my ($author, $phrase) = $query->fetchrow_array();
@@ -209,7 +209,7 @@ sub ircquote_num {
       $reply = "No such quote";
     }
   }
-  $dbh->disconnect;
+
   return $reply;
 }
 
