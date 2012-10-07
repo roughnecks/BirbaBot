@@ -1214,7 +1214,7 @@ sub irc_botcmd_wikiz {
     bot_says($where, 'Missing Argument');
     return
     } else {
-      @out = grep ( /\Q$arg\E/ , @formatlist );
+      @out = grep ( /\Q$arg\E/i , @formatlist );
     }
   # looping through the output of matching urls, clean some shit and spit to channel
 
@@ -1407,27 +1407,31 @@ sub irc_botcmd_kw {
   my $subcmd = shift(@args);
   my $string = join (" ", @args);
   if ($subcmd eq 'new') {
-    for ($string) {
-      if (/^\s*"(.+?)"\s+is+(.+?)\s*$/) {
-	bot_says($where, kw_new($dbh, $who, lc($1), $2))
+    if (is_where_a_channel($where)) {
+      for ($string) {
+	if (/^\s*"(.+?)"\s+is+(.+?)\s*$/) {
+	  bot_says($where, kw_new($dbh, $who, lc($1), $2))
+	}
+	elsif (/^\s*(.+?)\s+is\s+(.+?)\s*$/) {
+	  bot_says($where, kw_new($dbh, $who, lc($1), $2))
+	}
+	elsif (/^\s*(.+)\s+is\s*$/) {
+	  bot_says($where, "Missing Argument")
+	}
+	else {
+	  bot_says($where, "Something is wrong")
+	}
       }
-      elsif (/^\s*(.+?)\s+is\s+(.+?)\s*$/) {
-	bot_says($where, kw_new($dbh, $who, lc($1), $2))
-      }
-      elsif (/^\s*(.+)\s+is\s*$/) {
-	bot_says($where, "Missing Argument")
-      }
-      else {
-	bot_says($where, "Something is wrong")
-      }
-    }
+    } else { bot_says($where, "Cannot create other than in a channel") }
   } elsif ($subcmd eq 'add') {
-    for ($string) {
-      if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_add($dbh, $who, lc($1), $2)) }
-      elsif (/^\s*(.+)\s+is\s*$/) { bot_says($where, "Missing Argument") }
-      else {bot_says($where, "Something is wrong") } # default
-    }
-  } elsif ($subcmd eq 'forget') {
+    if (is_where_a_channel($where)) {
+      for ($string) {
+	if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_add($dbh, $who, lc($1), $2)) }
+	elsif (/^\s*(.+)\s+is\s*$/) { bot_says($where, "Missing Argument") }
+	else {bot_says($where, "Something is wrong") } # default
+      }
+    } else { bot_says($where, "Cannot add other than in a channel") }
+  }  elsif ($subcmd eq 'forget') {
     for ($string) {
       if (/^\s*(.+)\s*$/) { 
 	if (check_if_admin($who)) {
