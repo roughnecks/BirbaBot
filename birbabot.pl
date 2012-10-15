@@ -1407,7 +1407,7 @@ sub irc_botcmd_kw {
   my $subcmd = shift(@args);
   my $string = join (" ", @args);
   if ($subcmd eq 'new') {
-    if (is_where_a_channel($where)) {
+    if ((is_where_a_channel($where)) or check_if_admin($who)) {
       for ($string) {
 	if (/^\s*"(.+?)"\s+is+(.+?)\s*$/) {
 	  bot_says($where, kw_new($dbh, $who, lc($1), $2))
@@ -1424,7 +1424,7 @@ sub irc_botcmd_kw {
       }
     } else { bot_says($where, "Cannot create other than in a channel") }
   } elsif ($subcmd eq 'add') {
-    if (is_where_a_channel($where)) {
+    if ((is_where_a_channel($where)) or check_if_admin($who)) {
       for ($string) {
 	if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_add($dbh, $who, lc($1), $2)) }
 	elsif (/^\s*(.+)\s+is\s*$/) { bot_says($where, "Missing Argument") }
