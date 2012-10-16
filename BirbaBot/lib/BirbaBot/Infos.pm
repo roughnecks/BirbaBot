@@ -46,6 +46,11 @@ sub kw_add {
   unless ($check->fetchrow_array()) {
     return kw_new($dbh, $who, $key, $value)
   }
+  my $bar3check = $dbh->prepare('SELECT bar3 FROM factoids WHERE key = ?');
+  $bar3check->execute($key);
+  if ($bar3check->fetchrow_array()) {
+    return "No more slots to add a new definition."
+  }
   my $query = $dbh->prepare("UPDATE factoids SET bar2 = CASE WHEN bar2 IS NULL THEN ? WHEN bar2 IS NOT NULL THEN (SELECT bar2 FROM factoids where key = ?) END, bar3 = CASE WHEN bar2 IS NOT NULL AND bar3 IS NULL THEN ? WHEN bar2 IS NULL THEN (SELECT bar3 FROM factoids where key = ?) WHEN bar3 IS NOT NULL THEN (SELECT bar3 FROM factoids where key = ?) END WHERE key = ?;"); #bar2, bar3, key
   $query->execute($value, $key, $value, $key, $key, $key);
   return "Added $value to $key"
