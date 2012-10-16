@@ -1426,8 +1426,8 @@ sub irc_botcmd_kw {
   } elsif ($subcmd eq 'add') {
     if ((is_where_a_channel($where)) or check_if_admin($who)) {
       for ($string) {
-	if (/^\s*(.+)\s+is\s+(.+?)\s*$/) { bot_says($where, kw_add($dbh, $who, lc($1), $2)) }
-	elsif (/^\s*(.+)\s+is\s*$/) { bot_says($where, "Missing Argument") }
+	if (/^\s*(.+?)\s+is\s+(.+)\s*$/) { bot_says($where, kw_add($dbh, $who, lc($1), $2)) }
+	elsif (/^\s*(.+?)\s+is\s*$/) { bot_says($where, "Missing Argument") }
 	else {bot_says($where, "Something is wrong") } # default
       }
     } else { bot_says($where, "Cannot add other than in a channel") }
