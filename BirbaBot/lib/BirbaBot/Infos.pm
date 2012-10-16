@@ -40,6 +40,12 @@ sub kw_new {
 
 sub kw_add {
   my ($dbh, $who, $key, $value) = @_;
+
+  my $check = $dbh->prepare('SELECT key FROM factoids WHERE key = ?');
+  $check->execute($key);
+  unless ($check->fetchrow_array()) {
+    return kw_new($dbh, $who, $key, $value)
+  }
   my $query = $dbh->prepare("UPDATE factoids SET bar2 = CASE WHEN bar2 IS NULL THEN ? WHEN bar2 IS NOT NULL THEN (SELECT bar2 FROM factoids where key = ?) END, bar3 = CASE WHEN bar2 IS NOT NULL AND bar3 IS NULL THEN ? WHEN bar2 IS NULL THEN (SELECT bar3 FROM factoids where key = ?) WHEN bar3 IS NOT NULL THEN (SELECT bar3 FROM factoids where key = ?) END WHERE key = ?;"); #bar2, bar3, key
   $query->execute($value, $key, $value, $key, $key, $key);
   return "Added $value to $key"
