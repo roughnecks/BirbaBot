@@ -1403,77 +1403,87 @@ sub irc_botcmd_kw {
     bot_says($where, "$nick, Missing Arguments: ask me 'help kw'");
     return
   }
-  my @args = split(/ +/, $arg);
+  my @args = split(/\s+/, $arg);
   my $subcmd = shift(@args);
   my $string = join (" ", @args);
-  if ($subcmd eq 'new') {
-    if ((is_where_a_channel($where)) or check_if_admin($who)) {
-      for ($string) {
-	if (/^\s*"(.+?)"\s+is+(.+?)\s*$/) {
-	  bot_says($where, kw_new($dbh, $who, lc($1), $2))
-	}
-	elsif (/^\s*(.+?)\s+is\s+(.+?)\s*$/) {
-	  bot_says($where, kw_new($dbh, $who, lc($1), $2))
-	}
-	elsif (/^\s*(.+)\s+is\s*$/) {
-	  bot_says($where, "Missing Argument")
-	}
-	else {
-	  bot_says($where, "Something is wrong")
-	}
-      }
-    } else { bot_says($where, "Cannot create other than in a channel") }
-  } elsif ($subcmd eq 'add') {
-    if ((is_where_a_channel($where)) or check_if_admin($who)) {
-      for ($string) {
-	if (/^\s*(.+?)\s+is\s+(.+)\s*$/) { bot_says($where, kw_add($dbh, $who, lc($1), $2)) }
-	elsif (/^\s*(.+?)\s+is\s*$/) { bot_says($where, "Missing Argument") }
-	else {bot_says($where, "Something is wrong") } # default
-      }
-    } else { bot_says($where, "Cannot add other than in a channel") }
-  }  elsif ($subcmd eq 'forget') {
-    for ($string) {
-      if (/^\s*(.+)\s*$/) { 
-	if (check_if_admin($who)) {
-	  bot_says($where, kw_remove($dbh, $who, lc($1)))
-	} else {
-	  bot_says($where, "Something is wrong, are you an admin?");
-	}
-      }
-      elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
-      else {bot_says($where, "Something is wrong, are you an admin?") } # default
-    }
-  } elsif ($subcmd eq 'delete') {
-    for ($string) {
-      if (/^\s*(.+)\s+([23])\s*$/) { bot_says($where, kw_delete_item($dbh, lc($1), $2)) }
-      elsif (/^\s*(.+)\s+$/) { bot_says($where, "Missing Argument") }
-      else {bot_says($where, "Something is wrong") } # default
-    }
-  } elsif ($subcmd eq 'find') {
+
+  # first manage the "easy" subcommands
+  # list, no arguments
+  if ($subcmd eq 'list') {
+    return bot_says($where, kw_list($dbh))
+  }
+
+  # other subcommands have arguments, so do the check
+  return bot_says($where, "No argument provided") unless $string;
+  
+  # sanity checks
+  if ($subcmd eq 'find') {
     if (is_where_a_channel($where)) {
-      bot_says($where, "$nick, this command works only in a query");
-    } else {
-    for ($string) {
-      if (/^\s*(.+)\s*$/) { bot_says($where, kw_find($dbh, lc($1))) }
-      elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
-      else {bot_says($where, "Something is wrong") } # default
-    } 
-  }
-  } elsif ($subcmd eq 'list') {
-    for ($string) {
-      if (/^\s*$/) { bot_says($where, kw_list($dbh)) }
-      else { bot_says($where, "Listing does not accept other arguments" ) }
-    } 
-  } elsif ($subcmd eq 'show') {
-    for ($string) {
-      if (/^\s*(.+)\s*$/) { bot_says($where, kw_show($dbh, lc($1))) }
-      elsif (/^\s*$/) { bot_says($where, "Missing Argument") }
-      else {bot_says($where, "Something is wrong, probably that fact does not exist.") } # default
+      return bot_says($where, "$nick, this command works only in a query");
     }
-  } elsif ($subcmd ne ['new'|'add'|'forget'|'delete'|'find'|'list'|'show']) { 
-    bot_says($where, "Wrong Subcommand: $subcmd\n")
   }
+
+  # prevent the abusing
+  if ($subcmd =~ m/^(new|add|delete|forget)$/) {
+    return bot_says($where, "This command works only in a channel")
+      unless ((is_where_a_channel($where)) or check_if_admin($who)); 
+  }
+  if ($subcmd eq 'forget') {
+    return bot_says($where, "Only admins can make me forget that")
+      unless check_if_admin($who);
+  }
+
+  # identify the target
+  my $target;
+  my $definition;
+  my $slot;
+  # forget, show and find  has 1 argument, verbatim
+  if (($subcmd eq 'forget') or
+      ($subcmd eq 'show') or
+      ($subcmd eq 'find')) {
+    $target = lc($string);
+  }
+  # delete is the same, plus the [#]
+  if ($subcmd eq 'delete') {
+    if ($string =~ /^\s*(.+)\s+([23])\s*$/) {
+      $target = lc($1);
+      $slot = $2;
+    } else {
+      return bot_says($where, "Wrong delete command");
+    }
+  }
+
+  # new and add has the "is" as separator, unless there are the ""
+  if (($subcmd eq 'new') or
+      ($subcmd eq 'add')) {
+    if ($string =~ m/^\s*"(.+?)"\s+is+(.+)\s*$/) {
+      ($target, $definition) = (lc($1), $2);
+    } elsif ($string =~ m/^\s*(.+?)\s+is\s+(.+)\s*$/) {
+      ($target, $definition) = (lc($1), $2);
+    } else {
+      return bot_says("Missing argument");
+    }
+  }
+  
+  
+  if ($subcmd eq 'find') {
+    bot_says($where, kw_find($dbh, $target))
+  } elsif ($subcmd eq 'add') {
+    bot_says($where, kw_add($dbh, $who, $target, $definition))
+  } elsif ($subcmd eq 'new') {
+    bot_says($where, kw_new($dbh, $who, $target, $definition))
+  } elsif ($subcmd eq 'forget') {
+    bot_says($where, kw_remove($dbh, $who, $target))
+  } elsif ($subcmd eq 'delete') {
+    bot_says($where, kw_delete_item($dbh, $target, $slot))
+  } elsif ($subcmd eq 'show') {
+    bot_says($where, kw_show($dbh, $target))
+  } else {
+    bot_says($where, "wtf?")
+  }
+  return
 }
+
 
 
 sub debget_sentinel {
