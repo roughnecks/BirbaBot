@@ -328,7 +328,10 @@ sub bot_says {
     $irc->yield(privmsg => $where => $what);
   } else {
     my @output = ("");
-    my @tokens = split (/ +/, $what);
+    my @tokens = split (/\s+/, $what);
+    if ($tokens[0] =~ m/^(\s+)(.+$)/) {
+      $tokens[0] = $2;
+    }
     while (@tokens) {
       my $string = shift(@tokens);
       my $len = length($string);
@@ -337,6 +340,9 @@ sub bot_says {
 	$output[$#output] .= " $string";
       } else {
 	push @output, $string;
+	if ($output[0] =~ m/^(\s+)(.+$)/) {
+	  $output[0] = $2;
+	}
       }
     }
     foreach my $reply (@output) {
