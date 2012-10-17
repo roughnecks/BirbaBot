@@ -852,7 +852,7 @@ sub irc_public {
       if (index($what, $botconfig{'kw_prefix'}) == 0) {
 	# strip the prefix and pass all to the subroutine
 	my $querystripped = substr($what, 1);
-	if ((index($querystripped, '>')) < 0) {
+	if ((index($querystripped, ' >')) < 0) {
 	  # simulate the question for the poor bastards using the kw_prefix
 	  $querystripped .= '?';
 	}
