@@ -1508,7 +1508,7 @@ sub debget_sentinel {
     $ENV{PATH} = "/bin:/usr/bin"; # Minimal PATH.
     my $tmpfile = File::Temp->new();
     my @command = ('curl', '-s', '--compressed', '--connect-timeout', '10',
-		   '--max-time', '15',
+		   '--max-time', '10',
 		   '--output', $tmpfile->filename, $rel->{url});
     print "Trying ", join(" ", @command, "\n");
     if (system(@command) == 0) {
