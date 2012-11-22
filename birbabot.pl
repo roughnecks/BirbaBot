@@ -52,7 +52,6 @@ use BirbaBot::Quotes qw(ircquote_add
 use BirbaBot::Tail qw(file_tail);
 use BirbaBot::Debian qw(deb_pack_versions deb_pack_search);
 
-
 use URI::Find;
 use URI::Escape;
 
@@ -227,6 +226,7 @@ POE::Session->create(
 		     irc_botcmd_meteo
 		     irc_botcmd_deb
 		     irc_botcmd_debsearch
+		     irc_botcmd_pc
 		     irc_public
 		     irc_msg
                     irc_join
@@ -282,7 +282,8 @@ sub _start {
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
             pull => 'Execute a git pull',
-            anotes => 'Admin search and deletion of pending notes: without arguments list all the pending notes | "anotes del <nick>" Deletes all pending notes from "nick".'
+            anotes => 'Admin search and deletion of pending notes: without arguments list all the pending notes | "anotes del <nick>" Deletes all pending notes from "nick".',
+            pc => 'Public Commands: pc [ op - deop - voice - devoice - kick - ban - kickb ] <nick>'
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1591,6 +1592,70 @@ sub _kw_manage_request {
   }
   return;
 }
+
+sub irc_botcmd_pc {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  my $subcmd = shift(@args);
+  return unless (check_if_op($channel, $nick));
+  if ($subcmd eq 'op') {
+    my $status = '+o';
+    pc_status($status, $channel, $botnick, @args);
+  } elsif ($subcmd eq 'deop') {
+    my $status = '-o';
+    pc_status($status, $channel, $botnick, @args);
+  } elsif ($subcmd eq 'voice') {
+    my $status = '+v';
+    pc_status($status, $channel, $botnick, @args);
+  } elsif ($subcmd eq 'devoice') {
+    my $status = '-v';
+    pc_status($status, $channel, $botnick, @args);
+  } elsif ($subcmd eq 'kick') {
+    pc_kick($channel, $botnick, @args);
+  } elsif ($subcmd eq 'ban') {
+    my $mode = '+b';
+    pc_ban($mode, $channel, $botnick, @args);
+  } elsif ($subcmd eq 'kickb') {
+    my $mode = '+b';
+    pc_ban($mode, $channel, $botnick, @args);
+    pc_kick($channel, $botnick, @args);
+  }
+}
+
+sub pc_status {
+  my ($status, $channel, $botnick, @args) = @_;
+  foreach (@args) {
+    next if ("$_" eq "$botnick");
+    if ($irc->is_channel_member($channel, $_)) {
+      $irc->yield (mode => "$channel" => "$status" => "$_");
+    }
+  } 
+}
+
+sub pc_ban {
+  my ($mode, $channel, $botnick, @args) = @_;
+  foreach (@args) {
+    next if ("$_" eq "$botnick");
+    if ($irc->is_channel_member($channel, $_)) {
+      my $whois = $irc->nick_info($_);
+      my $host = $$whois{'Host'};
+      $irc->yield (mode => "$channel" => "$mode" => "\*!\*\@$host"); 
+    }
+  } 
+}
+
+sub pc_kick {
+  my ($channel, $botnick, @args) = @_;
+  foreach (@args) {
+    next if ("$_" eq "$botnick");
+    if ($irc->is_channel_member($channel, $_)) {
+      $irc->yield (kick => "$channel" => "$_" => 'gtfo');
+    }
+  }
+}
+
 
 
 $dbh->disconnect;
