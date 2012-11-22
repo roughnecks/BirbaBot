@@ -1652,7 +1652,7 @@ sub irc_botcmd_kick {
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
   return unless (check_if_op($channel, $nick));
-  pc_kick($channel, $botnick, @args);
+  pc_kick($nick, $channel, $botnick, @args);
 }
 
 sub irc_botcmd_ban {
@@ -1673,7 +1673,7 @@ sub irc_botcmd_kickb {
   return unless (check_if_op($channel, $nick));
   my $mode = '+b';
   pc_ban($mode, $channel, $botnick, @args);
-  pc_kick($channel, $botnick, @args);
+  pc_kick($nick, $channel, $botnick, @args);
 }
 
 sub pc_status {
@@ -1699,11 +1699,11 @@ sub pc_ban {
 }
 
 sub pc_kick {
-  my ($channel, $botnick, @args) = @_;
+  my ($nick, $channel, $botnick, @args) = @_;
   foreach (@args) {
     next if ("$_" eq "$botnick");
     if ($irc->is_channel_member($channel, $_)) {
-      $irc->yield (kick => "$channel" => "$_" => 'gtfo');
+      $irc->yield (kick => "$channel" => "$_" => "$nick");
     }
   }
 }
