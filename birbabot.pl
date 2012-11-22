@@ -226,7 +226,13 @@ POE::Session->create(
 		     irc_botcmd_meteo
 		     irc_botcmd_deb
 		     irc_botcmd_debsearch
-		     irc_botcmd_pc
+		     irc_botcmd_op
+		     irc_botcmd_deop
+		     irc_botcmd_voice
+		     irc_botcmd_devoice
+		     irc_botcmd_kick
+		     irc_botcmd_kickb
+		     irc_botcmd_ban
 		     irc_public
 		     irc_msg
                     irc_join
@@ -283,7 +289,13 @@ sub _start {
             restart => 'Restart BirbaBot',
             pull => 'Execute a git pull',
             anotes => 'Admin search and deletion of pending notes: without arguments list all the pending notes | "anotes del <nick>" Deletes all pending notes from "nick".',
-            pc => 'Public Commands: pc [ op - deop - voice - devoice - kick - ban - kickb ] <nick>'
+            op => 'op <nick>',
+            deop => 'deop <nick>',
+            voice => 'voice <nick>',
+            devoice => 'devoice <nick>',
+            kick => 'kick <nick>',
+            ban => 'ban <nick>',
+            kickb => 'kickban <nick>'									      
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1593,35 +1605,75 @@ sub _kw_manage_request {
   return;
 }
 
-sub irc_botcmd_pc {
+
+sub irc_botcmd_op {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  my $subcmd = shift(@args);
   return unless (check_if_op($channel, $nick));
-  if ($subcmd eq 'op') {
-    my $status = '+o';
-    pc_status($status, $channel, $botnick, @args);
-  } elsif ($subcmd eq 'deop') {
-    my $status = '-o';
-    pc_status($status, $channel, $botnick, @args);
-  } elsif ($subcmd eq 'voice') {
-    my $status = '+v';
-    pc_status($status, $channel, $botnick, @args);
-  } elsif ($subcmd eq 'devoice') {
-    my $status = '-v';
-    pc_status($status, $channel, $botnick, @args);
-  } elsif ($subcmd eq 'kick') {
-    pc_kick($channel, $botnick, @args);
-  } elsif ($subcmd eq 'ban') {
-    my $mode = '+b';
-    pc_ban($mode, $channel, $botnick, @args);
-  } elsif ($subcmd eq 'kickb') {
-    my $mode = '+b';
-    pc_ban($mode, $channel, $botnick, @args);
-    pc_kick($channel, $botnick, @args);
-  }
+  my $status = '+o';
+  pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_deop {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  return unless (check_if_op($channel, $nick));
+  my $status = '-o';
+  pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_voice {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  return unless (check_if_op($channel, $nick));
+  my $status = '+v';
+  pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_devoice {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  return unless (check_if_op($channel, $nick));
+  my $status = '-v';
+  pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_kick {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  return unless (check_if_op($channel, $nick));
+  pc_kick($channel, $botnick, @args);
+}
+
+sub irc_botcmd_ban {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  return unless (check_if_op($channel, $nick));
+  my $mode = '+b';
+  pc_ban($mode, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_kickb {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  return unless (check_if_op($channel, $nick));
+  my $mode = '+b';
+  pc_ban($mode, $channel, $botnick, @args);
+  pc_kick($channel, $botnick, @args);
 }
 
 sub pc_status {
@@ -1655,7 +1707,6 @@ sub pc_kick {
     }
   }
 }
-
 
 
 $dbh->disconnect;
