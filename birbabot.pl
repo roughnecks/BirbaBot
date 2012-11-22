@@ -1615,7 +1615,7 @@ sub irc_botcmd_op {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  return unless (check_if_op($channel, $nick));
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
   my $status = '+o';
   pc_status($status, $channel, $botnick, @args);
 }
@@ -1625,7 +1625,7 @@ sub irc_botcmd_deop {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  return unless (check_if_op($channel, $nick));
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
   my $status = '-o';
   pc_status($status, $channel, $botnick, @args);
 }
@@ -1635,7 +1635,7 @@ sub irc_botcmd_voice {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  return unless (check_if_op($channel, $nick));
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
   my $status = '+v';
   pc_status($status, $channel, $botnick, @args);
 }
@@ -1645,7 +1645,7 @@ sub irc_botcmd_devoice {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  return unless (check_if_op($channel, $nick));
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
   my $status = '-v';
   pc_status($status, $channel, $botnick, @args);
 }
@@ -1655,7 +1655,7 @@ sub irc_botcmd_kick {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  return unless (check_if_op($channel, $nick));
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
   pc_kick($nick, $channel, $botnick, @args);
 }
 
@@ -1664,7 +1664,7 @@ sub irc_botcmd_ban {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  return unless (check_if_op($channel, $nick));
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
   my $mode = '+b';
   pc_ban($mode, $channel, $botnick, @args);
 }
@@ -1684,7 +1684,7 @@ sub irc_botcmd_kb {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
-  return unless (check_if_op($channel, $nick));
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
   my $mode = '+b';
   pc_ban($mode, $channel, $botnick, @args);
   pc_kick($nick, $channel, $botnick, @args);
