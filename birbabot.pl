@@ -453,9 +453,13 @@ sub irc_botcmd_rss {
   my @args = split / +/, $arg;
   my ($action, $feed, $url) = @args;
   if ($action eq 'list') {
-    my $reply = rss_list($dbh, $where);
-    bot_says($where, $reply);
-    return;
+    if ($feed or $url) {
+      return bot_says($where, "Wrong argument to list (none required)");
+    } else {
+      my $reply = rss_list($dbh, $where);
+      bot_says($where, $reply);
+      return;
+    }
   }
   elsif ($action eq 'show') {
     my @replies = rss_give_latest($dbh, $feed);
