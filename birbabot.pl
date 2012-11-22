@@ -231,9 +231,10 @@ POE::Session->create(
 		     irc_botcmd_voice
 		     irc_botcmd_devoice
 		     irc_botcmd_kick
-		     irc_botcmd_kickb
+		     irc_botcmd_kb
 		     irc_botcmd_ban
-		     irc_public
+                     irc_botcmd_unban
+ 		     irc_public
 		     irc_msg
                     irc_join
                     irc_part
@@ -295,7 +296,8 @@ sub _start {
             devoice => 'devoice <nick>',
             kick => 'kick <nick>',
             ban => 'ban <nick>',
-            kickb => 'kickban <nick>'									      
+            unban => 'unban <nick>',
+            kb => 'kickban <nick>'									      
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1665,7 +1667,17 @@ sub irc_botcmd_ban {
   pc_ban($mode, $channel, $botnick, @args);
 }
 
-sub irc_botcmd_kickb {
+sub irc_botcmd_unban {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  return unless (check_if_op($channel, $nick));
+  my $mode = '-b';
+  pc_ban($mode, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_kb {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
