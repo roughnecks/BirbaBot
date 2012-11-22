@@ -235,6 +235,7 @@ POE::Session->create(
 		     irc_botcmd_ban
                      irc_botcmd_unban
                      irc_botcmd_mode
+		     irc_botcmd_topic
  		     irc_public
 		     irc_msg
                     irc_join
@@ -299,7 +300,8 @@ sub _start {
             ban => 'ban <nick> [ nick2 nick#n ]',
             unban => 'unban <nick> [ nick2 nick#n ]',
             kb => 'kickban <nick> [ reason ]',
-            mode => 'Set channels modes, like: mode +<mode>-<mode> and also users modes, like bans: mode +b nick!user@host'									      
+            mode => 'Set channels modes, like: mode +<mode>-<mode> and also users modes, like bans: mode +b nick!user@host',
+            topic => 'Set the channel topic: topic <topic>'									      
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1782,6 +1784,17 @@ sub irc_botcmd_mode {
   my ($who, $channel, $mode) = @_[ARG0..$#_];
   return unless (check_if_admin($who));
   $irc->yield (mode => "$channel" => "$mode");
+}
+
+sub irc_botcmd_topic {
+  my ($who, $channel, $topic) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  if ((! $topic) or ($topic =~ m/^\s*$/)) {
+    bot_says($channel, 'Missing argument (the actual topic to set)');
+  } else {
+    return unless (check_if_op($channel, $nick));
+    $irc->yield (topic => "$channel" => "$topic");
+  }
 }
 
 
