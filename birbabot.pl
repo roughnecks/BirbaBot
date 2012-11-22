@@ -262,7 +262,7 @@ sub _start {
             slap   => 'Takes one argument: a nickname to slap.',
             lookup => 'Query Internet name servers | Takes two arguments: a record type like MX, AAAA (optional), and a host.',
 	    geoip => 'IP Geolocation | Takes one argument: an ip or a hostname to lookup.',
-	    rss => 'Manage RSS subscriptions: RSS [ add | del ] <name> <url> - RSS show [ name ] - RSS list [ #channel ]',
+	    rss => 'Manage RSS subscriptions: RSS [ add ] <name> <url> - RSS [ del ] <name> - RSS show <name> - RSS list',
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
@@ -470,9 +470,13 @@ sub irc_botcmd_rss {
   my @args = split / +/, $arg;
   my ($action, $feed, $url) = @args;
   if ($action eq 'list') {
-    my $reply = rss_list($dbh, $where);
-    bot_says($where, $reply);
-    return;
+    if ($feed or $url) {
+      return bot_says($where, "Wrong argument to list (none required)");
+    } else {
+      my $reply = rss_list($dbh, $where);
+      bot_says($where, $reply);
+      return;
+    }
   }
   elsif ($action eq 'show') {
     my @replies = rss_give_latest($dbh, $feed);
