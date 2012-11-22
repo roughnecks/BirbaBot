@@ -1610,6 +1610,8 @@ sub _kw_manage_request {
 }
 
 
+## Public Commands - pc
+
 sub irc_botcmd_op {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
