@@ -234,6 +234,7 @@ POE::Session->create(
 		     irc_botcmd_kb
 		     irc_botcmd_ban
                      irc_botcmd_unban
+                     irc_botcmd_mode
  		     irc_public
 		     irc_msg
                     irc_join
@@ -297,7 +298,8 @@ sub _start {
             kick => 'kick <nick>',
             ban => 'ban <nick>',
             unban => 'unban <nick>',
-            kb => 'kickban <nick>'									      
+            kb => 'kickban <nick>',
+            mode => 'Set channels modes, like: mode +<mode>-<mode> and also users modes, like bans: mode +b nick!user@host'									      
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1718,6 +1720,12 @@ sub pc_kick {
       $irc->yield (kick => "$channel" => "$_" => "$nick");
     }
   }
+}
+
+sub irc_botcmd_mode {
+  my ($who, $channel, $mode) = @_[ARG0..$#_];
+  return unless (check_if_admin($who));
+  $irc->yield (mode => "$channel" => "$mode");
 }
 
 
