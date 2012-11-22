@@ -1614,8 +1614,13 @@ sub irc_botcmd_op {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
-  my @args = split(/ +/, $what);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
   my $status = '+o';
   pc_status($status, $channel, $botnick, @args);
 }
@@ -1624,8 +1629,13 @@ sub irc_botcmd_deop {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
-  my @args = split(/ +/, $what);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
   my $status = '-o';
   pc_status($status, $channel, $botnick, @args);
 }
@@ -1634,8 +1644,13 @@ sub irc_botcmd_voice {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
-  my @args = split(/ +/, $what);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
   my $status = '+v';
   pc_status($status, $channel, $botnick, @args);
 }
@@ -1644,8 +1659,13 @@ sub irc_botcmd_devoice {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
-  my @args = split(/ +/, $what);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
   my $status = '-v';
   pc_status($status, $channel, $botnick, @args);
 }
@@ -1654,8 +1674,14 @@ sub irc_botcmd_kick {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
-  my @args = split(/ +/, $what);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    bot_says($channel, 'lemme know who has to be kicked');
+    return;
+  } else {
+    @args = split(/ +/, $what);
+  }
   pc_kick($nick, $channel, $botnick, @args);
 }
 
@@ -1663,8 +1689,14 @@ sub irc_botcmd_ban {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
-  my @args = split(/ +/, $what);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    bot_says($channel, 'who shall i ban next?');
+    return;
+  } else {
+    @args = split(/ +/, $what);
+  }
   my $mode = '+b';
   pc_ban($mode, $channel, $botnick, @args);
 }
@@ -1673,8 +1705,13 @@ sub irc_botcmd_unban {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
-  my @args = split(/ +/, $what);
-  return unless (check_if_op($channel, $nick));
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
   my $mode = '-b';
   pc_ban($mode, $channel, $botnick, @args);
 }
@@ -1683,8 +1720,14 @@ sub irc_botcmd_kb {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
-  my @args = split(/ +/, $what);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    bot_says($channel, 'Is there some fella to kickban? Just name it.');
+    return;
+  } else {
+    @args = split(/ +/, $what);
+  }
   my $mode = '+b';
   pc_ban($mode, $channel, $botnick, @args);
   pc_kick($nick, $channel, $botnick, @args);
