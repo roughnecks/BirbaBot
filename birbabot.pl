@@ -1677,14 +1677,15 @@ sub irc_botcmd_kick {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
-  my @args = "";
   if (! $what) {
     bot_says($channel, 'lemme know who has to be kicked');
     return;
   } else {
-    @args = split(/ +/, $what);
+    my @args = split(/ +/, $what);
+    my $target = shift(@args);
+    my $reason = join (" ", @args);    
+    pc_kick($nick, $target, $channel, $botnick, $reason);
   }
-  pc_kick($nick, $channel, $botnick, @args);
 }
 
 sub irc_botcmd_ban {
@@ -1723,16 +1724,17 @@ sub irc_botcmd_kb {
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
   return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
-  my @args = "";
   if (! $what) {
-    bot_says($channel, 'Is there some fella to kickban? Just name it.');
+    bot_says($channel, 'lemme know who has to be kicked');
     return;
   } else {
-    @args = split(/ +/, $what);
+    my $mode = '+b';
+    my @args = split(/ +/, $what);
+    my $target = shift(@args);
+    my $reason = join (" ", @args);    
+    pc_ban($mode, $channel, $botnick, $target);
+    pc_kick($nick, $target, $channel, $botnick, $reason);
   }
-  my $mode = '+b';
-  pc_ban($mode, $channel, $botnick, @args);
-  pc_kick($nick, $channel, $botnick, @args);
 }
 
 sub pc_status {
@@ -1758,14 +1760,19 @@ sub pc_ban {
 }
 
 sub pc_kick {
-  my ($nick, $channel, $botnick, @args) = @_;
-  foreach (@args) {
-    next if ("$_" eq "$botnick");
-    if ($irc->is_channel_member($channel, $_)) {
-      $irc->yield (kick => "$channel" => "$_" => "$nick");
+  my ($nick, $target, $channel, $botnick, $reason) = @_;
+  return if ("$target" eq "$botnick");
+  if ($irc->is_channel_member($channel, $target)) {
+    if ($reason) {
+      my $message = $reason.' ('.$nick.')';
+      $irc->yield (kick => "$channel" => "$target" => "$message");
+    } else {
+      my $message = 'no reason given'.' ('.$nick.')';
+      $irc->yield (kick => "$channel" => "$target" => "$message");
     }
   }
 }
+
 
 sub irc_botcmd_mode {
   my ($who, $channel, $mode) = @_[ARG0..$#_];
