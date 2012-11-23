@@ -264,7 +264,7 @@ sub _start {
             slap   => 'Takes one argument: a nickname to slap.',
             lookup => 'Query Internet name servers | Takes two arguments: a record type like MX, AAAA (optional), and a host.',
 	    geoip => 'IP Geolocation | Takes one argument: an ip or a hostname to lookup.',
-	    rss => 'Manage RSS subscriptions: RSS [ add ] <name> <url> - RSS [ del ] <name> - RSS show <name> - RSS list',
+	    rss => 'Manage RSS subscriptions: RSS add <name> <url> - RSS del <name> - RSS show <name> - RSS list',
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
@@ -483,11 +483,15 @@ sub irc_botcmd_rss {
     }
   }
   elsif ($action eq 'show') {
-    my @replies = rss_give_latest($dbh, $feed);
-    foreach my $line (@replies) {
-      bot_says($where, $line);
-    }
+    if (! $feed) {
+      return bot_says($where, "I need a feed name to show.");
+    } else {
+      my @replies = rss_give_latest($dbh, $feed);
+      foreach my $line (@replies) {
+	bot_says($where, $line);
+      }
     return;
+    }
   }
 
   unless (check_if_op($where, $nick) or check_if_admin($mask)) {
