@@ -222,6 +222,7 @@ POE::Session->create(
 		     irc_botcmd_g
 		     irc_botcmd_gi
 		     irc_botcmd_gv
+		     irc_botcmd_gw
 		     irc_botcmd_imdb
 		     irc_botcmd_quote
 		     irc_botcmd_meteo
@@ -258,6 +259,7 @@ sub _start {
             g => 'Do a google search: Takes one or more arguments as search values.',
             gi => 'Do a search on google images.',
             gv => 'Do a search on google videos.',
+            gw => 'Do a search on wikipedia by google',
             bash => 'Get a random quote from bash.org - Optionally accepts one number as argument: bash <number>',
             urban => 'Get definitions from the urban dictionary | "urban url <word>" asks for the url',
             karma => 'Get the karma of a user | karma  <nick>',
@@ -572,6 +574,16 @@ sub irc_botcmd_gv {
   }
 }
 
+sub irc_botcmd_gw {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  return unless is_where_a_channel($where);
+  if (($arg) && $arg =~ /^\s*$/) {
+    return
+  } else {
+    my $prefix = 'site:en.wikipedia.org ';
+    bot_says($where, search_google($prefix.$arg, "web"));
+  }
+}
 
 
 
