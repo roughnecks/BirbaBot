@@ -1783,7 +1783,6 @@ sub irc_botcmd_topic {
   }
 }
 
-my $bombed;
 my $defuse;
 my $bomb_active;
 
@@ -1806,7 +1805,6 @@ sub irc_botcmd_timebomb {
       $defuse = $wires[$random];
       print "Defuse = $defuse\n";
       $bomb_active = 1;
-      my $bombed = $target;
       my $reason = "Booom!";
       $kernel->delay_set("timebomb_start", 15, $target, $channel, $botnick, $reason);
     }
