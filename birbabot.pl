@@ -1690,7 +1690,7 @@ sub irc_botcmd_devoice {
   pc_status($status, $channel, $botnick, @args);
 }
 
-sub irc_botcmd_kick {
+sub irc_botcmd_k {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
@@ -1746,7 +1746,7 @@ sub pc_ban {
   } 
 }
 
-sub pc_k {
+sub pc_kick {
   my ($nick, $target, $channel, $botnick, $reason) = @_;
   return if ("$target" eq "$botnick");
   if ($irc->is_channel_member($channel, $target)) {
