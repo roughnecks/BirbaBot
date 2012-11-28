@@ -1783,8 +1783,8 @@ sub irc_botcmd_topic {
   }
 }
 
-my $defuse;
-my $bomb_active;
+my %defuse;
+my %bomb_active;
 
 sub irc_botcmd_timebomb {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
@@ -1802,9 +1802,9 @@ sub irc_botcmd_timebomb {
       bot_says($channel, "$nick slips a bomb on $target\'s panties: the display reads \"@wires\"; $target: which wire would you like to cut to defuse the bomb? You have 15 secs left..");
       my $lenght = scalar @wires;
       my $random = int(rand($lenght));
-      $defuse = $wires[$random];
-      print "Defuse = $defuse\n";
-      $bomb_active = 1;
+      $defuse{$channel} = $wires[$random];
+      print "Defuse = $defuse{$channel}\n";
+      $bomb_active{$channel} = 1;
       my $reason = "Booom!";
       $kernel->delay_set("timebomb_start", 15, $target, $channel, $botnick, $reason);
     }
@@ -1814,9 +1814,10 @@ sub irc_botcmd_timebomb {
 sub timebomb_start {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my ($target, $channel, $botnick, $reason) = @_[ARG0..$#_];
-  if (defined $bomb_active) {
+  if (defined $bomb_active{$channel}) {
     pc_kick($botnick, $target, $channel, $botnick, $reason);
-    undef $defuse;
+    undef $bomb_active{$channel};
+    undef $defuse{$channel};
     return;
   }
 }
@@ -1828,17 +1829,18 @@ sub irc_botcmd_cut {
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
   my $wire = shift(@args);
-  return unless (defined $defuse);
-  if ($wire eq $defuse) {
-    undef $bomb_active;
+  return unless (defined $defuse{$channel});
+  if ($wire eq $defuse{$channel}) {
+    undef $bomb_active{$channel};
+    undef $defuse{$channel};
     bot_says($channel, "Congrats $nick, bomb defused.");
-    undef $defuse;
     return
   } else {
     my $target = $nick;
     my $reason = "Booom!";
     pc_kick($botnick, $target, $channel, $botnick, $reason);
-    undef $bomb_active;
+    undef $bomb_active{$channel};
+    undef $defuse{$channel};
   }
 }
 
