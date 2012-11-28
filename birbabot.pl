@@ -231,10 +231,8 @@ POE::Session->create(
 		     irc_botcmd_deop
 		     irc_botcmd_voice
 		     irc_botcmd_devoice
-		     irc_botcmd_kick
+		     irc_botcmd_k
 		     irc_botcmd_kb
-		     irc_botcmd_ban
-                     irc_botcmd_unban
                      irc_botcmd_mode
 		     irc_botcmd_topic
  		     irc_public
@@ -298,9 +296,7 @@ sub _start {
             deop => 'deop <nick> [ nick2 nick#n ]',
             voice => 'voice <nick> [ nick2 nick#n ]',
             devoice => 'devoice <nick> [ nick2 nick#n ]',
-            kick => 'kick <nick> [ reason ]',
-            ban => 'ban <nick> [ nick2 nick#n ]',
-            unban => 'unban <nick> [ nick2 nick#n ]',
+            k => 'kick <nick> [ reason ]',
             kb => 'kickban <nick> [ reason ]',
             mode => 'Set channels modes, like: mode +<mode>-<mode> and also users modes, like bans: mode +b nick!user@host',
             topic => 'Set the channel topic: topic <topic>'									      
@@ -1706,37 +1702,6 @@ sub irc_botcmd_kick {
   }
 }
 
-sub irc_botcmd_ban {
-  my ($who, $channel, $what) = @_[ARG0..$#_];
-  my $botnick = $irc->nick_name;
-  my $nick = parse_user($who);
-  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
-  my @args = "";
-  if (! $what) {
-    bot_says($channel, 'who shall i ban next?');
-    return;
-  } else {
-    @args = split(/ +/, $what);
-  }
-  my $mode = '+b';
-  pc_ban($mode, $channel, $botnick, @args);
-}
-
-sub irc_botcmd_unban {
-  my ($who, $channel, $what) = @_[ARG0..$#_];
-  my $botnick = $irc->nick_name;
-  my $nick = parse_user($who);
-  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
-  my @args = "";
-  if (! $what) {
-    @args = ("$nick");
-  } else {
-    @args = split(/ +/, $what);
-  }
-  my $mode = '-b';
-  pc_ban($mode, $channel, $botnick, @args);
-}
-
 sub irc_botcmd_kb {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
@@ -1772,12 +1737,12 @@ sub pc_ban {
     if ($irc->is_channel_member($channel, $_)) {
       my $whois = $irc->nick_info($_);
       my $host = $$whois{'Host'};
-      $irc->yield (mode => "$channel" => "$mode" => "\*!\*\@$host"); 
+      $irc->yield (mode => "$channel" => "$mode" => "\*!\*\@$host");
     }
   } 
 }
 
-sub pc_kick {
+sub pc_k {
   my ($nick, $target, $channel, $botnick, $reason) = @_;
   return if ("$target" eq "$botnick");
   if ($irc->is_channel_member($channel, $target)) {
