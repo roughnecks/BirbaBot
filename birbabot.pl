@@ -1800,16 +1800,15 @@ sub irc_botcmd_timebomb {
     return;
   } else {
     if ($irc->is_channel_member($channel, $target)) {
-      bot_says($channel, "$nick slips a bomb on $target\'s panties: the display reads \"@wires\"; $target: which wire would you like to cut to defuse the bomb? You have 15 secs left..");
+      bot_says($channel, "$nick slips a bomb on $target\'s panties: the display reads \"@wires\"; $target: which wire would you like to cut to defuse the bomb? You have about 20 secs left..");
       my $lenght = scalar @wires;
       my $random = int(rand($lenght));
       $defuse{$channel} = $wires[$random];
-      print "Defuse = $defuse{$channel}\n";
       $bomb_active{$channel} = 1;
       my $reason = "Booom!";
-      $kernel->delay_set("timebomb_start", 15, $target, $channel, $botnick, $reason);
-      $kernel->delay_set("timebomb_check", 5, $channel);
-      $kernel->delay_set("timebomb_check", 12, $channel);
+      $kernel->delay_set("timebomb_start", 20, $target, $channel, $botnick, $reason);
+      $kernel->delay_set("timebomb_check", 7, $channel);
+      $kernel->delay_set("timebomb_check", 15, $channel);
     }
   }
 }
