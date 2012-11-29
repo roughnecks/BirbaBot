@@ -238,6 +238,7 @@ POE::Session->create(
 		     irc_botcmd_timebomb
 		     irc_botcmd_cut
 		     timebomb_start
+		     timebomb_check
  		     irc_public
 		     irc_msg
                     irc_join
@@ -1807,6 +1808,8 @@ sub irc_botcmd_timebomb {
       $bomb_active{$channel} = 1;
       my $reason = "Booom!";
       $kernel->delay_set("timebomb_start", 15, $target, $channel, $botnick, $reason);
+      $kernel->delay_set("timebomb_check", 5, $channel);
+      $kernel->delay_set("timebomb_check", 12, $channel);
     }
   }
 }
@@ -1844,7 +1847,14 @@ sub irc_botcmd_cut {
   }
 }
 
-
+sub timebomb_check {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $channel = $_[ARG0];
+  if (defined $bomb_active{$channel}) {
+    bot_says($channel, "..tic tac..");
+    return
+  }
+}
 
 
 $dbh->disconnect;
