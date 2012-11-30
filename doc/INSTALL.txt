@@ -1,19 +1,21 @@
 Required perl modules to apt-get
 
-libpoe-component-irc-perl              POE::Component::IRC | POE::Component::IRC::Common
-libpoe-component-sslify-perl           POE::Component::SSLify
-libxml-rss-perl                        XML::RSS::LibXML
-libwww-perl                            LWP
-libcrypt-ssleay-perl                   Net::SSLeay
-libdbd-sqlite3-perl                    DBD::SQLite
-libgeo-ip-perl                         Geo::IP
-geoip-database                         
-libpoe-component-client-dns-perl       POE::Component::Client::DNS
-libxml-feed-perl                       XML::Feed
-libjson-any-perl                       JSON::Any
-liburi-find-perl                       URI::Find
-libyaml-perl			       YAML::Any
-libsocket6-perl			       Socket6		## with perl >= 5.14 this module is not needed
+libpoe-component-irc-perl		POE::Component::IRC | POE::Component::IRC::Common
+libpoe-component-sslify-perl		POE::Component::SSLify
+libxml-rss-perl				XML::RSS::LibXML
+libwww-perl				LWP
+libcrypt-ssleay-perl			Net::SSLeay
+libdbd-sqlite3-perl			DBD::SQLite
+libgeo-ip-perl				Geo::IP
+geoip-database
+libpoe-component-client-dns-perl	POE::Component::Client::DNS
+libxml-feed-perl			XML::Feed
+libjson-any-perl			JSON::Any
+liburi-find-perl			URI::Find
+libyaml-perl				YAML::Any
+libhtml-parser-perl			HTML::Entities
+libhtml-strip-perl			HTML::Strip
+libsocket6-perl				Socket6 ## with perl >= 5.14 this module is not needed
 
 Copy files/example.conf to some_file.conf in the bot root directory and modify it.
 cp files/example.conf bot.conf ; nano bot.conf
