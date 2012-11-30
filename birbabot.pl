@@ -57,6 +57,7 @@ use URI::Find;
 use URI::Escape;
 
 use HTML::Entities;
+use HTML::Strip;
 
 use POE;
 use POE::Component::Client::DNS;
@@ -1277,10 +1278,15 @@ sub irc_botcmd_isdown {
   my $query = $prepend . $what;
   #  print "Asking downforeveryoneorjustme for $query\n";
   my $file = get "$query";
-  if ( $file =~ m|<title>(.+)</title>|s ) {
+  if ( $file =~ m|<div\ id\=\"container\">(.+)</p>|s ) {
     my $result = $1;
-    $result =~ s/->.*$//;
-    bot_says($where, $result);
+    my $hs = HTML::Strip->new();
+    my $clean_text = $hs->parse( $result );
+    $hs->eof;
+    chomp($clean_text);
+    $clean_text =~ s/\s+/ /g;
+    $clean_text =~ s/^\s+//;
+    bot_says($where, $clean_text);
   }
 }
 
