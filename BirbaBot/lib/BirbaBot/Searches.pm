@@ -177,7 +177,7 @@ sub imdb_scan_for_titles {
   $htmlshit =~ s/\r?\n/ /gs;
   my @results;
   my $counter = 0;
-  while ($htmlshit =~ m!<a\s+href="/title/(tt[0-9]+)/".*?>([^><]+?)</a>!g) {
+  while ($htmlshit =~ m!<a\s+href="/title/(tt[0-9]+)/.*?".*?>([^><]+?)</a>!g) {
     unless ($results[$#results] and ($1 eq $results[$#results]->[1])) {
       push @results, [$2, $1]; # $title, $url
       $counter++;
