@@ -240,6 +240,8 @@ POE::Session->create(
 		     rss_sentinel
 		     tail_sentinel
 		     debget_sentinel
+		     reminder_sentinel
+		     reminder_del
 		     dns_response) ],
     ],
 );
@@ -757,6 +759,7 @@ sub irc_001 {
     }
 
     # here we register the rss_sentinel
+    $kernel->delay_set("reminder_sentinel", 15);  # first run after 15 seconds
     $kernel->delay_set("tail_sentinel", 20);  # first run after 20 seconds
     $kernel->delay_set("rss_sentinel", 40);  # first run after 40 seconds
     $kernel->delay_set("debget_sentinel", 180);  # first run after 180 seconds
@@ -1198,6 +1201,7 @@ sub irc_botcmd_version {
 }
 
 sub irc_botcmd_remind {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
   my ($who, $where, $what) = @_[ARG0..$#_];
   my $nick = parse_user($who);
   my $seconds;
@@ -1217,8 +1221,45 @@ sub irc_botcmd_remind {
     bot_says($where, 'Missing argument');
     return
   }
+  my $delay = time() + $seconds;
+  my $query = $dbh->prepare("INSERT INTO reminders (chan, author, time, phrase) VALUES (?, ?, ?, ?);");
+  $query->execute($where, $nick, $delay, $string);
+  my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
+  $select->execute($where, $nick, $string);
+  my $id = $select->fetchrow_array();
   $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
+  $_[KERNEL]->delay_add(reminder_del => $seconds => $id);
   bot_says($where, 'Reminder added.');
+}
+
+sub reminder_sentinel {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $query = $dbh->prepare("SELECT id,chan,author,time,phrase FROM reminders;");
+  $query->execute();
+  while (my @values = $query->fetchrow_array()) {
+    my $now = time();
+    my $time = $values[3];
+    my $where = $values[1];
+    my $nick = $values[2];
+    my $string = $values[4];
+    my $id = $values[0];
+    if ($time > $now) {
+      my $new_delay = $time - $now;
+      $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $new_delay );
+      $_[KERNEL]->delay_add(reminder_del => $new_delay => $id);
+    } else {
+      bot_says($where, "$nick: reminder expired before execution; was: $string");
+      my $del_query = $dbh->prepare("DELETE from reminders WHERE id = ?;");
+      $del_query->execute($id);
+    }
+  }
+}
+
+sub reminder_del {
+  my ($kernel, $sender, $id) = @_[KERNEL, SENDER, ARG0];
+  my $del_query = $dbh->prepare("DELETE from reminders WHERE id = ?;");
+  $del_query->execute($id);
+  print "remider deleted\n";
 }
 
 sub irc_botcmd_wikiz {

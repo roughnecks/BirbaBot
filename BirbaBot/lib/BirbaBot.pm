@@ -79,6 +79,13 @@ sub create_bot_db {
             chan    VARCHAR(30),
             author  VARCHAR(30),
             phrase  TEXT);');
+
+  $dbh->do('CREATE TABLE IF NOT EXISTS reminders (
+            id      INTEGER PRIMARY KEY,
+            chan    VARCHAR(30),
+            author  VARCHAR(30),
+            time    INT,
+            phrase  TEXT);');
   return 1;
 }
 
