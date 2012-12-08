@@ -846,6 +846,7 @@ sub irc_public {
     my ($sender, $who, $where, $what) = @_[SENDER, ARG0 .. ARG2];
     my $nick = ( split /!/, $who )[0];
     my $channel = $where->[0];
+    my $botnick = $irc->nick_name;
 
     # debug log
     if ($msg_log == 1) {
@@ -906,6 +907,10 @@ sub irc_public {
       elsif (! $irc->is_channel_member($channel, $karmanick)) {
 	print "$karmanick is not here, skipping\n";
 	return;
+      }
+      elsif ($karmanick eq $botnick) {
+	bot_says($channel, "meeow");
+	bot_says($channel, karma_manage($dbh, $karmanick, $karmaaction));
       }
       else {
 	bot_says($channel, karma_manage($dbh, $karmanick, $karmaaction));
