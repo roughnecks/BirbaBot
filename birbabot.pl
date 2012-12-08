@@ -914,7 +914,9 @@ sub irc_public {
 	} else {
 	  bot_says($channel, "fhhhhrrrrruuuuuuuuuuu")
 	}
-	karma_manage($dbh, $karmanick, $karmaaction)
+	print print_timestamp(),
+	  karma_manage($dbh, $karmanick, $karmaaction), "\n";
+	return;
       }
       else {
 	bot_says($channel, karma_manage($dbh, $karmanick, $karmaaction));
