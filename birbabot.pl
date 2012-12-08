@@ -909,8 +909,12 @@ sub irc_public {
 	return;
       }
       elsif ($karmanick eq $botnick) {
-	bot_says($channel, "meeow");
-	bot_says($channel, karma_manage($dbh, $karmanick, $karmaaction));
+	if ($karmaaction eq '++') {
+	  bot_says($channel, "meeow")
+	} else {
+	  bot_says($channel, "fhhhhrrrrruuuuuuuuuuu")
+	}
+	karma_manage($dbh, $karmanick, $karmaaction)
       }
       else {
 	bot_says($channel, karma_manage($dbh, $karmanick, $karmaaction));
