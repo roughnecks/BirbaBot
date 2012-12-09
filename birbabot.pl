@@ -1277,8 +1277,9 @@ sub reminder_del {
 
 sub irc_botcmd_lremind {
   my $where = $_[ARG1];
-  my $query = $dbh->prepare("SELECT id,author,time,phrase FROM reminders WHERE chan='$where';");
-  $query->execute();
+  my $query = $dbh->prepare("SELECT id,author,time,phrase FROM reminders WHERE chan= ?;");
+  $query->execute($where);
+  my $count;
   while (my @values = $query->fetchrow_array()) {
     my $now = time();
     my $time = $values[2];
@@ -1290,7 +1291,9 @@ sub irc_botcmd_lremind {
     my $hours = ($eta/(60*60))%24;
     my $mins = ($eta/60)%60;
     bot_says($where, "Reminder $id for $nick: $string, happens in $days day(s), $hours hour(s) and $mins minute(s)");
+    $count++
   }
+  bot_says($where, "No active reminders for $where") unless $count;
 }
 
 
