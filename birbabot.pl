@@ -229,6 +229,7 @@ POE::Session->create(
 		     irc_botcmd_meteo
 		     irc_botcmd_deb
 		     irc_botcmd_debsearch
+		     irc_botcmd_lremind
 		     irc_public
 		     irc_msg
                     irc_join
@@ -273,6 +274,7 @@ sub _start {
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ]',
             done => 'delete something from the channel TODO; done #id',
 	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
+            lremind => 'List active reminders in current channel',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: [kw new] foo is bar | [kw new] "foo is bar" is yes, probably foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw show] foo | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key. For special keywords usage please read the doc/Factoids.txt help file',
 	    meteo => 'Query the weather for location | meteo <city>',							       
@@ -1266,6 +1268,25 @@ sub reminder_del {
   $del_query->execute($id);
   print "remider deleted\n";
 }
+
+sub irc_botcmd_lremind {
+  my $where = $_[ARG1];
+  my $query = $dbh->prepare("SELECT id,author,time,phrase FROM reminders WHERE chan='$where';");
+  $query->execute();
+  while (my @values = $query->fetchrow_array()) {
+    my $now = time();
+    my $time = $values[2];
+    my $nick = $values[1];
+    my $string = $values[3];
+    my $id = $values[0];
+    my $eta = $time - $now;
+    my $days = int($eta/(24*60*60));
+    my $hours = ($eta/(60*60))%24;
+    my $mins = ($eta/60)%60;
+    bot_says($where, "Reminder $id for $nick: $string, happens in $days day(s), $hours hour(s) and $mins minute(s)");
+  }
+}
+
 
 sub irc_botcmd_wikiz {
   my ($where, $arg) = @_[ARG1, ARG2];
