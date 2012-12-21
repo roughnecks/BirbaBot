@@ -1279,7 +1279,7 @@ sub reminder_del {
 
 sub irc_botcmd_lremind {
   my $where = $_[ARG1];
-  my $query = $dbh->prepare("SELECT id,author,time,phrase FROM reminders WHERE chan= ?;");
+  my $query = $dbh->prepare("SELECT id,author,time,phrase FROM reminders WHERE chan= ? ORDER by time ASC;");
   $query->execute($where);
   my $count;
   while (my @values = $query->fetchrow_array()) {
