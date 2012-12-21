@@ -273,7 +273,7 @@ sub _start {
 	    notes => 'Without arguments lists pending notes by current user | "notes del <nickname>" Deletes all pending notes from the current user to <nickname>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ]',
             done => 'delete something from the channel TODO; done #id',
-	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
+	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" or by "xdxhxm days, hours and minutes" | remind [ <x> | <xhxm> | <xdxhxm> ] <message> , assuming "x" is a number',
             lremind => 'List active reminders in current channel',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: [kw new] foo is bar | [kw new] "foo is bar" is yes, probably foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw show] foo | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key. For special keywords usage please read the doc/Factoids.txt help file',
@@ -1222,9 +1222,11 @@ sub irc_botcmd_remind {
   my $time = shift(@args);
   my $string = join (" ", @args);
   if (($string) && defined $string) {
-    if (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
+    if (($time) && defined $time && $time =~ m/^(\d+)d(\d+)h(\d+)m$/) {
+      $seconds = ($1*86400)+($2*3600)+($3*60);
+    } elsif (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
       $seconds = ($1*3600)+($2*60);
-    } elsif (($time) && defined $time && $time =~ m/^(\d+)$/) {
+    } elsif (($time) && defined $time && $time =~ m/^(\d+)m?$/) {
       $seconds = $1*60;
     } else {
       bot_says($where, 'Wrong syntax: ask me "help remind" <= This is for the lazy one :)');
@@ -1272,7 +1274,7 @@ sub reminder_del {
   my ($kernel, $sender, $id) = @_[KERNEL, SENDER, ARG0];
   my $del_query = $dbh->prepare("DELETE from reminders WHERE id = ?;");
   $del_query->execute($id);
-  print "remider deleted\n";
+  print "reminder deleted\n";
 }
 
 sub irc_botcmd_lremind {
