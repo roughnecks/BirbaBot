@@ -240,6 +240,7 @@ POE::Session->create(
 		     irc_botcmd_cut
 		     timebomb_start
 		     timebomb_check
+		     irc_botcmd_lremind
  		     irc_public
 		     irc_msg
                     irc_join
@@ -251,6 +252,8 @@ POE::Session->create(
 		     rss_sentinel
 		     tail_sentinel
 		     debget_sentinel
+		     reminder_sentinel
+		     reminder_del
 		     dns_response) ],
     ],
 );
@@ -281,7 +284,8 @@ sub _start {
 	    notes => 'Without arguments lists pending notes by current user | "notes del <nickname>" Deletes all pending notes from the current user to <nickname>',
             todo => 'add something to the channel TODO; todo [ add "foo" | rearrange | done #id ]',
             done => 'delete something from the channel TODO; done #id',
-	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" | remind [ <x> | <xhxm> ] <message> , assuming "x" is a number',
+	    remind => 'Store an alarm for the current user, delayed by "x minutes" or by "xhxm hours and minutes" or by "xdxhxm days, hours and minutes" | remind [ <x> | <xhxm> | <xdxhxm> ] <message> , assuming "x" is a number',
+            lremind => 'List active reminders in current channel',
 	    wikiz => 'Performs a search on "laltrowiki" and retrieves urls matching given argument | wikiz <arg>',
             kw => 'Manage the keywords: [kw new] foo is bar | [kw new] "foo is bar" is yes, probably foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw show] foo | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key. For special keywords usage please read the doc/Factoids.txt help file',
 	    meteo => 'Query the weather for location | meteo <city>',							       
@@ -778,6 +782,7 @@ sub irc_001 {
     }
 
     # here we register the rss_sentinel
+    $kernel->delay_set("reminder_sentinel", 15);  # first run after 15 seconds
     $kernel->delay_set("tail_sentinel", 20);  # first run after 20 seconds
     $kernel->delay_set("rss_sentinel", 40);  # first run after 40 seconds
     $kernel->delay_set("debget_sentinel", 180);  # first run after 180 seconds
@@ -864,6 +869,7 @@ sub irc_public {
     my ($sender, $who, $where, $what) = @_[SENDER, ARG0 .. ARG2];
     my $nick = ( split /!/, $who )[0];
     my $channel = $where->[0];
+    my $botnick = $irc->nick_name;
 
     # debug log
     if ($msg_log == 1) {
@@ -923,6 +929,16 @@ sub irc_public {
       } 
       elsif (! $irc->is_channel_member($channel, $karmanick)) {
 	print "$karmanick is not here, skipping\n";
+	return;
+      }
+      elsif ($karmanick eq $botnick) {
+	if ($karmaaction eq '++') {
+	  bot_says($channel, "meeow")
+	} else {
+	  bot_says($channel, "fhhhhrrrrruuuuuuuuuuu")
+	}
+	print print_timestamp(),
+	  karma_manage($dbh, $karmanick, $karmaaction), "\n";
 	return;
       }
       else {
@@ -1219,6 +1235,7 @@ sub irc_botcmd_version {
 }
 
 sub irc_botcmd_remind {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
   my ($who, $where, $what) = @_[ARG0..$#_];
   my $nick = parse_user($who);
   my $seconds;
@@ -1226,9 +1243,11 @@ sub irc_botcmd_remind {
   my $time = shift(@args);
   my $string = join (" ", @args);
   if (($string) && defined $string) {
-    if (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
+    if (($time) && defined $time && $time =~ m/^(\d+)d(\d+)h(\d+)m$/) {
+      $seconds = ($1*86400)+($2*3600)+($3*60);
+    } elsif (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
       $seconds = ($1*3600)+($2*60);
-    } elsif (($time) && defined $time && $time =~ m/^(\d+)$/) {
+    } elsif (($time) && defined $time && $time =~ m/^(\d+)m?$/) {
       $seconds = $1*60;
     } else {
       bot_says($where, 'Wrong syntax: ask me "help remind" <= This is for the lazy one :)');
@@ -1238,9 +1257,68 @@ sub irc_botcmd_remind {
     bot_says($where, 'Missing argument');
     return
   }
+  my $delay = time() + $seconds;
+  my $query = $dbh->prepare("INSERT INTO reminders (chan, author, time, phrase) VALUES (?, ?, ?, ?);");
+  $query->execute($where, $nick, $delay, $string);
+  my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
+  $select->execute($where, $nick, $string);
+  my $id = $select->fetchrow_array();
   $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
+  $_[KERNEL]->delay_add(reminder_del => $seconds => $id);
   bot_says($where, 'Reminder added.');
 }
+
+sub reminder_sentinel {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $query = $dbh->prepare("SELECT id,chan,author,time,phrase FROM reminders;");
+  $query->execute();
+  while (my @values = $query->fetchrow_array()) {
+    my $now = time();
+    my $time = $values[3];
+    my $where = $values[1];
+    my $nick = $values[2];
+    my $string = $values[4];
+    my $id = $values[0];
+    if ($time > $now) {
+      my $new_delay = $time - $now;
+      $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $new_delay );
+      $_[KERNEL]->delay_add(reminder_del => $new_delay => $id);
+    } else {
+      bot_says($where, "$nick: reminder expired before execution; was: $string");
+      my $del_query = $dbh->prepare("DELETE from reminders WHERE id = ?;");
+      $del_query->execute($id);
+    }
+  }
+}
+
+sub reminder_del {
+  my ($kernel, $sender, $id) = @_[KERNEL, SENDER, ARG0];
+  my $del_query = $dbh->prepare("DELETE from reminders WHERE id = ?;");
+  $del_query->execute($id);
+  print "reminder deleted\n";
+}
+
+sub irc_botcmd_lremind {
+  my $where = $_[ARG1];
+  my $query = $dbh->prepare("SELECT id,author,time,phrase FROM reminders WHERE chan= ? ORDER by time ASC;");
+  $query->execute($where);
+  my $count;
+  while (my @values = $query->fetchrow_array()) {
+    my $now = time();
+    my $time = $values[2];
+    my $nick = $values[1];
+    my $string = $values[3];
+    my $id = $values[0];
+    my $eta = $time - $now;
+    my $days = int($eta/(24*60*60));
+    my $hours = ($eta/(60*60))%24;
+    my $mins = ($eta/60)%60;
+    bot_says($where, "Reminder $id for $nick: $string, happens in $days day(s), $hours hour(s) and $mins minute(s)");
+    $count++
+  }
+  bot_says($where, "No active reminders for $where") unless $count;
+}
+
 
 sub irc_botcmd_wikiz {
   my ($where, $arg) = @_[ARG1, ARG2];
