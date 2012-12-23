@@ -178,6 +178,9 @@ rss_clean_unused_feeds($dbh, \@channels);
 
 my $starttime = time;
 
+my $bbold = "\x{0002}";
+my $ebold = "\x{000F}";
+
 ### starting POE stuff
 
 my $irc = POE::Component::IRC::State->spawn(%serverconfig) 
@@ -1287,6 +1290,7 @@ sub irc_botcmd_lremind {
     my $time = $values[2];
     my $nick = $values[1];
     my $string = $values[3];
+    my $string = $bbold . $string . $ebold;
     my $id = $values[0];
     my $eta = $time - $now;
     my $days = int($eta/(24*60*60));
