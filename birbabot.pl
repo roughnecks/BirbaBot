@@ -1311,7 +1311,7 @@ sub irc_botcmd_lremind {
     my $time = $values[2];
     my $nick = $values[1];
     my $string = $values[3];
-    my $string = $bbold . $string . $ebold;
+    $string = $bbold . $string . $ebold;
     my $id = $values[0];
     my $eta = $time - $now;
     my $days = int($eta/(24*60*60));
@@ -1889,7 +1889,7 @@ sub irc_botcmd_topic {
   if ((! $topic) or ($topic =~ m/^\s*$/)) {
     bot_says($channel, 'Missing argument (the actual topic to set)');
   } else {
-    return unless (check_if_op($channel, $nick));
+    return unless (check_if_op($channel, $nick)) || (check_if_admin($who));
     $irc->yield (topic => "$channel" => "$topic");
   }
 }
