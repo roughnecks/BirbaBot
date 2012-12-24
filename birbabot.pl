@@ -1816,6 +1816,10 @@ sub irc_botcmd_kb {
 
 sub pc_status {
   my ($status, $channel, $botnick, @args) = @_;
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
   foreach (@args) {
     next if ("$_" eq "$botnick");
     if ($irc->is_channel_member($channel, $_)) {
@@ -1826,6 +1830,10 @@ sub pc_status {
 
 sub pc_ban {
   my ($mode, $channel, $botnick, @args) = @_;
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
   foreach (@args) {
     next if ("$_" eq "$botnick");
     if ($irc->is_channel_member($channel, $_)) {
@@ -1839,6 +1847,10 @@ sub pc_ban {
 sub pc_kick {
   my ($nick, $target, $channel, $botnick, $reason) = @_;
   return if ("$target" eq "$botnick");
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
   if ($irc->is_channel_member($channel, $target)) {
     if ($reason) {
       my $message = $reason.' ('.$nick.')';
@@ -1853,13 +1865,23 @@ sub pc_kick {
 
 sub irc_botcmd_mode {
   my ($who, $channel, $mode) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
   return unless (check_if_admin($who));
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
   $irc->yield (mode => "$channel" => "$mode");
 }
 
 sub irc_botcmd_topic {
   my ($who, $channel, $topic) = @_[ARG0..$#_];
   my $nick = parse_user($who);
+  my $botnick = $irc->nick_name;
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
   if ((! $topic) or ($topic =~ m/^\s*$/)) {
     bot_says($channel, 'Missing argument (the actual topic to set)');
   } else {
@@ -1867,6 +1889,8 @@ sub irc_botcmd_topic {
     $irc->yield (topic => "$channel" => "$topic");
   }
 }
+
+## Game: Timebomb
 
 my %defuse;
 my %bomb_active;
@@ -1879,6 +1903,10 @@ sub irc_botcmd_timebomb {
   my @args = split(/ +/, $what);
   my $target = shift(@args);
   my @wires = ('red', 'yellow', 'blue', 'brown', 'pink');
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "op me first; You know, just in case ;)");
+    return
+  }
   if ($target eq $botnick) {
     bot_says($channel, "$nick: you mad bro?!");
     return;
