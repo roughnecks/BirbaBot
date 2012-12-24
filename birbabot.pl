@@ -52,7 +52,6 @@ use BirbaBot::Quotes qw(ircquote_add
 use BirbaBot::Tail qw(file_tail);
 use BirbaBot::Debian qw(deb_pack_versions deb_pack_search);
 
-
 use URI::Find;
 use URI::Escape;
 
@@ -232,8 +231,20 @@ POE::Session->create(
 		     irc_botcmd_meteo
 		     irc_botcmd_deb
 		     irc_botcmd_debsearch
+		     irc_botcmd_op
+		     irc_botcmd_deop
+		     irc_botcmd_voice
+		     irc_botcmd_devoice
+		     irc_botcmd_k
+		     irc_botcmd_kb
+                     irc_botcmd_mode
+		     irc_botcmd_topic
+		     irc_botcmd_timebomb
+		     irc_botcmd_cut
+		     timebomb_start
+		     timebomb_check
 		     irc_botcmd_lremind
-		     irc_public
+ 		     irc_public
 		     irc_msg
                     irc_join
                     irc_part
@@ -292,7 +303,17 @@ sub _start {
 	    free => 'Show system memory usage',
             restart => 'Restart BirbaBot',
             pull => 'Execute a git pull',
-            anotes => 'Admin search and deletion of pending notes: without arguments list all the pending notes | "anotes del <nick>" Deletes all pending notes from "nick".'
+            anotes => 'Admin search and deletion of pending notes: without arguments list all the pending notes | "anotes del <nick>" Deletes all pending notes from "nick".',
+            op => 'op <nick> [ nick2 nick#n ]',
+            deop => 'deop <nick> [ nick2 nick#n ]',
+            voice => 'voice <nick> [ nick2 nick#n ]',
+            devoice => 'devoice <nick> [ nick2 nick#n ]',
+            k => 'kick <nick> [ reason ]',
+            kb => 'kickban <nick> [ reason ]',
+            mode => 'Set channels modes, like: mode +<mode>-<mode> and also users modes, like bans: mode +b nick!user@host',
+	    topic => 'Set the channel topic: topic <topic>',
+            timebomb => 'Game: place the bomb on <nick> panties; use cut <wire> to defuse it.',
+            cut => 'Defuse the Bomb by cutting the right colored wire: cut <wire>'				      
 		    },
             In_channels => 1,
 	    Auth_sub => \&check_if_fucker,
@@ -1698,6 +1719,256 @@ sub _kw_manage_request {
     }
   }
   return;
+}
+
+
+## Public Commands - pc
+
+sub irc_botcmd_op {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
+  my $status = '+o';
+  pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_deop {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
+  my $status = '-o';
+  pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_voice {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
+  my $status = '+v';
+  pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_devoice {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  my @args = "";
+  if (! $what) {
+    @args = ("$nick");
+  } else {
+    @args = split(/ +/, $what);
+  }
+  my $status = '-v';
+  pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_k {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  if (! $what) {
+    bot_says($channel, 'lemme know who has to be kicked');
+    return;
+  } else {
+    my @args = split(/ +/, $what);
+    my $target = shift(@args);
+    my $reason = join (" ", @args);    
+    pc_kick($nick, $target, $channel, $botnick, $reason);
+  }
+}
+
+sub irc_botcmd_kb {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  return unless (check_if_op($channel, $nick) || check_if_admin($who)) ;
+  if (! $what) {
+    bot_says($channel, 'lemme know who has to be kicked');
+    return;
+  } else {
+    my $mode = '+b';
+    my @args = split(/ +/, $what);
+    my $target = shift(@args);
+    my $reason = join (" ", @args);    
+    pc_ban($mode, $channel, $botnick, $target);
+    pc_kick($nick, $target, $channel, $botnick, $reason);
+  }
+}
+
+sub pc_status {
+  my ($status, $channel, $botnick, @args) = @_;
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
+  foreach (@args) {
+    next if ("$_" eq "$botnick");
+    if ($irc->is_channel_member($channel, $_)) {
+      $irc->yield (mode => "$channel" => "$status" => "$_");
+    }
+  } 
+}
+
+sub pc_ban {
+  my ($mode, $channel, $botnick, @args) = @_;
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
+  foreach (@args) {
+    next if ("$_" eq "$botnick");
+    if ($irc->is_channel_member($channel, $_)) {
+      my $whois = $irc->nick_info($_);
+      my $host = $$whois{'Host'};
+      $irc->yield (mode => "$channel" => "$mode" => "\*!\*\@$host");
+    }
+  } 
+}
+
+sub pc_kick {
+  my ($nick, $target, $channel, $botnick, $reason) = @_;
+  return if ("$target" eq "$botnick");
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
+  if ($irc->is_channel_member($channel, $target)) {
+    if ($reason) {
+      my $message = $reason.' ('.$nick.')';
+      $irc->yield (kick => "$channel" => "$target" => "$message");
+    } else {
+      my $message = 'no reason given'.' ('.$nick.')';
+      $irc->yield (kick => "$channel" => "$target" => "$message");
+    }
+  }
+}
+
+
+sub irc_botcmd_mode {
+  my ($who, $channel, $mode) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  return unless (check_if_admin($who));
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
+  $irc->yield (mode => "$channel" => "$mode");
+}
+
+sub irc_botcmd_topic {
+  my ($who, $channel, $topic) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  my $botnick = $irc->nick_name;
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "I need op");
+    return
+  }
+  if ((! $topic) or ($topic =~ m/^\s*$/)) {
+    bot_says($channel, 'Missing argument (the actual topic to set)');
+  } else {
+    return unless (check_if_op($channel, $nick));
+    $irc->yield (topic => "$channel" => "$topic");
+  }
+}
+
+## Game: Timebomb
+
+my %defuse;
+my %bomb_active;
+
+sub irc_botcmd_timebomb {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  my $target = shift(@args);
+  my @wires = ('red', 'yellow', 'blue', 'brown', 'pink');
+  if (! check_if_op($channel, $botnick)) {
+    bot_says($channel, "op me first; You know, just in case ;)");
+    return
+  }
+  if ($target eq $botnick) {
+    bot_says($channel, "$nick: you mad bro?!");
+    return;
+  } else {
+    if ($irc->is_channel_member($channel, $target)) {
+      bot_says($channel, "$nick slips a bomb on $target\'s panties: the display reads \"@wires\"; $target: which wire would you like to cut to defuse the bomb? You have about 20 secs left..");
+      my $lenght = scalar @wires;
+      my $random = int(rand($lenght));
+      $defuse{$channel} = $wires[$random];
+      $bomb_active{$channel} = 1;
+      my $reason = "Booom!";
+      $kernel->delay_set("timebomb_start", 20, $target, $channel, $botnick, $reason);
+      $kernel->delay_set("timebomb_check", 7, $channel);
+      $kernel->delay_set("timebomb_check", 15, $channel);
+    }
+  }
+}
+
+sub timebomb_start {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my ($target, $channel, $botnick, $reason) = @_[ARG0..$#_];
+  if (defined $bomb_active{$channel}) {
+    pc_kick($botnick, $target, $channel, $botnick, $reason);
+    undef $bomb_active{$channel};
+    undef $defuse{$channel};
+    return;
+  }
+}
+
+
+sub irc_botcmd_cut {
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $botnick = $irc->nick_name;
+  my $nick = parse_user($who);
+  my @args = split(/ +/, $what);
+  my $wire = shift(@args);
+  return unless (defined $defuse{$channel});
+  if ($wire eq $defuse{$channel}) {
+    undef $bomb_active{$channel};
+    undef $defuse{$channel};
+    bot_says($channel, "Congrats $nick, bomb defused.");
+    return
+  } else {
+    my $target = $nick;
+    my $reason = "Booom!";
+    pc_kick($botnick, $target, $channel, $botnick, $reason);
+    undef $bomb_active{$channel};
+    undef $defuse{$channel};
+  }
+}
+
+sub timebomb_check {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $channel = $_[ARG0];
+  if (defined $bomb_active{$channel}) {
+    bot_says($channel, "..tic tac..");
+    return
+  }
 }
 
 
