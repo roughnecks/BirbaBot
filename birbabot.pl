@@ -1923,8 +1923,10 @@ sub irc_botcmd_timebomb {
       $bomb_active{$channel} = 1;
       my $reason = "Booom!";
       $kernel->delay_set("timebomb_start", 20, $target, $channel, $botnick, $reason);
-      $kernel->delay_set("timebomb_check", 7, $channel);
-      $kernel->delay_set("timebomb_check", 15, $channel);
+      my $tic = 12;
+      $kernel->delay_set("timebomb_check", 7, $channel, $tic);
+      $tic = 5;
+      $kernel->delay_set("timebomb_check", 15, $channel, $tic);
     }
   }
 }
@@ -1964,9 +1966,9 @@ sub irc_botcmd_cut {
 
 sub timebomb_check {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
-  my $channel = $_[ARG0];
+  my ($channel, $tic) = @_[ARG0, ARG1];
   if (defined $bomb_active{$channel}) {
-    bot_says($channel, "..tic tac..");
+    bot_says($channel, "\(\-$tic\) ..tic tac..");
     return
   }
 }
