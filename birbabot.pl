@@ -1906,7 +1906,14 @@ sub irc_botcmd_timebomb {
   my $nick = parse_user($who);
   my @args = split(/ +/, $what);
   my $target = shift(@args);
-  my @wires = ('red', 'yellow', 'blue', 'brown', 'pink');
+  my @colors = ('red', 'yellow', 'blue', 'brown', 'pink', 'green', 'gold', 'magenta', 'orange', 'beige', 'black', 'grey', 'lime', 'navy');
+  my @wires;
+  while (@wires <= 3) {
+    my $lenght = scalar @colors;
+    my $random = int(rand($lenght));
+    my $wire = splice(@colors,$random,1);
+    push @wires,$wire;
+  }
   if (! check_if_op($channel, $botnick)) {
     bot_says($channel, "op me first; You know, just in case ;)");
     return
