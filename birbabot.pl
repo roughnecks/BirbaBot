@@ -1923,7 +1923,7 @@ sub irc_botcmd_timebomb {
     return;
   } else {
     if ($irc->is_channel_member($channel, $target)) {
-      bot_says($channel, "$nick slips a bomb on $target\'s panties: the display reads \"@wires\"; $target: which wire would you like to cut to defuse the bomb? You have about 20 secs left..");
+      bot_says($channel, "$nick slips a bomb on $target\'s panties: the display reads \"$bbold@wires$ebold\"; $target: which wire would you like to cut to defuse the bomb? You have about 20 secs left..");
       my $lenght = scalar @wires;
       my $random = int(rand($lenght));
       $defuse{$channel} = $wires[$random];
