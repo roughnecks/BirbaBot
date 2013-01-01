@@ -180,6 +180,10 @@ my $starttime = time;
 my $bbold = "\x{0002}";
 my $ebold = "\x{000F}";
 
+# Let's inizialize a global variable for delayed events
+# to be populated by irc_botcmd_remind and reminder_sentinel
+my @delayed;
+
 ### starting POE stuff
 
 my $irc = POE::Component::IRC::State->spawn(%serverconfig) 
@@ -755,17 +759,38 @@ sub dns_response {
 }
 
 sub irc_disconnected {
+  my $kernel = $_[KERNEL];
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
+  if (@delayed) {
+    foreach (@delayed) {
+      $irc->delay_remove( $_ );
+    }
+  }
+  $kernel->alarm_remove_all();
   $irc->delay([ connect => { }], $reconnect_delay);
 }
 
 sub irc_error {
+  my $kernel = $_[KERNEL];
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
+  if (@delayed) {
+    foreach (@delayed) {
+      $irc->delay_remove( $_ );
+    }
+  }
+  $kernel->alarm_remove_all();
   $irc->delay([ connect => { }], $reconnect_delay);
 }
 
 sub irc_socketerr {
+  my $kernel = $_[KERNEL];
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
+  if (@delayed) {
+    foreach (@delayed) {
+      $irc->delay_remove( $_ );
+    }
+  }
+  $kernel->alarm_remove_all();
   $irc->delay([ connect => { }], $reconnect_delay);
 }
 
@@ -1266,7 +1291,8 @@ sub irc_botcmd_remind {
   my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
   $select->execute($where, $nick, $string);
   my $id = $select->fetchrow_array();
-  $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
+  my $delayed = $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
+  push @delayed, $delayed;
   $_[KERNEL]->delay_add(reminder_del => $seconds => $id);
   bot_says($where, 'Reminder added.');
 }
@@ -1284,7 +1310,8 @@ sub reminder_sentinel {
     my $id = $values[0];
     if ($time > $now) {
       my $new_delay = $time - $now;
-      $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $new_delay );
+      my $delayed = $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $new_delay );
+      push @delayed, $delayed;
       $_[KERNEL]->delay_add(reminder_del => $new_delay => $id);
     } else {
       bot_says($where, "$nick: reminder expired before execution; was: $string");
