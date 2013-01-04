@@ -261,6 +261,7 @@ POE::Session->create(
 		     debget_sentinel
 		     reminder_sentinel
 		     reminder_del
+		     delay_remove
 		     dns_response) ],
     ],
 );
@@ -759,39 +760,31 @@ sub dns_response {
 }
 
 sub irc_disconnected {
-  my $kernel = $_[KERNEL];
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
-  if (@delayed) {
-    foreach (@delayed) {
-      $irc->delay_remove( $_ );
-    }
-  }
-  $kernel->alarm_remove_all();
+  delay_remove();
   $irc->delay([ connect => { }], $reconnect_delay);
 }
 
 sub irc_error {
-  my $kernel = $_[KERNEL];
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
-  if (@delayed) {
-    foreach (@delayed) {
-      $irc->delay_remove( $_ );
-    }
-  }
-  $kernel->alarm_remove_all();
+  delay_remove();
   $irc->delay([ connect => { }], $reconnect_delay);
 }
 
 sub irc_socketerr {
-  my $kernel = $_[KERNEL];
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
-  if (@delayed) {
-    foreach (@delayed) {
-      $irc->delay_remove( $_ );
-    }
-  }
-  $kernel->alarm_remove_all();
+  delay_remove();
   $irc->delay([ connect => { }], $reconnect_delay);
+}
+
+sub delay_remove {
+  my $kernel = $_[KERNEL];
+  if (@delayed) {              
+    foreach (@delayed) {       
+      $irc->delay_remove( $_ );
+    }                          
+  }                            
+  $kernel->alarm_remove_all(); 
 }
 
 sub irc_001 {
