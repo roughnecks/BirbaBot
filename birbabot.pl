@@ -766,7 +766,7 @@ sub irc_disconnected {
       $irc->delay_remove( $_ );
     }
   }
-  $kernel->alarm_remove_all();
+#  $kernel->alarm_remove_all();
   $irc->delay([ connect => { }], $reconnect_delay);
 }
 
@@ -778,7 +778,7 @@ sub irc_error {
       $irc->delay_remove( $_ );
     }
   }
-  $kernel->alarm_remove_all();
+#  $kernel->alarm_remove_all();
   $irc->delay([ connect => { }], $reconnect_delay);
 }
 
@@ -790,7 +790,7 @@ sub irc_socketerr {
       $irc->delay_remove( $_ );
     }
   }
-  $kernel->alarm_remove_all();
+#  $kernel->alarm_remove_all();
   $irc->delay([ connect => { }], $reconnect_delay);
 }
 
