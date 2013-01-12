@@ -333,6 +333,12 @@ sub _start {
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     $kernel->delay_set('save', SAVE_INTERVAL);
+    # here we register the rss_sentinel
+    $kernel->delay_set("reminder_sentinel", 35);  # first run after 35 seconds
+    $kernel->delay_set("tail_sentinel", 40);  # first run after 40 seconds
+    $kernel->delay_set("rss_sentinel", 60);  # first run after 60 seconds
+    $kernel->delay_set("debget_sentinel", 180);  # first run after 180 seconds
+    $lastpinged = time();
     return;
 }
 
@@ -809,12 +815,6 @@ sub irc_001 {
       $irc->delay( [ join => $_ ], 10 ); 
     }
 
-    # here we register the rss_sentinel
-    $kernel->delay_set("reminder_sentinel", 15);  # first run after 15 seconds
-    $kernel->delay_set("tail_sentinel", 20);  # first run after 20 seconds
-    $kernel->delay_set("rss_sentinel", 40);  # first run after 40 seconds
-    $kernel->delay_set("debget_sentinel", 180);  # first run after 180 seconds
-    $lastpinged = time();
     return;
 }
 
@@ -1292,7 +1292,7 @@ sub irc_botcmd_remind {
   $select->execute($where, $nick, $string);
   my $id = $select->fetchrow_array();
   my $delayed = $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
-  push @delayed, $delayed;
+  #  push @delayed, $delayed;
   $_[KERNEL]->delay_add(reminder_del => $seconds => $id);
   bot_says($where, 'Reminder added.');
 }
@@ -1311,7 +1311,7 @@ sub reminder_sentinel {
     if ($time > $now) {
       my $new_delay = $time - $now;
       my $delayed = $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $new_delay );
-      push @delayed, $delayed;
+      # push @delayed, $delayed;
       $_[KERNEL]->delay_add(reminder_del => $new_delay => $id);
     } else {
       bot_says($where, "$nick: reminder expired before execution; was: $string");
