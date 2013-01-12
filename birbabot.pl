@@ -394,6 +394,7 @@ sub irc_botcmd_karma {
   my $nick = parse_user($who);
   if (($arg) && $arg =~ m/^\s*$/) {
     bot_says($where, karma_manage($dbh, $nick));
+    return;
   } elsif (($arg) && $arg =~ m/^\s*\S+\s*$/) {
     $arg =~ s/\s*//g;
     bot_says($where, karma_manage($dbh, $arg));
@@ -401,7 +402,7 @@ sub irc_botcmd_karma {
   } else {
     # self karma
     bot_says($where, karma_manage($dbh, $nick));
-    return
+    return;
   }
 }
 
