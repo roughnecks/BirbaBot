@@ -1658,7 +1658,7 @@ sub irc_botcmd_deb {
 			      $debian_relfiles_base, 
 			      $debconfig{debrels});
   if (@out) {
-    bot_says($where,  join(', ', @out));
+    bot_says($where, "Package $arg: ". join(', ', @out));
   } else {
     bot_says($where, "No packs for $arg");
   }
