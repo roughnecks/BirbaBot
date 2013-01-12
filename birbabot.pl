@@ -390,14 +390,17 @@ sub bot_says {
 }
   
 sub irc_botcmd_karma {
-  my ($where, $arg) = @_[ARG1, ARG2];
-  if ($arg) {
+  my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
+  my $nick = parse_user($who);
+  if (($arg) && $arg =~ m/^\s*$/) {
+    bot_says($where, karma_manage($dbh, $nick));
+  } elsif (($arg) && $arg =~ m/^\s*\S+\s*$/) {
     $arg =~ s/\s*//g;
     bot_says($where, karma_manage($dbh, $arg));
     return;
   } else {
-    # don't output everything
-    # bot_says($where, karma_manage($dbh));
+    # self karma
+    bot_says($where, karma_manage($dbh, $nick));
     return
   }
 }
