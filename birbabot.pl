@@ -1716,6 +1716,7 @@ sub _kw_manage_request {
 	return;
       } else {
 	$irc->yield(privmsg => $target, "$kw2 is $query");
+	$irc->yield(privmsg => $nick, "Told $target about $kw2");
       }
     } else {
       bot_says($channel, "Dunno about $target");
