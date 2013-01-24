@@ -1371,7 +1371,7 @@ sub irc_botcmd_wikiz {
 sub irc_botcmd_isdown {
   my ($where, $what) = @_[ARG1, ARG2];
   return unless is_where_a_channel($where);
-  if ($what =~ m/^\s*(http\:\/\/)?(\www\.)?([a-zA-Z0-9][\w\.-]+\.[a-z]{2,4})\s*$/) {
+  if ($what =~ m/^\s*(http\:\/\/)?(\www\.)?([a-zA-Z0-9][\w\.-]+\.[a-z]{2,4})\/?\s*$/) {
     $what = $2 . $3;
     if ($what =~ m/^\s*(www\.)?downforeveryoneorjustme\.com\s*/) {
       bot_says($where, 'You just found egg #1: http://laltromondo.dynalias.net/~img/images/sitedown.png');
