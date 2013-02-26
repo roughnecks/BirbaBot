@@ -103,6 +103,7 @@ my %serverconfig = (
 		    'localaddr' => undef,
 		    'port' => 7000,
 		    'usessl' => 1,
+		    'useipv6' => undef,
 		   );
 
 my %botconfig = (
