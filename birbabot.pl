@@ -63,6 +63,7 @@ use POE::Component::Client::DNS;
 use POE::Component::IRC::Common qw(parse_user l_irc irc_to_utf8);
 use POE::Component::IRC::State;
 use POE::Component::IRC::Plugin::BotCommand;
+use POE::Component::IRC::Plugin::CTCP;
 use Storable;
 use YAML::Any qw/LoadFile/;
 
@@ -166,6 +167,7 @@ my $relay_source = $botconfig{'relay_source'};
 my $relay_dest = $botconfig{'relay_dest'};
 my $twoways_relay = $botconfig{'twoways_relay'};
 my $msg_log = $botconfig{'msg_log'};
+my $ircname = $serverconfig{'ircname'};
 
 my $debian_relfiles_base = File::Spec->catdir(getcwd(), 'debs');
 
@@ -326,7 +328,10 @@ sub _start {
             Ignore_unknown => 1,
 								  
 								 ));
- 
+    $irc->plugin_add( 'CTCP' => POE::Component::IRC::Plugin::CTCP->new(
+								       version => 'BirbaBot, IRC Perl Bot: https://github.com/roughnecks/BirbaBot',
+								       userinfo => $ircname,
+								      ));
     $irc->yield( register => 'all' );
     $irc->yield( connect => { } );
     $kernel->delay_set('save', SAVE_INTERVAL);
