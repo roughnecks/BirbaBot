@@ -67,6 +67,8 @@ use POE::Component::IRC::Plugin::CTCP;
 use Storable;
 use YAML::Any qw/LoadFile/;
 
+our $VERSION = '1.8';
+
 use constant {
   USER_DATE     => 0,
   USER_MSG      => 1,
@@ -329,7 +331,7 @@ sub _start {
 								  
 								 ));
     $irc->plugin_add( 'CTCP' => POE::Component::IRC::Plugin::CTCP->new(
-								       version => 'BirbaBot, IRC Perl Bot: https://github.com/roughnecks/BirbaBot',
+								       version => "BirbaBot, IRC Perl Bot $VERSION: https://github.com/roughnecks/BirbaBot",
 								       userinfo => $ircname,
 								      ));
     $irc->yield( register => 'all' );
