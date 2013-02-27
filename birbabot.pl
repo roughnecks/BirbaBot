@@ -331,7 +331,7 @@ sub _start {
 								  
 								 ));
     $irc->plugin_add( 'CTCP' => POE::Component::IRC::Plugin::CTCP->new(
-								       version => "BirbaBot, IRC Perl Bot $VERSION: https://github.com/roughnecks/BirbaBot",
+								       version => "BirbaBot v.$VERSION, IRC Perl Bot: https://github.com/roughnecks/BirbaBot",
 								       userinfo => $ircname,
 								      ));
     $irc->yield( register => 'all' );
