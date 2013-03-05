@@ -51,7 +51,7 @@ print "Importing finished.\n";
 
 print "Starting deletion..\n";
 # delete non-supported facts
-my $delete = $dbh->prepare('DELETE FROM factoids WHERE key LIKE \'cmd:%\' or bar1 LIKE \'%$randnick%\';');
+my $delete = $dbh->prepare('DELETE FROM factoids WHERE key LIKE \'cmd:%\' or bar1 LIKE \'%$randnick%\' or key LIKE \'_default%\';');
 $delete->execute();
 print "Deletion finished.\n";
 
