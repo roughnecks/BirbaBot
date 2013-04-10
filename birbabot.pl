@@ -96,7 +96,7 @@ undef $fh;
 
 # initialize the db
 
-my $reconnect_delay = 300;
+my $reconnect_delay = 150;
 
 my %serverconfig = (
 		    'nick' => 'Birba',
@@ -251,6 +251,7 @@ POE::Session->create(
 		     irc_botcmd_lremind
  		     irc_public
 		     irc_msg
+		     ping_check
                     irc_join
                     irc_part
                     irc_quit
@@ -341,8 +342,8 @@ sub _start {
     $kernel->delay_set("reminder_sentinel", 35);  # first run after 35 seconds
     $kernel->delay_set("tail_sentinel", 40);  # first run after 40 seconds
     $kernel->delay_set("rss_sentinel", 60);  # first run after 60 seconds
-    $kernel->delay_set("debget_sentinel", 180);  # first run after 180 seconds
-    $lastpinged = time();
+    $kernel->delay_set("ping_check", 180);  # first run after 180 seconds
+    $kernel->delay_set("debget_sentinel", 185);  # first run after 185 seconds
     return;
 }
 
@@ -1082,14 +1083,6 @@ sub irc_botcmd_quote {
 
 sub rss_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
-  my $currentime = time();
-  if (($currentime - $lastpinged) > 200) {
-    print print_timestamp(), "no ping in more then 200 secs, checking\n";
-    $irc->yield( userhost => $serverconfig{nick} );
-    $lastpinged = time();
-    $kernel->delay_set("rss_sentinel", $botconfig{rsspolltime});
-    return
-  }
   print print_timestamp(), "Starting fetching RSS...\n";
   my $feeds = rss_get_my_feeds($dbh, $localdir);
   foreach my $channel (keys %$feeds) {
@@ -1994,6 +1987,12 @@ sub timebomb_check {
   }
 }
 
+sub ping_check {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  $irc->yield( userhost => $serverconfig{nick} );
+  $kernel->delay_set("ping_check", 60 );
+  return;
+}
 
 $dbh->disconnect;
 exit;
