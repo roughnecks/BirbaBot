@@ -248,6 +248,7 @@ POE::Session->create(
 		     irc_botcmd_cut
 		     timebomb_start
 		     timebomb_check
+		     chan_msg_parser
 		     irc_botcmd_lremind
  		     irc_public
 		     irc_msg
@@ -881,118 +882,119 @@ sub irc_quit {
 
 
 sub irc_public {
-    my ($sender, $who, $where, $what) = @_[SENDER, ARG0 .. ARG2];
-    my $nick = ( split /!/, $who )[0];
-    my $channel = $where->[0];
-    my $botnick = $irc->nick_name;
-
-    # debug log
-    if ($msg_log == 1) {
-      print print_timestamp(), "$nick/$channel: $what\n";
-    }
-
-    # relay stuff
-    if (($relay_source) && ($relay_dest)) {
-      if ($channel eq $relay_source) {
-	foreach ($what) {
-	  $what = irc_to_utf8($what);
-	  bot_says($relay_dest, "\[$relay_source/$nick\]: $what")
-	}
+  my ($sender, $who, $where, $what) = @_[SENDER, ARG0 .. ARG2];
+  my $nick = ( split /!/, $who )[0];
+  my $channel = $where->[0];
+  my $botnick = $irc->nick_name;
+  
+  # debug log
+  if ($msg_log == 1) {
+    print print_timestamp(), "$nick/$channel: $what\n";
+  }
+  
+  # relay stuff
+  if (($relay_source) && ($relay_dest)) {
+    if ($channel eq $relay_source) {
+      foreach ($what) {
+	$what = irc_to_utf8($what);
+	bot_says($relay_dest, "\[$relay_source/$nick\]: $what")
       }
     }
-
-    if ( ($twoways_relay == 1) && ($relay_source) && ($relay_dest)) {
-      if ($channel eq $relay_dest) {
-	foreach ($what) {
-	  $what = irc_to_utf8($what);
-	  bot_says($relay_source, "\[$relay_dest/$nick\]: $what")
-	}
+  }
+  
+  if ( ($twoways_relay == 1) && ($relay_source) && ($relay_dest)) {
+    if ($channel eq $relay_dest) {
+      foreach ($what) {
+	$what = irc_to_utf8($what);
+	bot_says($relay_source, "\[$relay_dest/$nick\]: $what")
       }
     }
-    # seen stuff
-    add_nick($nick, "on $channel saying: $what");
-
-    # if it's a fucker, do nothing
-    my ($auth, $spiterror) = check_if_fucker($sender, $who, $where, $what);
-    return unless $auth;
-
-    # keywords
-    if ($botconfig{'kw_prefix'}) {
-      if (index($what, $botconfig{'kw_prefix'}) == 0) {
-	# strip the prefix and pass all to the subroutine
-	my $querystripped = substr($what, 1);
-	if ((index($querystripped, ' >')) < 0) {
-	  # simulate the question for the poor bastards using the kw_prefix
-	  $querystripped .= '?';
-	}
-	return _kw_manage_request($querystripped, $nick, $where, $channel)
-      }
-    } else {
-      _kw_manage_request($what, $nick, $where, $channel)
-    }
-    
-    if ($what =~ /((AH){2,})/) {
-      bot_says($channel, "AHAHAHAHAHAH!");
-      return;
-    }
-    if ($what =~ /^\s*([^\s]+)(\+\+|--)(\s+#.+)?\s*$/) {
-      my $karmanick = $1;
-      my $karmaaction = $2;
-      if ($karmanick eq $nick) {
-	bot_says($channel, "You're cheating, moron!");
-	return;
-      } 
-      elsif (! $irc->is_channel_member($channel, $karmanick)) {
-	print "$karmanick is not here, skipping\n";
-	return;
-      }
-      elsif ($karmanick eq $botnick) {
-	if ($karmaaction eq '++') {
-	  bot_says($channel, "meeow")
-	} else {
-	  bot_says($channel, "fhhhhrrrrruuuuuuuuuuu")
-	}
-	print print_timestamp(),
-	  karma_manage($dbh, $karmanick, $karmaaction), "\n";
-	return;
-      }
-      else {
-	bot_says($channel, karma_manage($dbh, $karmanick, $karmaaction));
-	return;
-      }
-    }
-    # this will push in @longurls
-    $urifinder->find(\$what);
-    while (@longurls) {
-      my $url = shift @longurls;
-#      print "Found $url\n";
-      if ($url =~ m/^https?:\/\/(www\.)?youtube/) {
-	bot_says($channel, get_youtube_title($url));
-      }
-      if ($url =~ m/youtu\.be\/(.+)$/) {
-	my $newurl = "http://www.youtube.com/watch?v="."$1";
-	bot_says($channel, get_youtube_title($newurl));
-      }	
-
-      next if (length($url) <= 65);
-      next unless ($url =~ m/^(f|ht)tp/);
-      my $reply = $nick . "'s url: " . make_tiny_url($url);
-      bot_says($channel, $reply);
-    }
-    
-#     elsif (($what =~ /\?$/) and (int(rand(6)) == 1)) {
-#       bot_says($channel, "RTFM!");
-#     }
-#    if ($what eq "hi") {
-#      if (check_if_admin($who)) {
-#	bot_says($where, "Hello my master");
-#      } else {
-#	bot_says($where, "And who the hell are you?");
-#      }
-#    }
-    return;
+  }
+  # seen stuff
+  add_nick($nick, "on $channel saying: $what");
+  
+  # if it's a fucker, do nothing
+  my ($auth, $spiterror) = check_if_fucker($sender, $who, $where, $what);
+  return unless $auth;
+  
+  ## Let's parse channel messages to find out links and stuff
+  my $response = chan_msg_parser($what, $nick, $channel, $botnick, $where);
+  return;
 }
 
+sub chan_msg_parser {
+  my ($what, $nick, $channel, $botnick, $where) = @_;
+  
+  # this will push in @longurls
+  $urifinder->find(\$what);
+  while (@longurls) {
+    my $url = shift @longurls;
+  # print "Found $url\n";
+    if ($url =~ m/^https?:\/\/(www\.)?youtube/) {
+      bot_says($channel, get_youtube_title($url));
+    }
+    if ($url =~ m/youtu\.be\/(.+)$/) {
+      my $newurl = "http://www.youtube.com/watch?v="."$1";
+      bot_says($channel, get_youtube_title($newurl));
+    }	
+    
+    next if (length($url) <= 65);
+    next unless ($url =~ m/^(f|ht)tp/);
+    my $reply = $nick . "'s url: " . make_tiny_url($url);
+    bot_says($channel, $reply);
+  }
+  
+  # keywords
+  if ($botconfig{'kw_prefix'}) {
+    if (index($what, $botconfig{'kw_prefix'}) == 0) {
+      # strip the prefix and pass all to the subroutine
+      my $querystripped = substr($what, 1);
+      if ((index($querystripped, ' >')) < 0) {
+	# simulate the question for the poor bastards using the kw_prefix
+	$querystripped .= '?';
+      }
+      return _kw_manage_request($querystripped, $nick, $where, $channel)
+    }
+  } else {
+    _kw_manage_request($what, $nick, $where, $channel)
+  }
+  
+  # Here we parse other channel messages' content
+  if ($what =~ /((AH){2,})/) {
+    bot_says($channel, "AHAHAHAHAHAH!");
+    return;
+  }
+
+  # karma
+  if ($what =~ /^\s*([^\s]+)(\+\+|--)(\s+#.+)?\s*$/) {
+    my $karmanick = $1;
+    my $karmaaction = $2;
+    if ($karmanick eq $nick) {
+      bot_says($channel, "You're cheating, moron!");
+      return;
+    } 
+    elsif (! $irc->is_channel_member($channel, $karmanick)) {
+      print "$karmanick is not here, skipping\n";
+      return;
+    }
+    elsif ($karmanick eq $botnick) {
+      if ($karmaaction eq '++') {
+	bot_says($channel, "meeow")
+      } else {
+	bot_says($channel, "fhhhhrrrrruuuuuuuuuuu")
+      }
+      print print_timestamp(),
+	karma_manage($dbh, $karmanick, $karmaaction), "\n";
+      return;
+    }
+    else {
+      bot_says($channel, karma_manage($dbh, $karmanick, $karmaaction));
+      return;
+    }
+  } 
+}
+  
+  
 sub irc_msg {
   my ($who, $what) = @_[ARG0, ARG2];
   my $nick = parse_user($who);
