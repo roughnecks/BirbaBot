@@ -381,7 +381,7 @@ sub process_feeds {
       }
       if ($news->{content}) {
 	if ($news->{title} eq $news->{content}) {
-	  print "Not printing duplicated content in link and content";
+	  print "Not printing duplicated content in link and content\n";
 	}
 	else {
 	  $string .= $news->{content};

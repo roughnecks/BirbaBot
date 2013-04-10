@@ -344,6 +344,7 @@ sub _start {
     $kernel->delay_set("rss_sentinel", 60);  # first run after 60 seconds
     $kernel->delay_set("ping_check", 180);  # first run after 180 seconds
     $kernel->delay_set("debget_sentinel", 185);  # first run after 185 seconds
+    $lastpinged = time();
     return;
 }
 
