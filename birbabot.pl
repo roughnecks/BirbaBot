@@ -889,7 +889,7 @@ sub irc_public {
   
   # debug log
   if ($msg_log == 1) {
-    print print_timestamp(), "$nick/$channel: $what\n";
+    print print_timestamp(), "$channel \| <$nick>: $what\n";
   }
   
   # relay stuff
