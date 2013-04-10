@@ -248,7 +248,6 @@ POE::Session->create(
 		     irc_botcmd_cut
 		     timebomb_start
 		     timebomb_check
-		     chan_msg_parser
 		     irc_botcmd_lremind
  		     irc_public
 		     irc_msg
@@ -918,7 +917,7 @@ sub irc_public {
   return unless $auth;
   
   ## Let's parse channel messages to find out links and stuff
-  my $response = chan_msg_parser($what, $nick, $channel, $botnick, $where);
+  chan_msg_parser($what, $nick, $channel, $botnick, $where);
   return;
 }
 
