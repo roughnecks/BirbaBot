@@ -27,7 +27,6 @@ string telling what we did
 
 sub todo_add {
   my ($dbh, $channel, $todo) = @_;
-  print @_;
 
   my $query = $dbh->prepare("SELECT MAX(id) FROM todo WHERE chan = ?");
   $query->execute($channel);
