@@ -226,7 +226,7 @@ sub rss_fetch {
 #    print "Fetching data for $feedname\n";
     my $destfile = File::Spec->catfile($datadir, $feedname);
     my $response;
-    print "Mirroring ", $urls{$feedname}, "to  $destfile";
+    print "Mirroring ", $urls{$feedname}, " to  $destfile";
     eval { 
       $response = $ua->mirror($urls{$feedname}, $destfile);
     };
