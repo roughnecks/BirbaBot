@@ -22,6 +22,7 @@ our @EXPORT_OK = qw(ircquote_add
 		    ircquote_last 
 		    ircquote_find
 		    ircquote_num
+		    ircquote_list
 		  );
 
 our $VERSION = '0.01';
@@ -211,6 +212,25 @@ sub ircquote_num {
   }
 
   return $reply;
+}
+
+sub ircquote_list {
+  my $dbh = shift;
+  my $reply;
+  my @output;
+  my $query = $dbh->prepare('SELECT DISTINCT chan FROM quotes');
+  $query->execute();
+  my $error = $query->err;
+  if ($error) {
+    $reply = "Error while listing channels"
+  } else {
+    while ( my @channels = $query->fetchrow_array() ) {
+      push @output, $channels[0];
+    } 
+    if (@output) {
+      return $reply = "The following channels seems to have stored quotes: @output"
+    } else { return $reply = "There are no channels with quotes" } 
+  }
 }
 
 1;

@@ -66,7 +66,8 @@ use BirbaBot::Quotes qw(ircquote_add
 		    ircquote_rand 
 		    ircquote_last 
 		    ircquote_find
-		    ircquote_num);
+		    ircquote_num
+		    ircquote_list);
 use BirbaBot::Tail qw(file_tail);
 use BirbaBot::Debian qw(deb_pack_versions deb_pack_search);
 
@@ -307,7 +308,7 @@ sub _start {
 									     notes => '(notes [del <nickname>] -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
 									     op => '(op <nick> [<nick2> <nick#n>]) -- Give operator status to the given nick(s) in the current channel.',
 									     pull => '(pull) -- Execute a git pull in order to update the bot (only if you are using a git version of it).',
-									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument>) -- Manage the quotes database.',
+									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument> | list) -- Manage the quotes database.',
 									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes.',
 									     restart => '(restart) -- Restart BirbaBot',
 									     rss => '(rss [add <name> <url> | del <name> | show <name> | list]) -- Manage RSS subscriptions: RSS add, del, show, list.',
@@ -1183,8 +1184,12 @@ sub irc_botcmd_quote {
     $reply = ircquote_num($dbh, $1, $where)
   } elsif ($subcmd eq 'find' && $string =~ /.+/) {
     $reply = ircquote_find($dbh, $where, $string)
+  } elsif ($subcmd eq 'list') {
+    if (check_if_admin($who)) {
+      $reply = ircquote_list($dbh);
+    } else {$reply = "Only admin are permitted to list."}
   } else {
-    $reply = "command not supported"
+    $reply = "Command not supported"
   }
   bot_says($where, $reply);
   return
