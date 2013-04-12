@@ -100,7 +100,7 @@ print $fh $$;
 close $fh;
 undef $fh;
 
-my $reconnect_delay = 150;
+my $reconnect_delay = 120;
 
 my %serverconfig = (
 		    'nick' => 'Birba',
@@ -398,7 +398,8 @@ sub irc_ctcp_action {
   my $nick = parse_user($_[ARG0]);
   my $chan = $_[ARG1]->[0];
   my $text = $_[ARG2];
-  
+  $text = irc_to_utf8($text);
+
   add_nick($nick, "on $chan doing: * $nick $text");
   
   # debug log                                               
@@ -409,7 +410,6 @@ sub irc_ctcp_action {
   if (($relay_source) && ($relay_dest)) {
     if ($chan eq $relay_source) {
       foreach ($text) {
-	$text = irc_to_utf8($text);
 	bot_says($relay_dest, "\[$relay_source\]: * $nick $text")
       }
     }
@@ -418,7 +418,6 @@ sub irc_ctcp_action {
   if ( ($twoways_relay == 1) && ($relay_source) && ($relay_dest)) {
     if ($chan eq $relay_dest) {
       foreach ($text) {
-	$text = irc_to_utf8($text);
 	bot_says($relay_source, "\[$relay_dest\]: * $nick $text");
       }
     }
@@ -507,6 +506,7 @@ sub irc_public {
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   my $botnick = $irc->nick_name;
+  $what = irc_to_utf8($what);
   
   # debug log
   if ($msg_log == 1) {
@@ -517,7 +517,6 @@ sub irc_public {
   if (($relay_source) && ($relay_dest)) {
     if ($channel eq $relay_source) {
       foreach ($what) {
-	$what = irc_to_utf8($what);
 	bot_says($relay_dest, "\[$relay_source/$nick\]: $what")
       }
     }
@@ -526,7 +525,6 @@ sub irc_public {
   if ( ($twoways_relay == 1) && ($relay_source) && ($relay_dest)) {
     if ($channel eq $relay_dest) {
       foreach ($what) {
-	$what = irc_to_utf8($what);
 	bot_says($relay_source, "\[$relay_dest/$nick\]: $what")
       }
     }
