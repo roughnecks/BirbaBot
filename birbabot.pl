@@ -1382,6 +1382,7 @@ sub irc_botcmd_timebomb {
     bot_says($channel, "op me first; You know, just in case ;)");
     return
   }
+  return if defined $bomb_active{$channel};
   if ($target) {
     if ($target eq $botnick) {
       bot_says($channel, "$nick: you mad bro?!");
