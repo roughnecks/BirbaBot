@@ -395,12 +395,36 @@ sub irc_001 {
 }
 
 sub irc_ctcp_action {
-    my $nick = parse_user($_[ARG0]);
-    my $chan = $_[ARG1]->[0];
-    my $text = $_[ARG2];
-
-    add_nick($nick, "on $chan doing: * $nick $text");
-}
+  my $nick = parse_user($_[ARG0]);
+  my $chan = $_[ARG1]->[0];
+  my $text = $_[ARG2];
+  
+  add_nick($nick, "on $chan doing: * $nick $text");
+  
+  # debug log                                               
+  if ($msg_log == 1) {                                      
+    print print_timestamp(), "$chan \| * $nick $text\n";
+  }
+  # relay stuff
+  if (($relay_source) && ($relay_dest)) {
+    if ($chan eq $relay_source) {
+      foreach ($text) {
+	$text = irc_to_utf8($text);
+	bot_says($relay_dest, "\[$relay_source\]: * $nick $text")
+      }
+    }
+  }
+  
+  if ( ($twoways_relay == 1) && ($relay_source) && ($relay_dest)) {
+    if ($chan eq $relay_dest) {
+      foreach ($text) {
+	$text = irc_to_utf8($text);
+	bot_says($relay_source, "\[$relay_dest\]: * $nick $text");
+      }
+    }
+  }
+}     
+                                                    
 
 sub irc_disconnected {
   print print_timestamp(), "Reconnecting in $reconnect_delay seconds\n";
@@ -486,7 +510,7 @@ sub irc_public {
   
   # debug log
   if ($msg_log == 1) {
-    print print_timestamp(), "$channel \| <$nick>: $what\n";
+    print print_timestamp(), "$channel \| <$nick> $what\n";
   }
   
   # relay stuff
