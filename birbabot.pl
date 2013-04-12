@@ -1382,23 +1382,28 @@ sub irc_botcmd_timebomb {
     bot_says($channel, "op me first; You know, just in case ;)");
     return
   }
-  if ($target eq $botnick) {
-    bot_says($channel, "$nick: you mad bro?!");
-    return;
-  } else {
-    if ($irc->is_channel_member($channel, $target)) {
-      bot_says($channel, "$nick slips a bomb on $target\'s panties: the display reads \"$bbold@wires$ebold\"; $target: which wire would you like to cut to defuse the bomb? You have about 20 secs left..");
-      my $lenght = scalar @wires;
-      my $random = int(rand($lenght));
-      $defuse{$channel} = $wires[$random];
-      $bomb_active{$channel} = 1;
-      my $reason = "Booom!";
-      $kernel->delay_set("timebomb_start", 20, $target, $channel, $botnick, $reason);
-      my $tic = 12;
-      $kernel->delay_set("timebomb_check", 7, $channel, $tic);
-      $tic = 5;
-      $kernel->delay_set("timebomb_check", 15, $channel, $tic);
+  if ($target) {
+    if ($target eq $botnick) {
+      bot_says($channel, "$nick: you mad bro?!");
+      return;
+    } else {
+      if ($irc->is_channel_member($channel, $target)) {
+	bot_says($channel, "$nick slips a bomb on $target\'s panties: the display reads \"$bbold@wires$ebold\"; $target: which wire would you like to cut to defuse the bomb? You have about 20 secs left..");
+	my $lenght = scalar @wires;
+	my $random = int(rand($lenght));
+	$defuse{$channel} = $wires[$random];
+	$bomb_active{$channel} = 1;
+	my $reason = "Booom!";
+	$kernel->delay_set("timebomb_start", 20, $target, $channel, $botnick, $reason);
+	my $tic = 12;
+	$kernel->delay_set("timebomb_check", 7, $channel, $tic);
+	$tic = 5;
+	$kernel->delay_set("timebomb_check", 15, $channel, $tic);
+      }
     }
+  } else {
+    bot_says($channel, "\*system failure\*: Missing Target.");
+    return;
   }
 }
 
