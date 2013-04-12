@@ -398,7 +398,7 @@ sub irc_ctcp_action {
   my $nick = parse_user($_[ARG0]);
   my $chan = $_[ARG1]->[0];
   my $text = $_[ARG2];
-  $text = irc_to_utf8($text);
+  # $text = irc_to_utf8($text);
 
   add_nick($nick, "on $chan doing: * $nick $text");
   
@@ -506,8 +506,8 @@ sub irc_public {
   my $nick = ( split /!/, $who )[0];
   my $channel = $where->[0];
   my $botnick = $irc->nick_name;
-  $what = irc_to_utf8($what);
-  
+  # $what = irc_to_utf8($what);
+    
   # debug log
   if ($msg_log == 1) {
     print print_timestamp(), "$channel \| <$nick> $what\n";
