@@ -197,8 +197,16 @@ sub kw_find {
   }
 
   if (@out) {
-    my $output = "I know the following facts: " . join(", ", sort(@out));
-    return $output;
+    my $maxlenght = 3000;
+    my $outstring = join(", ", sort(@out));
+    if (length($outstring) <= $maxlenght) {
+      my $output = "I know the following facts: " . "$outstring";
+	return $output;
+    } elsif (length($outstring) > $maxlenght) {
+      my $outstring_cut = substr($outstring, 0, $maxlenght) . " ...";
+      my $output = "I know too many facts, here follow some of them: " . "$outstring_cut";
+      return $output;
+    }                                                                
   } else { return "Dunno about any matching fact; empty list." }
 }
 
