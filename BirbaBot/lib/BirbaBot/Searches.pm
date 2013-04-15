@@ -345,7 +345,7 @@ sub search_urban {
   while (@$results && ($counter < 3)) {
     my $res = shift(@$results);
     $res->{'term'} =~ s/ +//g;
-    $outstring .= $bbold . $counter . "." . " " .  $res->{'term'} . $ebold . ": " .
+    $outstring .= $bbold . $counter . "." . " " .  $res->{'term'} . $ebold . " " .
       $res->{'definition'} . " " . $res->{'example'} . "; ";
     $counter++;
   }
