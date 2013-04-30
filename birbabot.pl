@@ -1524,7 +1524,7 @@ sub irc_botcmd_urban {
 
 sub irc_botcmd_version {
   my $where = $_[ARG1];
-  bot_says($where, "BirbaBot v." . "$VERSION" . ", IRC Per Bot: " . 'https://github.com/roughnecks/BirbaBot');
+  bot_says($where, "BirbaBot v." . "$VERSION" . ", IRC Perl Bot: " . 'https://github.com/roughnecks/BirbaBot');
   return;
 }
 
