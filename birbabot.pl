@@ -226,6 +226,7 @@ POE::Session->create(
 						     irc_botcmd_g
 						     irc_botcmd_geoip
 						     irc_botcmd_gi
+						     irc_botcmd_git
 						     irc_botcmd_gv
 						     irc_botcmd_gw
 						     irc_botcmd_imdb
@@ -242,7 +243,6 @@ POE::Session->create(
 						     irc_botcmd_note
 						     irc_botcmd_notes
 						     irc_botcmd_op
-						     irc_botcmd_pull
 						     irc_botcmd_quote
 						     irc_botcmd_remind
 						     irc_botcmd_restart
@@ -291,6 +291,7 @@ sub _start {
 									     g => '(g <string to search>) -- Do a google search: Takes a string of one or more arguments as search pattern.',
 									     geoip => '(geoip <ip_number|hostname>) -- IP Geolocation | Takes one argument: an ip or a hostname to lookup.',
 									     gi => '(gi <string to search>) -- Do a search on google images.',
+									     git =>'(git <pull|version>) -- Pull updates from BirbaBot Git Repository or show Git Version.',
 									     gv => '(gv <string to search>) -- Do a search on google videos.',
 									     gw => '(gw <string to search>) -- Do a search on wikipedia by google',
 									     imdb => '(imdb <string|id|link>) -- Query the Internet Movie Database: takes one argument, a generic string or an id/link to fetch more data. ids are strings at the end of an imdb link, like "tt0088247".',
@@ -307,7 +308,6 @@ sub _start {
 									     note => '(note <nick> <message>) -- Send a note to a user not in the channel: he/she will get a query next time logins.',
 									     notes => '(notes [del <nickname>] -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
 									     op => '(op <nick> [<nick2> <nick#n>]) -- Give operator status to the given nick(s) in the current channel.',
-									     pull => '(pull) -- Execute a git pull in order to update the bot (only if you are using a git version of it).',
 									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument> | list) -- Manage the quotes database.',
 									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes.',
 									     restart => '(restart) -- Restart BirbaBot',
@@ -319,7 +319,7 @@ sub _start {
 									     topic => '(topic <topic>) -- Set the channel topic.',
 									     uptime => '(uptime) -- Show the Bot\'s uptime',
 									     urban => '(urban [url] <foo>) -- Get definitions from the urban dictionary | "urban url <foo>" asks for the url',
-									     version => '(version) -- Show from which git branch we are running the bot. Do not use without git',
+									     version => '(version) -- Show our version number and infos.',
 									     voice => '(voice <nick> [<nick2> <nick#n>]) -- Give voice status to someone in the current channel.',
 									     wikiz => '(wikiz <foo>) -- Perform a search on "http://laltromondo.dynalias.net/~iki" and retrieve urls matching given argument.'									    },
 								In_channels => 1,
@@ -800,6 +800,52 @@ sub irc_botcmd_gi {
   }
 }
 
+sub irc_botcmd_git {
+  my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
+  return unless (sanity_check($who, $where));
+  return unless $arg;
+  if ($arg eq 'pull') { 
+    my $gitorigin = `git config --get remote.origin.url`;
+    if ($gitorigin =~ m!^\s*ssh://!) {
+      bot_says($where, "Your git uses ssh, I can't safely pull");
+      return;
+    }
+    die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+    if ($pid) {           # parent
+      while (<KID>) {
+	bot_says($where, $_);
+      }
+      close KID;
+      return;
+    } else {
+      my @command = ("git", "pull");
+      # this is the external process, forking. It never returns
+      exec @command or die "Can't exec git: $!";
+    }
+    return;
+  } elsif ($arg eq 'version') {
+    die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+    if ($pid) { # parent
+      while (<KID>) {
+	my $line = $_;
+	unless ($line =~ m/^\s*$/) {
+	  bot_says($where, $line);
+	}
+      }
+      close KID;
+      return;
+    } else {
+      # this is the external process, forking. It never returns
+      my @command = ('git', 'log', '-n', '1');
+      exec @command or die "Can't exec git: $!";
+    }
+  } else {
+    bot_says($where, "git command accepts only 'pull' and 'version' subcommands");
+    return;
+  }
+}
+
+
 sub irc_botcmd_gv {
   my ($where, $arg) = @_[ARG1, ARG2];
   return unless is_where_a_channel($where);
@@ -1164,29 +1210,6 @@ sub irc_botcmd_op {
   pc_status($status, $channel, $botnick, @args);
 }
 
-sub irc_botcmd_pull {
-  my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
-  return unless (sanity_check($who, $where));
-  my $gitorigin = `git config --get remote.origin.url`;
-  if ($gitorigin =~ m!^\s*ssh://!) {
-    bot_says($where, "Your git uses ssh, I can't safely pull");
-    return;
-  }
-  die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
-  if ($pid) {           # parent
-    while (<KID>) {
-      bot_says($where, $_);
-    }
-    close KID;
-    return;
-  } else {
-    my @command = ("git", "pull");
-    # this is the external process, forking. It never returns
-    exec @command or die "Can't exec git: $!";
-  }
-  return;
-}
-
 sub irc_botcmd_quote {
   my ($who, $where, $what) = @_[ARG0..$#_];
   my $nick = parse_user($who);
@@ -1501,21 +1524,8 @@ sub irc_botcmd_urban {
 
 sub irc_botcmd_version {
   my $where = $_[ARG1];
-      die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
-  if ($pid) { # parent
-    while (<KID>) {
-      my $line = $_;
-      unless ($line =~ m/^\s*$/) {
-	bot_says($where, $line);
-      }
-    }
-    close KID;
-    return;
-  } else {
-    # this is the external process, forking. It never returns
-    my @command = ('git', 'log', '-n', '1');
-    exec @command or die "Can't exec git: $!";
-  }
+  bot_says($where, "BirbaBot v." . "$VERSION" . ", IRC Per Bot: " . 'https://github.com/roughnecks/BirbaBot');
+  return;
 }
 
 sub irc_botcmd_voice {
