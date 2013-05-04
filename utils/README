@@ -24,11 +24,20 @@ $ ./dpkg_facts-import.pl
 
 Copy the updated birba.db back to the root of BirbaBot, start the bot.
 
-** note
+** note #1
 
 If you added some facts before running the importer, they will not be overwritten and you'll see
 a failed execution query, like this:
 DBD::SQLite::st execute failed: column key is not unique at ./dpkg_facts-import.pl line 48.
+
+*** note #2
+
+If this is the second (or ahead) time you are about to upgrade dpkg factoids, you may need to 
+remove the old ones first. Open a sqlite shell on birba.db and execute this command:
+
+sqlite> delete from factoids where nick='dpkg';
+
+Then you can continue with the import process, as explained above.
 
 ------------------------------------------------------------------------------------------------
 
