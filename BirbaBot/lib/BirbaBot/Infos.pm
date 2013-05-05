@@ -120,6 +120,10 @@ sub kw_query {
       my $possibilities_string = $2;
       @possibilities = split (/\|/, $possibilities_string);
     }
+    elsif ($out[0] =~ m/^\s*(<action>)?\s*\((.+\|.+)\)\s*$/i) {
+      my $possibilities_string = $2;
+      @possibilities = split (/\|/, $possibilities_string);
+    }
     if (scalar @possibilities > 1) {
       my $number = scalar @possibilities;
       my $random = int(rand($number));
