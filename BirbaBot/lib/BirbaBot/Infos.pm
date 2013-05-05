@@ -119,14 +119,14 @@ sub kw_query {
     if ($out[0] =~ m/\|\|/) {
       @possibilities= split (/\|\|/, $out[0]);
     }
-    elsif ($out[0] =~ m/^\s*(<reply>)?\s*(.+)\((.+\|.+)\)\s*(.+)?$/i) {
+    elsif ($out[0] =~ m/^\s*(<reply>)?\s*(.*)\((.+\|.+)\)\s*(.*)?$/i) {
       $tag = $1;
       $message = $2;
       $message2 = $4;
       my $possibilities_string = $3;
       @possibilities = split (/\|/, $possibilities_string);
     }
-    elsif ($out[0] =~ m/^\s*(<action>)?\s*(.+)\((.+\|.+)\)\s*(.+)?$/i) {
+    elsif ($out[0] =~ m/^\s*(<action>)?\s*(.*)\((.+\|.+)\)\s*(.*)?$/i) {
       $tag = $1;
       $message = $2;
       $message2 = $4;
