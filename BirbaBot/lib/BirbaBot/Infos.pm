@@ -101,6 +101,8 @@ sub kw_query {
   # here we get the results
   my @out;
   my $redirect;
+  my $tag;
+  my $message;
 
   while (my @data = $query->fetchrow_array()) {
     foreach my $result (@data) {
@@ -116,18 +118,22 @@ sub kw_query {
     if ($out[0] =~ m/\|\|/) {
       @possibilities= split (/\|\|/, $out[0]);
     }
-    elsif ($out[0] =~ m/^\s*(<reply>)?\s*\((.+\|.+)\)\s*$/i) {
-      my $possibilities_string = $2;
+    elsif ($out[0] =~ m/^\s*(<reply>)?\s*(.+)\((.+\|.+)\)\s*$/i) {
+      $tag = $1;
+      $message = $2;
+      my $possibilities_string = $3;
       @possibilities = split (/\|/, $possibilities_string);
     }
-    elsif ($out[0] =~ m/^\s*(<action>)?\s*\((.+\|.+)\)\s*$/i) {
-      my $possibilities_string = $2;
+    elsif ($out[0] =~ m/^\s*(<action>)?\s*(.+)\((.+\|.+)\)\s*$/i) {
+      $tag = $1;
+      $message = $2;
+      my $possibilities_string = $3;
       @possibilities = split (/\|/, $possibilities_string);
     }
     if (scalar @possibilities > 1) {
       my $number = scalar @possibilities;
       my $random = int(rand($number));
-      $out[0] = $possibilities[$random];
+      $out[0] = $tag . $message . $possibilities[$random];
     }
     while ($out[0] =~ m/^\s*(<reply>){1}\s*see\s+(.+)$/i) {
       $redirect = $2;
