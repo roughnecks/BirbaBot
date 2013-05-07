@@ -25,7 +25,7 @@ while (my $line = <$fh>) {
   chomp($line);
   if ($line =~ m/^\s*(.+)\s,,,\s(.+)$/) {
     my $query = $dbh->prepare("INSERT INTO factoids (nick, key, bar1) VALUES (?, ?, ?);");
-    $query->execute('roughnecks', $1, $2);
+    $query->execute('dpkg', $1, $2);
   } else {print "Probably wrong factoid type: $line\n"}
 }
 
