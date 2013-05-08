@@ -22,6 +22,7 @@ use POE::Component::IRC::State;
 # Modules
 use Cwd;
 use Data::Dumper;
+use Date::Parse;
 use File::Basename;
 use File::Copy;
 use File::Path qw(make_path);
@@ -309,7 +310,7 @@ sub _start {
 									     notes => '(notes [del <nickname>] -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
 									     op => '(op <nick> [<nick2> <nick#n>]) -- Give operator status to the given nick(s) in the current channel.',
 									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument> | list) -- Manage the quotes database.',
-									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes.',
+									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes. Alternate syntax: ( <message> -- <date> )',
 									     restart => '(restart) -- Restart BirbaBot',
 									     rss => '(rss [add <name> <url> | del <name> | show <name> | list]) -- Manage RSS subscriptions: RSS add, del, show, list.',
 									     seen => '(seen <nick>) -- Search for a user.',
@@ -1243,27 +1244,41 @@ sub irc_botcmd_quote {
 sub irc_botcmd_remind {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my ($who, $where, $what) = @_[ARG0..$#_];
+  if ((!$what) or $what =~ m/^\s+$/) {
+    bot_says($where, 'Missing argument.');
+    return;
+  }
+  
   my $nick = parse_user($who);
   my $seconds;
   my @args = split(/ +/, $what);
   my $time = shift(@args);
   my $string = join (" ", @args);
-  if (($string) && defined $string) {
-    if (($time) && defined $time && $time =~ m/^(\d+)d(\d+)h(\d+)m$/) {
-      $seconds = ($1*86400)+($2*3600)+($3*60);
-    } elsif (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
-      $seconds = ($1*3600)+($2*60);
-    } elsif (($time) && defined $time && $time =~ m/^(\d+)m?$/) {
-      $seconds = $1*60;
-    } else {
-      bot_says($where, 'Wrong syntax: ask me "help remind" <= This is for the lazy one :)');
-      return
-    }
+  
+  if ($what =~ m,^(.+)\s+--\s+(.+?)\s*$,) {
+    $string = $1;
+    my $target;
+    eval { $target = str2time($2) };
+    return bot_says($where, "Invalid format") unless $target;
+    $seconds =  $target - time();
   } else {
-    bot_says($where, 'Missing argument');
-    return
+    if (($string) && defined $string) {
+      if (($time) && defined $time && $time =~ m/^(\d+)d(\d+)h(\d+)m$/) {
+	$seconds = ($1*86400)+($2*3600)+($3*60);
+      } elsif (($time) && defined $time && $time =~ m/^(\d+)h(\d+)m$/) {
+	$seconds = ($1*3600)+($2*60);
+      } elsif (($time) && defined $time && $time =~ m/^(\d+)m?$/) {
+	$seconds = $1*60;
+      } else {
+	bot_says($where, 'Wrong syntax: ask me "help remind"');
+	return;
+      }
+    }
   }
+  
+  return if $seconds <= 0;
   my $delay = time() + $seconds;
+  print Dumper(\$seconds);
   my $query = $dbh->prepare("INSERT INTO reminders (chan, author, time, phrase) VALUES (?, ?, ?, ?);");
   $query->execute($where, $nick, $delay, $string);
   my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
@@ -1271,7 +1286,7 @@ sub irc_botcmd_remind {
   my $id = $select->fetchrow_array();
   my $delayed = $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
   $_[KERNEL]->delay_add(reminder_del => $seconds => $id);
-  bot_says($where, 'Reminder added.');
+  bot_says($where, "reminder scheduled for " . localtime($delay));
 }
 
 sub irc_botcmd_restart {
