@@ -147,12 +147,11 @@ sub kw_query {
       } else {
 	my $queryn = $dbh->prepare("SELECT bar1 FROM factoids WHERE key=?;"); #key
 	$queryn->execute($redirect);
-	while (my @data = $queryn->fetchrow_array()) {
-	  # here we process
-	  return unless @data;
-	  if (@data) {
-	    $out[0] = $data[0];
-	  }
+	my @data = $queryn->fetchrow_array();
+	# here we process
+	return $out[0] = 'This is very bad and should not happen; failed redirection: please check the content of this fact.' unless @data;
+	if (@data) {
+	  $out[0] = $data[0];
 	}
       }
     }
