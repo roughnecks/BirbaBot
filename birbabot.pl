@@ -310,7 +310,7 @@ sub _start {
 									     notes => '(notes [del <nickname>] -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
 									     op => '(op <nick> [<nick2> <nick#n>]) -- Give operator status to the given nick(s) in the current channel.',
 									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument> | list) -- Manage the quotes database.',
-									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes. Alternate syntax: ( <message> -- <date> )',
+									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes. Alternate syntax: (<message> -- <date>). <date> accepts a wide variety of formats and an optional ZONE parameter at the end.',
 									     restart => '(restart) -- Restart BirbaBot',
 									     rss => '(rss [add <name> <url> | del <name> | show <name> | list]) -- Manage RSS subscriptions: RSS add, del, show, list.',
 									     seen => '(seen <nick>) -- Search for a user.',
