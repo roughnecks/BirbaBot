@@ -39,13 +39,21 @@ print "Succesfully connected to the sqlite database $dbname\n";
 my @all_factoids = $schema->resultset('Factoids')->all;
 print "Starting updater..\n";
 
-# Cycle through facts and get keys/values to be imported in the sqlited db
+# Cycle through facts and get keys/values to be updated/imported in the sqlited db
 foreach my $fact (@all_factoids) {
-my $key = $fact->factoid_key;
-my $value = $fact->factoid_value;
-
-my $query = $dbh->prepare("UPDATE factoids SET bar1=? WHERE key=? AND nick=?;");
-$query->execute($value, $key, 'dpkg');
+  my $key = $fact->factoid_key;
+  my $value = $fact->factoid_value;
+  
+  my $select = $dbh->prepare("SELECT key FROM factoids WHERE key=? AND nick=?;");
+  $select->execute($key, 'dpkg');
+  my $result = ($select->fetchrow_array());
+  if ($result) {
+    my $query = $dbh->prepare("UPDATE factoids SET bar1=? WHERE key=? AND nick=?;");
+    $query->execute($value, $key, 'dpkg');
+  } else {
+    my $query = $dbh->prepare("INSERT INTO factoids (nick, key, bar1) VALUES (?, ?, ?);");
+    $query->execute('dpkg', $key, $value);
+  }
 }
 print "Update finished.\n";
 
