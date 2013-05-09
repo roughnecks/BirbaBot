@@ -1278,7 +1278,6 @@ sub irc_botcmd_remind {
   
   return if $seconds <= 0;
   my $delay = time() + $seconds;
-  print Dumper(\$seconds);
   my $query = $dbh->prepare("INSERT INTO reminders (chan, author, time, phrase) VALUES (?, ?, ?, ?);");
   $query->execute($where, $nick, $delay, $string);
   my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
