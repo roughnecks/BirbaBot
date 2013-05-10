@@ -267,7 +267,6 @@ POE::Session->create(
 						     rss_sentinel
 						     save
 						     tail_sentinel
-						     timebomb_check
 						     timebomb_start) ],
 				       ],
 		    );
@@ -573,7 +572,7 @@ sub irc_socketerr {
 # Game: Timebomb
 my %defuse;
 my %bomb_active;
-
+ 
 sub irc_botcmd_anotes {
   my ($who, $where, $arg) = @_[ARG0..$#_];
   my $nick = parse_user($who);
@@ -638,6 +637,7 @@ sub irc_botcmd_choose {
 }
 
 sub irc_botcmd_cut {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
@@ -645,6 +645,7 @@ sub irc_botcmd_cut {
   my $wire = shift(@args);
   return unless (defined $defuse{$channel});
   if ($wire eq $defuse{$channel}) {
+    $kernel->delay( "timebomb_start" );
     undef $bomb_active{$channel};
     undef $defuse{$channel};
     bot_says($channel, "Congrats $nick, bomb defused.");
@@ -1433,10 +1434,6 @@ sub irc_botcmd_timebomb {
 	$bomb_active{$channel} = 1;
 	my $reason = "Booom!";
 	$kernel->delay_set("timebomb_start", 20, $target, $channel, $botnick, $reason);
-	my $tic = 12;
-	$kernel->delay_set("timebomb_check", 7, $channel, $tic);
-	$tic = 5;
-	$kernel->delay_set("timebomb_check", 15, $channel, $tic);
       }
     }
   } else {
@@ -1746,14 +1743,6 @@ sub tail_sentinel {
   $kernel->delay_set("tail_sentinel", 60)
 }
 
-sub timebomb_check {
-  my ($kernel, $sender) = @_[KERNEL, SENDER];
-  my ($channel, $tic) = @_[ARG0, ARG1];
-  if (defined $bomb_active{$channel}) {
-    bot_says($channel, "\(\-$tic\) ..tic tac..");
-    return
-  }
-}
 
 sub timebomb_start {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
