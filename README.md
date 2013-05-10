@@ -31,6 +31,7 @@ Installation
     libjson-any-perl                       JSON::Any
     liburi-find-perl                       URI::Find
     libyaml-perl                           YAML::Any
+    libhtml-strip-perl			   HTML::Strip
     libsocket6-perl                        Socket6	## with perl >= 5.14 this module is not needed
     ------------------------------------------------------------------
 
