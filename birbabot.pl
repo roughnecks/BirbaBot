@@ -1419,8 +1419,10 @@ sub irc_botcmd_timebomb {
     bot_says($channel, "op me first; You know, just in case ;)");
     return
   }
-  return if defined $bomb_active{$channel};
-  if (defined $alarm_active{$channel}) {
+  if (defined $bomb_active{$channel}) {
+    bot_says($channel, "A bomb is already set.");
+    return;
+  } elsif (defined $alarm_active{$channel}) {
     bot_says($channel, "An alarm is still active, please try again in a few seconds.");
     return;
   }
@@ -1434,6 +1436,7 @@ sub irc_botcmd_timebomb {
 	my $lenght = scalar @wires;
 	my $random = int(rand($lenght));
 	$defuse{$channel} = $wires[$random];
+#	print "defuse = $defuse{$channel}\n";
 	$bomb_active{$channel} = 1;
 	my $reason = "Booom!";
 	$kernel->delay_set("timebomb_start", 20, $target, $channel, $botnick, $reason);
