@@ -1421,7 +1421,7 @@ sub irc_botcmd_timebomb {
   }
   return if defined $bomb_active{$channel};
   if (defined $alarm_active{$channel}) {
-    bot_says($channel, "An alarm is still active, please retry again later.");
+    bot_says($channel, "An alarm is still active, please try again in a few seconds.");
     return;
   }
   if ($target) {
