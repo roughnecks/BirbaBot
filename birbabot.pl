@@ -572,6 +572,7 @@ sub irc_socketerr {
 # Game: Timebomb
 my %defuse;
 my %bomb_active;
+my %alarm_active;
  
 sub irc_botcmd_anotes {
   my ($who, $where, $arg) = @_[ARG0..$#_];
@@ -637,7 +638,6 @@ sub irc_botcmd_choose {
 }
 
 sub irc_botcmd_cut {
-  my ($kernel, $sender) = @_[KERNEL, SENDER];
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $botnick = $irc->nick_name;
   my $nick = parse_user($who);
@@ -645,7 +645,6 @@ sub irc_botcmd_cut {
   my $wire = shift(@args);
   return unless (defined $defuse{$channel});
   if ($wire eq $defuse{$channel}) {
-    $kernel->delay( "timebomb_start" );
     undef $bomb_active{$channel};
     undef $defuse{$channel};
     bot_says($channel, "Congrats $nick, bomb defused.");
@@ -1421,6 +1420,10 @@ sub irc_botcmd_timebomb {
     return
   }
   return if defined $bomb_active{$channel};
+  if (defined $alarm_active{$channel}) {
+    bot_says($channel, "An alarm is still active, please retry again later.");
+    return;
+  }
   if ($target) {
     if ($target eq $botnick) {
       bot_says($channel, "$nick: you mad bro?!");
@@ -1434,6 +1437,7 @@ sub irc_botcmd_timebomb {
 	$bomb_active{$channel} = 1;
 	my $reason = "Booom!";
 	$kernel->delay_set("timebomb_start", 20, $target, $channel, $botnick, $reason);
+	$alarm_active{$channel} = 1;
       }
     }
   } else {
@@ -1751,8 +1755,9 @@ sub timebomb_start {
     pc_kick($botnick, $target, $channel, $botnick, $reason);
     undef $bomb_active{$channel};
     undef $defuse{$channel};
+    undef $alarm_active{$channel};
     return;
-  }
+  } else { return undef $alarm_active{$channel}; }
 }
 
 # END POE related subs
