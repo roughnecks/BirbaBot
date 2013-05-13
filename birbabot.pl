@@ -471,9 +471,20 @@ sub irc_msg {
     } elsif ($query) {
       bot_says($nick, $query);
     return;
+    } 
+  } elsif ($what =~ /^[^\Q$botconfig{'botprefix'}\E](.+)\s*$/) {
+    print "info: requesting keyword $what\n";
+    my $query = (kw_query($dbh, $nick, lc($what)));
+    if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
+      $irc->yield(ctcp => $nick, "ACTION $1");
+      return;
+    } elsif ($query) {
+      bot_says($nick, $query);
+      return;
     }
   }
 }
+
 
 sub irc_notice {
   my ($who, $text) = @_[ARG0, ARG2];
