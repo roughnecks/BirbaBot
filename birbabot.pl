@@ -1678,7 +1678,7 @@ sub ping_check {
   my ($kernel, $sender) = @_[KERNEL, SENDER];                            
   my $currentime = time();                                               
   if (($currentime - $lastpinged) > 200) {                               
-    print print_timestamp(), "no ping in more then 200 secs, checking\n";
+    print print_timestamp(), "no ping in more than 200 secs, checking\n";
     $irc->yield( userhost => $serverconfig{nick} );                      
     $lastpinged = time();                                                
   }
