@@ -298,7 +298,7 @@ sub _start {
 									     k => '(kick <nick> [reason]) -- Kick someone from the current channel; reason is not mandatory.',
 									     karma => '(karma [<nick>]) -- Get the karma of a user, or yours, without argument.',
 									     kb => '(kb <nick> [reason]) -- KickBan someone from the current channel; reason is not mandatory.',
-									     kw => '(kw new|add <foo is bar | "foo is bar" is yes, probably foo is bar> | forget <foo> | delete <foo 2/3> | list | show <foo> | find <foo>) - (key<?>) - (key > <nick>) - (key >> <nick>) -- Manage the keywords: new/add, forget, delete, list, find, spit, redirect, query. For special keywords usage please read the doc/Factoids.txt help file.',
+									     kw => '(kw new|add <foo is bar | "foo is bar" is yes, probably foo is bar> | forget <foo> | delete <foo 2/3> | list | show <foo> | find <foo>) - (<!>key) - (key > <nick>) - (key >> <nick>) -- Manage the keywords: new/add, forget, delete, list, find, spit, redirect, query. For special keywords usage please read the doc/Factoids.txt help file.',
 									     isdown => '(isdown <domain>) -- Check whether a website is up or down.',
 									     lookup => '(lookup [<MX|AAAA>] <host>) -- Query Internet name servers | Takes two arguments: a record type like MX, AAAA (optional), and a host.',
 									     lremind => '(lremind) -- List active reminders in current channel, takes no argument.',
@@ -461,9 +461,9 @@ sub irc_msg {
   my ($who, $what) = @_[ARG0, ARG2];
   my $nick = parse_user($who);
   
-  if ( $what =~ /^(.+)\?\s*$/ ) {
-    print "info: requesting keyword $1\n";
-    my $kw = $1;
+  if ( $what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s*$/ ) {
+    print "info: requesting keyword $2\n";
+    my $kw = $2;
     my $query = (kw_query($dbh, $nick, lc($kw)));
     if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
       $irc->yield(ctcp => $nick, "ACTION $1");
@@ -1780,20 +1780,9 @@ sub timebomb_start {
 sub _kw_manage_request {
   my ($what, $nick, $where, $channel) = @_;
   print_timestamp(join ":", @_);
-  if ( $what =~ /^(.+)\?\s*$/ ) {
-    print "info: requesting keyword $1\n";
-    my $kw = $1;
-    my $query = (kw_query($dbh, $nick, lc($kw)));
-    if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
-      $irc->yield(ctcp => $where, "ACTION $1");
-      return;
-    } elsif ($query) {
-      bot_says($channel, $query);
-      return;
-    }
-  } elsif ( my ($kw) = $what =~ /^(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
-    my $target = $2;
-    my $query = (kw_query($dbh, $nick, lc($1)));
+  if ( my ($kw) = $what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
+    my $target = $3;
+    my $query = (kw_query($dbh, $nick, lc($2)));
     if ($irc->is_channel_member($channel, $target)) {
       if ((! $query) or ( $query =~ m/^ACTION\s(.+)$/ )) {
 	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw\" to see its content.");
@@ -1802,24 +1791,37 @@ sub _kw_manage_request {
 	bot_says($channel, "$target: "."$query");
       } 
     }
-  } elsif ( my ($kw2) = $what =~ /^(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
-    my $target = $2;
-    my $query = (kw_query($dbh, $nick, lc($1)));
+  } elsif ( my ($kw2) = $what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
+    my $target = $3;
+    my $fact = $2;
+    my $query = (kw_query($dbh, $nick, lc($2)));
     if ($irc->is_channel_member($channel, $target)) {
       if ((! $query ) or ($query =~ m/^ACTION\s(.+)$/)) {
 	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw2\" to see its content.");
 	return;
       } else {
-	$irc->yield(privmsg => $target, "$kw2 is $query");
-	$irc->yield(privmsg => $nick, "Told $target about $kw2");
+	$irc->yield(privmsg => $target, "$fact is $query");
+	$irc->yield(privmsg => $nick, "Told $target about $fact");
       }
     } else {
       bot_says($channel, "Dunno about $target");
       return;
+    } 
+  } elsif ($what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s*$/ ) {
+    print "info: requesting keyword $2\n";
+    my $kw = $2;
+    my $query = (kw_query($dbh, $nick, lc($kw)));
+    if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
+      $irc->yield(ctcp => $where, "ACTION $1");
+      return;
+    } elsif ($query) {
+      bot_says($channel, $query);
+      return;
     }
+    return;
   }
-  return;
 }
+
 
 sub add_nick {
   my ($nick, $msg) = @_;
@@ -1885,18 +1887,8 @@ sub chan_msg_parser {
   }
   
   # keywords
-  if ($botconfig{'kw_prefix'}) {
-    if (index($what, $botconfig{'kw_prefix'}) == 0) {
-      # strip the prefix and pass all to the subroutine
-      my $querystripped = substr($what, 1);
-      if ((index($querystripped, ' >')) < 0) {
-	# simulate the question for the poor bastards using the kw_prefix
-	$querystripped .= '?';
-      }
-      return _kw_manage_request($querystripped, $nick, $where, $channel)
-    }
-  } else {
-    _kw_manage_request($what, $nick, $where, $channel)
+  if ($what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s*$/) {
+    return _kw_manage_request($what, $nick, $where, $channel)
   }
   
   # Here we parse other channel messages' content
