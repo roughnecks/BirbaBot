@@ -1808,7 +1808,6 @@ sub _kw_manage_request {
       return;
     } 
   } elsif ($what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s*$/ ) {
-    print "info: requesting keyword $2\n";
     my $kw = $2;
     my $query = (kw_query($dbh, $nick, lc($kw)));
     if (($query) && ($query =~ m/^ACTION\s(.+)$/)) {
