@@ -96,8 +96,8 @@ sub kw_query {
   my ($dbh, $nick, $key) = @_;
   my $questionkey = $key . '?';
   my $query = $dbh->prepare("SELECT bar1,bar2,bar3 FROM factoids 
-                             WHERE key = ? OR key = ?;");
-  $query->execute($key, $questionkey);
+                             WHERE key = ?;");
+  $query->execute($key);
   # here we get the results
   my @out;
   my $redirect;
@@ -161,7 +161,7 @@ sub kw_query {
     $reply =~ s/^\s*<reply>\s*//i;
     return $reply;
   } else {
-    return join(", or ", @out)
+    return join(", or ", @out);
   }
 }
 
