@@ -1780,7 +1780,10 @@ sub timebomb_start {
 sub _kw_manage_request {
   my ($what, $nick, $where, $channel) = @_;
   print_timestamp(join ":", @_);
-  if ( my ($kw) = $what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
+  if ($what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s+>{1,2}\s*$/) {
+    bot_says($channel, "Please specify a valid nickname.");
+    return;
+  } elsif ( my ($kw) = $what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
     my $target = $3;
     my $query = (kw_query($dbh, $nick, lc($2)));
     if ($irc->is_channel_member($channel, $target)) {
@@ -1806,7 +1809,7 @@ sub _kw_manage_request {
     } else {
       bot_says($channel, "Dunno about $target");
       return;
-    } 
+    }
   } elsif ($what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s*$/ ) {
     my $kw = $2;
     my $query = (kw_query($dbh, $nick, lc($kw)));
