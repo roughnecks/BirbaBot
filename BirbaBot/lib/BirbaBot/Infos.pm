@@ -248,7 +248,7 @@ sub kw_show {
     my $output = "keyword \"$arg\" has been stored with the following values: bar1 is = $out[0], bar2 is = $out[1] and bar3 = $out[2]";
     return $output;
   } else { 
-    return "I think there's no fact named \"$arg\".";
+    return "I am not aware of any fact named \"$arg\".";
   }
 }
 
