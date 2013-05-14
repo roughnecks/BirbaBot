@@ -207,7 +207,7 @@ sub kw_find {
       }
     }
   }
-
+  print "info: resolving private kw_find query for argument \"$arg\"\n";
   if (@out) {
     my $maxlenght = 3000;
     my $outstring = join(", ", sort(@out));
