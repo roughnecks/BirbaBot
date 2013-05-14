@@ -117,7 +117,7 @@ sub kw_query {
   if (scalar @out == 1) {
     my @possibilities;
     if ($out[0] =~ m/\|\|/) {
-      @possibilities= split (/\|\|/, $out[0]);
+      @possibilities= split (/\s*\|\|\s*/, $out[0]);
     }
     elsif ($out[0] =~ m/^\s*(<reply>)?\s*(.*)\((.+\|.+)\)\s*(.*)?$/i) {
       $tag = $1;
