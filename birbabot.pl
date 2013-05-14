@@ -1796,10 +1796,11 @@ sub _kw_manage_request {
     return;
   } elsif ( my ($kw) = $what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s+>{1}\s+([\S]+)\s*$/ ) {
     my $target = $3;
-    my $query = (kw_query($dbh, $nick, lc($2)));
+    my $fact = $2;
+    my $query = (kw_query($dbh, $nick, lc($fact)));
     if ($irc->is_channel_member($channel, $target)) {
       if ((! $query) or ( $query =~ m/^ACTION\s(.+)$/ )) {
-	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw\" to see its content.");
+	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $fact\" to see its content.");
 	return;
       } else {
 	bot_says($channel, "$target: "."$query");
@@ -1808,10 +1809,10 @@ sub _kw_manage_request {
   } elsif ( my ($kw2) = $what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s+>{2}\s+([\S]+)\s*$/ ) {
     my $target = $3;
     my $fact = $2;
-    my $query = (kw_query($dbh, $nick, lc($2)));
+    my $query = (kw_query($dbh, $nick, lc($fact)));
     if ($irc->is_channel_member($channel, $target)) {
       if ((! $query ) or ($query =~ m/^ACTION\s(.+)$/)) {
-	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $kw2\" to see its content.");
+	bot_says($channel, "$nick, that fact does not exist or it can't be told to $target; try \"kw show $fact\" to see its content.");
 	return;
       } else {
 	$irc->yield(privmsg => $target, "$fact is $query");
