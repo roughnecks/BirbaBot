@@ -194,7 +194,7 @@ EXAMPLE
 
 Without quoting you would get 'what time' => 'it is I don't know'
 
-The complete help about facts can be found in doc/Factoids.txt.
+The complete help about keywords can be found in doc/Factoids.txt.
 
 Contacts
 --------
