@@ -129,8 +129,8 @@ That's simple: just ask a fact prefixed by kw_prefix (as chosen in configuration
 
 * Tell a fact to somebody else
 
-1. In channel: BirbaBot > john
-2. In query: BirbaBot >> john
+1. In channel: 	 !BirbaBot > john
+2. In query: 	 !BirbaBot >> john
 
 #### Config Option
 
