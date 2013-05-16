@@ -105,7 +105,7 @@ anotes, bash, choose, deb, debsearch, done, free, g, geoip, gi, gv, imdb, isdown
 
 ### @help kw
 
-"Manage the keywords: [kw new] foo is bar | [kw new] "foo is bar" is yes, probably foo is bar | [kw add] foo is bar2/bar3 | [kw forget] foo | [kw delete] foo 2/3 | [kw list] | [kw show] foo | [kw find] foo (query only) - [key > nick] spits key to nick in channel; [key >> nick] privmsg nick with key; [key?] ask for key. For special keywords usage please read the doc/Factoids.txt help file"
+"Notice(Birba): (kw new|add <foo is bar | "foo is bar" is yes, probably foo is bar> | forget <foo> | delete <foo 2/3> | list | show <foo> | find <foo>) - (<!>key) - (key > <nick>) - (key >> <nick>) -- Manage the keywords: new/add, forget, delete, list, find, spit, redirect, query. For special keywords usage please read the doc/Factoids.txt help file."
 
 **Keywords have been refactored since V.1.6 to be almost compatible with** [infobot](http://www.infobot.org/guide-0.43.x.html) - see the Factoids.txt help below.
 
@@ -121,9 +121,9 @@ anotes, bash, choose, deb, debsearch, done, free, g, geoip, gi, gv, imdb, isdown
 
 * Asking the bot for a factoid:
 
-That's simple: just ask :)
+That's simple: just ask a fact prefixed by kw_prefix (as chosen in configuration file)
 
-BirbaBot?
+!BirbaBot
 
     A POE Powered IRC Perl Bot, or a cat, see http://it.wikipedia.org/wiki/Birba
 
@@ -134,7 +134,7 @@ BirbaBot?
 
 #### Config Option
 
-Starting from commit "625f093166858d7c2dea45e48e00bbd62237cf75" pushed on Fri, 5 Oct 2012 16:01:01 +0000, the bot has a new config option: kw_prefix (in the bot config section, see example.conf). Setting a prefix (hey dude, if you set the same for the bot and the keywords you're too dumb to run a bot) disable the question parsing; so, if the kw_prefix is set to "!", "ping?" doesn't query the bot, but "!ping" does.
+Starting from commit "ff598791764981df47ff845212f9ff2a4e9a7c63" pushed on Mon, 13 May 2013 02:20:29 +0000 (04:20 +0200), we don't use questions anymore to ask for a fact; we use a prefix instead, that is "kw_prefix" (in the bot config section, see example.conf). So, if the kw_prefix is set to "!", "!ping" queries the bot for a fact named "ping". N.B. Do not set the same prefix for keywords and bot commands.
 
 #### Factoids usage notes
 
@@ -155,7 +155,7 @@ What do they do?
 EXAMPLE:
 
     @kw new hello is hello $who!
-    asking: hello?
+    asking: !hello
     outputs: hello roughnecks!
 
 2)
@@ -166,7 +166,7 @@ EXAMPLE:
 
     @kw new hi is <reply> see hello
     @kw new hello is Hello, how are you today?
-    asking: hi?
+    asking: !hi
     does a query against "hi" -> finds a "<reply> see" tag followed by "hello" -> does a new query against "hello" 
     outputs: Hello, how are you today?
 
@@ -177,7 +177,7 @@ The keyword <action> triggers the bot to spit a factoid while doing a "ctcp acti
 EXAMPLE
 
     @kw new smile is <action> lols :)
-    asking: smile?
+    asking: !smile
     the bot performs a ctcp action
     outputs: * Birba lols :)
 
@@ -189,11 +189,12 @@ Normally, the word 'is' is considered a separator between the keyword and the de
 EXAMPLE
 
     @kw new "what time is it" is I don't know
-    asking: what time is it?
+    asking: !what time is it
     bot replies: I don't know
 
 Without quoting you would get 'what time' => 'it is I don't know'
 
+The complete help about facts can be found in doc/Factoids.txt.
 
 Contacts
 --------
