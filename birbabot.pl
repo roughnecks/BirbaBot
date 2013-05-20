@@ -795,11 +795,10 @@ sub irc_botcmd_g {
 }
 
 sub irc_botcmd_geoip {
-    my $nick = (split /!/, $_[ARG0])[0];
-    my ($where, $arg) = @_[ARG1, ARG2];
-    return unless is_where_a_channel($where);
-    $irc->yield(privmsg => $where => BirbaBot::Geo::geo_by_name_or_ip($arg));
-    return;
+  my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
+  return unless is_where_a_channel($where) || check_if_admin($who);
+  $irc->yield(privmsg => $where => BirbaBot::Geo::geo_by_name_or_ip($arg));
+  return;
 }
 
 sub irc_botcmd_gi {
@@ -1058,37 +1057,37 @@ sub irc_botcmd_kw {
 
 # non-blocking dns lookup
 sub irc_botcmd_lookup {
-    my $nick = (split /!/, $_[ARG0])[0];
-    my ($where, $arg) = @_[ARG1, ARG2];
-    return unless is_where_a_channel($where);
-    if ($arg =~ m/(([0-9]{1,3}\.){3}([0-9]{1,3}))/) {
-      my $ip = $1;
-      # this is from `man perlsec` so it has to be safe
-      die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
-      if ($pid) {           # parent
-	while (<KID>) {
-	  bot_says($where, $_);
-	}
-	close KID;
-	return;
-      } else {
-	# this is the external process, forking. It never returns
-	exec 'host', $ip or die "Can't exec host: $!";
+  my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
+  my $nick = (split /!/, $_[ARG0])[0];
+  return unless is_where_a_channel($where) || check_if_admin($who);
+  if ($arg =~ m/(([0-9]{1,3}\.){3}([0-9]{1,3}))/) {
+    my $ip = $1;
+    # this is from `man perlsec` so it has to be safe
+    die "Can't fork: $!" unless defined(my $pid = open(KID, "-|"));
+    if ($pid) {           # parent
+      while (<KID>) {
+	bot_says($where, $_);
       }
+      close KID;
+      return;
+    } else {
+      # this is the external process, forking. It never returns
+      exec 'host', $ip or die "Can't exec host: $!";
     }
-    my ($type, $host) = $arg =~ /^(?:(\w+) )?(\S+)/;
-    return unless $host;
-    my $res = $dns->resolve(
-        event => 'dns_response',
-        host => $host,
-        type => $type,
-        context => {
-            where => $where,
-            nick  => $nick,
-        },
-    );
+  }
+  my ($type, $host) = $arg =~ /^(?:(\w+) )?(\S+)/;
+  return unless $host;
+  my $res = $dns->resolve(
+			  event => 'dns_response',
+			  host => $host,
+			  type => $type,
+			  context => {
+				      where => $where,
+				      nick  => $nick,
+				     },
+			 );
     $poe_kernel->yield(dns_response => $res) if $res;
-    return;
+  return;
 }
 
 sub irc_botcmd_lremind {
