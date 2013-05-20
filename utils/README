@@ -3,6 +3,7 @@ dpkg_facts-import.pl
 
 This Utility can be used to import the factoids table from the mysql database of "dpkg",
 an IRC bot which runs in freenode/oftc #debian channels, to the sqlite database of BirbaBot.
+It only inserts new factoids, does not overwrite nor update existing ones.
 
 ## How it works
 
@@ -45,9 +46,11 @@ Then you can continue with the import process, as explained above.
 ## dpkg/#debian Bot database Updater Utility
 dpkg_facts-update.pl
 
-This one behave exactly as the importer but it updates only existing facts owned by 'dpkg':
-If you have already imported facts, you are strongly encouraged to use this updater next time 
-you need fresh definitions from apt_dump database.
+This one behaves exactly as the importer, in regard to its operation, but it only *updates* 
+existing facts owned by 'dpkg' in birba.db: it *will not* import new facts and it *will not* 
+overwrite factoids (imported from dpkg) which may have been subsequently modified.
+So, if you have already imported facts, you are strongly encouraged to use this updater next 
+time you need fresh definitions from dpkg database.
 
 $ ./dpkg_facts-update.pl
 
