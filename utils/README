@@ -62,7 +62,7 @@ dpkg_facts-delete.pl
 So, if you have already imported dpkg facts into birba.db you may now want to run this 
 additional script: dpkg database is, unfortunately, full of garbage so you can safely delete
 several facts which birba does not support and a bunch of "not-so-fine" facts collected 
-by skizzhg (thanks). To do it, git clone the repository at git://gitorious.org/galatine/stuff.git
+by skizzhg (thanks). To do it, git clone the repository at git://gitorious.org/galatine/birba.git 
 and copy "birba-to-delete.txt" in the "utils" dir of BirbaBot; now you can run:
 
 $ ./dpkg_facts-delete.pl
