@@ -295,7 +295,7 @@ sub _start {
 									     gv => '(gv <string to search>) -- Do a search on google videos.',
 									     gw => '(gw <string to search>) -- Do a search on wikipedia by google',
 									     imdb => '(imdb <string|id|link>) -- Query the Internet Movie Database: takes one argument, a generic string or an id/link to fetch more data. ids are strings at the end of an imdb link, like "tt0088247".',
-									     k => '(kick <nick> [reason]) -- Kick someone from the current channel; reason is not mandatory.',
+									     k => '(k <nick> [reason]) -- Kick someone from the current channel; reason is not mandatory.',
 									     karma => '(karma [<nick>]) -- Get the karma of a user, or yours, without argument.',
 									     kb => '(kb <nick> [reason]) -- KickBan someone from the current channel; reason is not mandatory.',
 									     kw => '(kw new|add <foo is bar | "foo is bar" is yes, probably foo is bar> | forget <foo> | delete <foo 2/3> | list | show <foo> | find <foo>) - (<!>key) - (key > <nick>) - (key >> <nick>) -- Manage the keywords: new/add, forget, delete, list, find, spit, redirect, query. For special keywords usage please read the doc/Factoids.txt help file.',
