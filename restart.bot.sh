@@ -17,6 +17,7 @@ cd $botdir || exit 2
 # the bot never started, as there is no birba.pid, so append to logfile
 if [ ! -f "$botdir/birba.pid" ]; then
     exec nohup perl birbabot.pl $1 >> "$logfile" 2>&1 &
+    exit
 fi
 
 pid=$(cat $botdir/birba.pid)
