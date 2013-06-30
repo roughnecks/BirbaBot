@@ -38,6 +38,7 @@ print "Succesfully connected to the sqlite database $dbname\n";
 # Find all of the facts
 my @all_factoids = $schema->resultset('Factoids')->all;
 print "Starting updater..\n";
+print "The process may take a while to finish, please hold on.\n";
 
 # Cycle through facts and get keys/values to be imported in the sqlited db
 foreach my $fact (@all_factoids) {
