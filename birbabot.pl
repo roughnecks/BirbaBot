@@ -120,6 +120,7 @@ my %botconfig = (
 		 'rsspolltime' => 600, # default to 10 minutes
 		 'dbname' => "bot.db",
 		 'admins' => [ 'nobody!nobody@nowhere' ],
+		 'adminpwd' => '',
 		 'fuckers' => [ 'fucker1',' fucker2'],
 		 'nspassword' => 'nopass',
 		 'tail' => {},
@@ -170,6 +171,7 @@ my @adminregexps = process_admin_list(@{$botconfig{'admins'}});
 
 my @fuckers = @{$botconfig{'fuckers'}};
 
+my $adminpwd = $botconfig{'adminpwd'};
 my $relay_source = $botconfig{'relay_source'};
 my $relay_dest = $botconfig{'relay_dest'};
 my $twoways_relay = $botconfig{'twoways_relay'};
@@ -214,6 +216,7 @@ POE::Session->create(
 						     irc_public
 						     irc_quit
 						     irc_socketerr
+						     irc_botcmd_admin
 						     irc_botcmd_anotes
 						     irc_botcmd_bash
 						     irc_botcmd_choose
@@ -278,6 +281,7 @@ sub _start {
   $irc->plugin_add('BotCommand', 
 		   POE::Component::IRC::Plugin::BotCommand->new(
 								Commands => {
+									     admin => '(admin <pwd>) -- Add yourself as a temporary admin supplying the correct password set in config file; we accept only queries.',
 									     anotes => '(anotes [del <nick>]) -- Admin listing and deletion of pending notes: without arguments list all pending notes.',
 									     bash => '(bash [<number>]) -- Get a random quote from bash.org or quote number <number>.',
 									     choose => '(choose <choice1> <choice2> [<choice#n>]) -- Do a random guess | Takes 2 or more arguments.',
@@ -585,6 +589,23 @@ my %defuse;
 my %bomb_active;
 my %alarm_active;
  
+sub irc_botcmd_admin {
+  my ($who, $where, $arg) = @_[ARG0..$#_];
+  return if is_where_a_channel($where);
+  return if not defined $arg;
+  return if $arg =~ m/^\s*$/;
+  if ($arg eq $adminpwd) {
+    my $newadmin = $who;
+    $newadmin =~ s/(\W)/\\$1/g;   # escape everything which is not a \w
+    $newadmin =~ s/\\\*/.*?/g;    # unescape the *
+    push @adminregexps, qr/^$newadmin$/;
+    print "Temporary Admin added\n";
+    print Dumper(\@adminregexps);
+    bot_says($where, "Temporary Admin added.");
+    return;
+  } else { print "Failed attempt to add a temporary Admin by $who\n"; }
+}
+
 sub irc_botcmd_anotes {
   my ($who, $where, $arg) = @_[ARG0..$#_];
   my $nick = parse_user($who);
