@@ -595,10 +595,7 @@ sub irc_botcmd_admin {
   return if not defined $arg;
   return if $arg =~ m/^\s*$/;
   if ($arg eq $adminpwd) {
-    my $newadmin = $who;
-    $newadmin =~ s/(\W)/\\$1/g;   # escape everything which is not a \w
-    $newadmin =~ s/\\\*/.*?/g;    # unescape the *
-    push @adminregexps, qr/^$newadmin$/;
+    push @adminregexps, qr/^\Q$who\E$/;
     print "Temporary Admin added\n";
     print Dumper(\@adminregexps);
     bot_says($where, "Temporary Admin added.");
