@@ -44,15 +44,30 @@ sub make_tiny_url {
   my $ua = LWP::UserAgent->new(timeout => 10);
   $ua->agent( 'Mozilla' );
   my $short;
-  if ($short = make_tiny_url_x ($ua, $url)) {
+  if ($short = make_tiny_url_jumbo($ua, $url)) {
     return $short
-  } elsif ($short = make_tiny_url_metamark( $ua, $url)) {
+  } elsif ($short = make_tiny_url_x($ua, $url)) {
+    return $short
+  } elsif ($short = make_tiny_url_metamark($ua, $url)) {
     return $short
   }
   else {
     return $url
   }
 }
+
+sub make_tiny_url_jumbo {
+  my ($ua, $url) = @_;
+  my $response = $ua->request( GET "http://jmb.tw/api/create/?newurl=$url");
+  #  print $response->content, "\n";
+  if ($response->is_success and $response->content =~ m!($goodurlre)!) {
+    return $1;
+  } 
+  else {
+    return 0;
+  };
+}
+
 
 sub make_tiny_url_x {
   my ($ua, $url) = @_;
