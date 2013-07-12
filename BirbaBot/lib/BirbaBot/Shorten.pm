@@ -43,7 +43,6 @@ sub make_tiny_url {
 #  print $url, "\n";
   my $ua = LWP::UserAgent->new(timeout => 10);
   $ua->agent( 'Mozilla' );
-  my $response = $ua->request( POST 'http://api.x0.no/post/', ["u" => $url]);
   my $short;
   if ($short = make_tiny_url_x ($ua, $url)) {
     return $short
