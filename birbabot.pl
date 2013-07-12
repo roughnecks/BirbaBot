@@ -281,7 +281,7 @@ sub _start {
   $irc->plugin_add('BotCommand', 
 		   POE::Component::IRC::Plugin::BotCommand->new(
 								Commands => {
-									     admin => '(admin <pwd>) -- Add yourself as a temporary admin supplying the correct password set in config file; we accept only queries.',
+									     admin => '(admin <pwd>) -- Add yourself as a temporary admin supplying the correct password set in config file; admin privileges will be flushed upon a bot restart - we only accept queries.',
 									     anotes => '(anotes [del <nick>]) -- Admin listing and deletion of pending notes: without arguments list all pending notes.',
 									     bash => '(bash [<number>]) -- Get a random quote from bash.org or quote number <number>.',
 									     choose => '(choose <choice1> <choice2> [<choice#n>]) -- Do a random guess | Takes 2 or more arguments.',
