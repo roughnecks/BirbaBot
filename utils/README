@@ -1,29 +1,55 @@
-## dpkg/#debian Bot database Import Utility
-dpkg_facts-import.pl
+# dpkg factoids management utilities
 
-This Utility can be used to import the factoids table from the mysql database of "dpkg",
-an IRC bot which runs in freenode/oftc #debian channels, to the sqlite database of BirbaBot.
-It only inserts new factoids, does not overwrite nor update existing ones.
+BirbaBot is able to use factoids from dpkg, an infobot running on the Debian IRC support channel
+at oftc; but these facts must be imported into Birba sqlite database from dpkg mysql one.. 
+moreover dpkg database is, unfortunately, full of garbage so we think you can safely delete several 
+facts which birba does not support at all and a bunch of "not-so-fine" facts selected by skizzhg 
+(thanks).
 
-## How it works
+To do these operations (import and deletion) i have wrote some perl scripts which i'm going to 
+illustrate to you. Over the time i've experienced different ways to operate and i am going to 
+explain to you the one which i think should be preferred: by the way, feel free to read the content
+ of all the scripts to look at differences and options, if you happen to be familiar with Perl.
+------------------------------------------------------------------------------------------------
+
+## This is the way i would follow
+## dpkg/#debian Bot database Delete Utility
+dpkg_facts-mysql-delete.pl
 
 First you need to setup a mysql database and import dpkg's data.
-
 A nightly exported dump of dpkg's db can be found at: http://crito.ucr.edu/~dpkg/
 Save it to disk and gunzip it.
 Import apt_dump in your mysql databse like:
 
 $ mysql -u user -p dbname < apt_dump
 
-Then you need to stop BirbaBot, copy its sqlite db (birba.db) into this same dir where
-this README is located.
+Now we have a mysql db with all of dpkg facts: next step is to delete unsupported/unwanted facts
+from it. git clone the repository at git://gitorious.org/galatine/birba.git and copy 
+"birba-to-delete.txt" in the "utils" dir of BirbaBot; now edit "dpkg_facts-mysql-delete.pl"
+with data about your mysql configuration and then run:
+
+$ ./dpkg_facts-mysql-delete.pl
+
+If all is good we now have a mysql db without garbage and ready to be imported into Birba.
+------------------------------------------------------------------------------------------------
+
+## dpkg/#debian Bot database Import Utility
+dpkg_facts-import.pl
+
+This Utility can be used to import the factoids table from the mysql database of "dpkg", previously
+set-up. It only inserts new factoids, does not overwrite nor update existing ones.
+
+## How it works
+You need to stop BirbaBot, copy its sqlite db (birba.db) into the "utils" dir, where this README 
+is located.
 
 Finally edit "dpkg_facts-import.pl" and set the custom variables for the sql connection handles.
-Make the script executable if it's not and run it:
+run the script:
 
 $ ./dpkg_facts-import.pl
 
-Copy the updated birba.db back to the root of BirbaBot, start the bot.
+Copy the updated birba.db back to the root of BirbaBot, start the bot. You're set.
+
 
 ** note #1
 
@@ -33,42 +59,31 @@ DBD::SQLite::st execute failed: column key is not unique at ./dpkg_facts-import.
 
 *** note #2
 
-If this is the second (or ahead) time you are about to upgrade dpkg factoids, you may need to 
-remove the old ones first, or better use the updater utility (see below).
-Open a sqlite shell on birba.db and execute this command:
-
-sqlite> delete from factoids where nick='dpkg';
-
-Then you can continue with the import process, as explained above.
-
+If this is the second (or ahead) time you are about to upgrade dpkg factoids, you can restart the
+importing process from the beginning or use the updater utility (see below).
 ------------------------------------------------------------------------------------------------
 
 ## dpkg/#debian Bot database Updater Utility
 dpkg_facts-update.pl
 
-This one behaves exactly as the importer, in regard to its operation, but it only *updates* 
+This one behaves exactly as the importer in regard to its operation, but it only *updates* 
 existing facts owned by 'dpkg' in birba.db: it *will not* import new facts and it *will not* 
-overwrite factoids (imported from dpkg) which may have been subsequently modified.
+overwrite factoids which have been created or modified by you.
 So, if you have already imported facts, you are strongly encouraged to use this updater next 
 time you need fresh definitions from dpkg database.
+Once again you need to set-up some variables for sql handles in the script and run it.
 
 $ ./dpkg_facts-update.pl
 
+All of the other scripts found in the "utils" directory can be safely ignored and you can also 
+stop reading at this point.
+Thanks
+------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------
 
-## dpkg/#debian Bot database Delete Utility
-dpkg_facts-delete.pl
 
-So, if you have already imported dpkg facts into birba.db you may now want to run this 
-additional script: dpkg database is, unfortunately, full of garbage so you can safely delete
-several facts which birba does not support and a bunch of "not-so-fine" facts collected 
-by skizzhg (thanks). To do it, git clone the repository at git://gitorious.org/galatine/birba.git 
-and copy "birba-to-delete.txt" in the "utils" dir of BirbaBot; now you can run:
-
-$ ./dpkg_facts-delete.pl
-
-------------------------------------------------------------------------------------------------
-
+## Other utilities
 ## dpkg/#debian Bot database Save-To-Disk Utility
 dpkg_facts-save.pl
 
