@@ -5,6 +5,7 @@ package BirbaBot::Shorten;
 use 5.010001;
 use strict;
 use warnings;
+use URI::Escape;
 
 require Exporter;
 
@@ -58,12 +59,14 @@ sub make_tiny_url {
 
 sub make_tiny_url_jumbo {
   my ($ua, $url) = @_;
-  my $response = $ua->request( GET "http://jmb.tw/api/create/?newurl=$url");
+  my $uri = uri_escape($url);
+  my $response = $ua->request( GET "http://jmb.tw/api/create/?newurl=$uri");
   #  print $response->content, "\n";
   if ($response->is_success and $response->content =~ m!($goodurlre)!) {
     return $1;
   } 
   else {
+    warn $response->status_line;
     return 0;
   };
 }
@@ -78,6 +81,7 @@ sub make_tiny_url_x {
     return $1;
   } 
   else {
+    warn $response->status_line;
     return 0;
   };
 }
@@ -90,6 +94,7 @@ sub make_tiny_url_metamark {
     return $1;
   } 
   else {
+    warn $response->status_line;
     return 0;
   }
 }
