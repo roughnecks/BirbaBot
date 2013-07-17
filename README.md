@@ -6,7 +6,7 @@ BirbaBot, a POE Powered IRC Bot
 About
 -----
 
-BirbaBot is a perl (ro)bot meant to be used in Internet Relay Chats (IRC): it's built upon the POE::IRC Framework and features many useful plugins, like RSS Feeds Management, Channel Quotes and Factoids, various Search Engines tools (like Google, bash.org and the Urban Dictionary) and so on.. BirbaBot is free code and this means you can freely grab a copy of it by using git to clone the online repository or downloading the tarball, which can always be found in the Downloads section of http://laltromondo.dynalias.net, as soon as a new release is available.
+BirbaBot is a perl (ro)bot meant to be used in Internet Relay Chats (IRC): it's built upon the POE::IRC Framework and features many useful plugins, like RSS Feeds Management, Channel Quotes and Factoids, various Search Engines tools (like Google, bash.org and the Urban Dictionary) and so on.. BirbaBot is free code and this means you can freely grab a copy of it by using git to clone the online repository or downloading the tarball, which can be found in the Releases/Tags section of github.
 
 The resources required by the bot are moderately low: from our extensive testing, the bot can operate successfully with less than 50MB of RAM.
 
@@ -201,4 +201,4 @@ Contacts
 
 For any other help, contacts and informations:
 
-** freenode IRC Network, #BirbaBot
+** freenode IRC Network, #BirbaBot channel.
