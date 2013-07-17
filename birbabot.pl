@@ -260,6 +260,7 @@ POE::Session->create(
 						     irc_botcmd_urban
 						     irc_botcmd_version
 						     irc_botcmd_voice
+						     irc_botcmd_whoami
 						     irc_botcmd_wikiz
 						     debget_sentinel
 						     dns_response
@@ -325,6 +326,7 @@ sub _start {
 									     urban => '(urban [url] <foo>) -- Get definitions from the urban dictionary | "urban url <foo>" asks for the url',
 									     version => '(version) -- Show our version number and infos.',
 									     voice => '(voice <nick> [<nick2> <nick#n>]) -- Give voice status to someone in the current channel.',
+									     whoami => '(whoami) -- Check if you have Admin permission in BirbaBot.',
 									     wikiz => '(wikiz <foo>) -- Perform a search on "http://laltromondo.dynalias.net/~iki" and retrieve urls matching given argument.'									    },
 								In_channels => 1,
 								Auth_sub => \&check_if_fucker,
@@ -1587,6 +1589,16 @@ sub irc_botcmd_voice {
   }
   my $status = '+v';
   pc_status($status, $channel, $botnick, @args);
+}
+
+sub irc_botcmd_whoami {
+  my ($who, $channel) = @_[ARG0, ARG1];
+  my $nick = parse_user($who);
+  if (check_if_admin($who)) {
+    bot_says($channel, "Hi $nick, i recognize you as a bot-admin.");
+  } elsif (check_if_op($channel, $nick)) {
+    bot_says($channel, "Hi $nick, you have operator status in $channel but i do not recognize you as a bot-admin.");
+  } else {bot_says($channel, "Sorry pal, i do not recognize you.");}
 }
 
 sub irc_botcmd_wikiz {
