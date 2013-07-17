@@ -454,7 +454,7 @@ sub rss_list {
   }
 
   if (@watched) {
-    return join(" ", @watched);
+    return join(" ", sort @watched);
   } else {
     return "I'm not watching anything :-)";
   }
