@@ -955,18 +955,31 @@ sub irc_botcmd_k {
 sub irc_botcmd_karma {
   my ($who, $where, $arg) = @_[ARG0, ARG1, ARG2];
   my $nick = parse_user($who);
+  my $botnick = $irc->nick_name;
+  my $res;
   if (($arg) && ($arg =~ m/^\s*$/)) {
-    bot_says($where, karma_manage($dbh, $nick));
-    return;
-  } elsif (($arg) && ($arg =~ m/^\s*\S+\s*$/)) {
-    $arg =~ s/\s*//g;
-    bot_says($where, karma_manage($dbh, $arg));
-    return;
-  } else {
-    # self karma
-    bot_says($where, karma_manage($dbh, $nick));
-    return;
+    $res = karma_manage($dbh, $nick);
   }
+  elsif (($arg) && ($arg =~ m/^\s*\S+\s*$/)) {
+    $arg =~ s/\s*//g;
+    $res = karma_manage($dbh, $arg);
+  } else {
+    $res = karma_manage($dbh, $nick);
+  }
+  my $string;
+  if (ref($res) eq 'ARRAY') {
+      if ($res->[0] eq $botnick) {
+          $string = "I have karma $res->[1]";
+      }
+      else {
+          $string = "$res->[0] has karma $res->[1]";
+      }
+  }
+  else {
+    $string = $res;
+  }
+  bot_says($where, $res);
+  return;
 }
 
 sub irc_botcmd_kb {

@@ -254,39 +254,19 @@ sub kw_show {
 
 sub karma_manage {
   my ($dbh, $nick, $action) = @_;
-  # print "arguments for karma_manage: ", join(':', @_), "\n";
-
-
-  unless ($nick) {
-    my @reply;
-    my $query = $dbh->prepare('SELECT nick, level FROM karma');
-    $query->execute();
-    while (my @data = $query->fetchrow_array()) {
-      push @reply, $data[0] . " => " . $data[1];
-    }
-
-    # print "disconnected db";
-
-    if ((@reply) && ((scalar @reply) <= 15)) {
-      return join(", ", (sort @reply));
-    } elsif ((@reply) && ((scalar @reply) > 15)) {
-      my @karmas = join(", ", sort (@reply[0..15]));
-      return "Too many karmas stored to be all printed: "."@karmas";
-    } else { return "Karma list is empty." }
-  }
-
 
   unless ($action) {
-    my $query = $dbh->prepare('SELECT level FROM karma WHERE nick = ?;');
+    my $query = $dbh->prepare('SELECT nick, level FROM karma WHERE nick = ?;');
     $query->execute($nick);
-    my $reply ;
+    my @reply;
     while (my @data = $query->fetchrow_array()) {
-      $reply = $nick . " has karma " . $data[0];
+      # we assume there is only one row or we pick the latest
+      @reply = @data;
     }
 
     # print "disconnected db";
-    if ($reply) {
-      return $reply;
+    if (@reply) {
+      return \@reply;
     } else {
       return "No karma for $nick";
     }
