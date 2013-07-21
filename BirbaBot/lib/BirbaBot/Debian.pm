@@ -100,8 +100,8 @@ sub parse_debfiles {
     if ($exact) {
       if ($line =~ m/^\Q$pack\E\s+\((.+?)\)\s+(\[.+\])?.+$/i) {
 	$foundmatch = $1;
-        if ($2) {
-          $foundmatch .= " $2";
+        if (my $branch = $2) {
+          $foundmatch .= " " . $bbold . $branch . $ebold;
         }
 	last;
       }
