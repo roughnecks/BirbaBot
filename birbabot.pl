@@ -978,7 +978,7 @@ sub irc_botcmd_karma {
   else {
     $string = $res;
   }
-  bot_says($where, $res);
+  bot_says($where, $string);
   return;
 }
 
