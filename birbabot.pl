@@ -961,7 +961,7 @@ sub irc_botcmd_karma {
       $arg =~ s/\s*//g;
       $nick = $arg;
   }
-  @res = karma_manage($dbh, $arg);
+  @res = karma_manage($dbh, $nick);
   my $string;
   if (@res) {
       if ($res[0] eq $botnick) {
