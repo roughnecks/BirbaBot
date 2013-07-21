@@ -263,13 +263,7 @@ sub karma_manage {
       # we assume there is only one row or we pick the latest
       @reply = @data;
     }
-
-    # print "disconnected db";
-    if (@reply) {
-      return \@reply;
-    } else {
-      return "No karma for $nick";
-    }
+    return @reply;
   }
 
   my $oldkarma = $dbh->prepare('SELECT nick,level,last FROM karma WHERE nick = ?;');
