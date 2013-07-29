@@ -1314,8 +1314,10 @@ sub irc_botcmd_remind {
       }
     }
   }
-  
-  return if $seconds <= 0;
+  if ($seconds <= 0) {
+      bot_says($where, "This date in the past, idiot!");
+      return;
+  }
   my $delay = time() + $seconds;
   my $query = $dbh->prepare("INSERT INTO reminders (chan, author, time, phrase) VALUES (?, ?, ?, ?);");
   $query->execute($where, $nick, $delay, $string);
