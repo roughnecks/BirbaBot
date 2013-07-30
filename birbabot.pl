@@ -467,6 +467,13 @@ sub irc_msg {
   my ($who, $what) = @_[ARG0, ARG2];
   my $nick = parse_user($who);
   
+  # if it's a fucker, do nothing
+  my ($auth, $spiterror) = check_if_fucker('null', $who, 'null', $what);
+  if (! $auth) {
+    print "fucker $who said $what in private\n";
+    return;
+  }
+
   if ( $what =~ /^(\Q$botconfig{'kw_prefix'}\E)(.+)\s*$/ ) {
     print "info: requesting keyword $2\n";
     my $kw = $2;
