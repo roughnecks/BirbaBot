@@ -22,7 +22,6 @@ print "Succesfully connected to the mysql database $db\n";
 my $delete = $dbh->prepare('DELETE FROM factoids WHERE factoid_key LIKE \'cmd:%\' or factoid_value LIKE \'%$randnick%\' or factoid_key LIKE \'_default%\' or factoid_key LIKE \'#del# cmd:%\' or factoid_value=\'\' or factoid_value LIKE \'%#del#%\' or factoid_key LIKE \'%#del#%\';');
 $delete->execute();
 
-close($fh);
 $dbh->disconnect;
 
 print "Deletion finished.\n";
