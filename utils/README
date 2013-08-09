@@ -3,8 +3,7 @@
 BirbaBot is able to use factoids from dpkg, an infobot running on the Debian IRC support channel
 at oftc; but these facts must be imported into Birba sqlite database from dpkg mysql one.. 
 moreover dpkg database is, unfortunately, full of garbage so we think you can safely delete several 
-facts which birba does not support at all and a bunch of "not-so-fine" facts selected by skizzhg 
-(thanks).
+facts which birba does not support at all.
 
 To do these operations (import and deletion) i have wrote some perl scripts which i'm going to 
 illustrate to you. Over the time i've experienced different ways to operate and i am going to 
@@ -24,9 +23,7 @@ Import apt_dump in your mysql databse like:
 $ mysql -u user -p dbname < apt_dump
 
 Now we have a mysql db with all of dpkg facts: next step is to delete unsupported/unwanted facts
-from it. git clone the repository at git://gitorious.org/galatine/birba.git and copy 
-"birba-to-delete.txt" in the "utils" dir of BirbaBot; now edit "dpkg_facts-mysql-delete.pl"
-with data about your mysql configuration and then run:
+from it. Edit "dpkg_facts-mysql-delete.pl" with data about your mysql configuration and then run:
 
 $ ./dpkg_facts-mysql-delete.pl
 
