@@ -10,6 +10,7 @@
 
 use strict;
 use warnings;
+use diagnostics;
 
 # POE
 use POE;
@@ -195,6 +196,11 @@ my $starttime = time;
 my $bbold = "\x{0002}";
 my $ebold = "\x{000F}";
 
+# psyradio
+my $lastsong;
+my $psy_id;
+my $psy_chk = 0;
+
 # Starting POE stuff
 
 my $irc = POE::Component::IRC::State->spawn(%serverconfig) 
@@ -250,6 +256,7 @@ POE::Session->create(
 						     irc_botcmd_note
 						     irc_botcmd_notes
 						     irc_botcmd_op
+						     irc_botcmd_psyradio
 						     irc_botcmd_quote
 						     irc_botcmd_remind
 						     irc_botcmd_restart
@@ -317,6 +324,7 @@ sub _start {
 									     note => '(note <nick> <message>) -- Send a note to a user not in the channel: he/she will get a query next time logins.',
 									     notes => '(notes [del <nickname>]) -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
 									     op => '(op <nick> [<nick2> <nick#n>]) -- Give operator status to the given nick(s) in the current channel.',
+									     psyradio => '(psyradio <on | off>) -- Start or Stop psyradio titles broadcasting.',
 									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument> | list) -- Manage the quotes database.',
 									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes. Alternate syntax: (<message> -- <date>). <date> accepts a wide variety of formats and an optional ZONE parameter at the end.',
 									     restart => '(restart) -- Restart BirbaBot',
@@ -1262,6 +1270,24 @@ sub irc_botcmd_op {
   pc_status($status, $channel, $botnick, @args);
 }
 
+sub irc_botcmd_psyradio {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my ($who, $channel, $what) = @_[ARG0..$#_];
+  my $nick = parse_user($who);
+  return unless (check_if_op($channel, $nick) || check_if_admin($who));
+  return unless ($channel eq $psychan);
+  if (($what eq 'off') && ($psy_chk == 1)) {
+    bot_says($channel, "Stopping titles broadcasting on $channel.");
+    $_[KERNEL]->alarm_remove($psy_id);
+    $psy_chk = 0;
+    return;
+  } elsif (($what eq 'on') && ($psy_chk == 0)) {
+    bot_says($channel, "Starting titles broadcasting on $channel.");
+    $kernel->delay_set("psyradio_sentinel", 5);
+    return;
+  }
+}
+
 sub irc_botcmd_quote {
   my ($who, $where, $what) = @_[ARG0..$#_];
   my $nick = parse_user($who);
@@ -1738,8 +1764,6 @@ sub ping_check {
   return;
 }
 
-my $lastsong;
-
 sub psyradio_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $song = get('http://psyradio.com.ua/ajax/radio_new.php');
@@ -1748,7 +1772,8 @@ sub psyradio_sentinel {
     $lastsong = $song;
     bot_says($psychan, "$bbold" . "$song" . "$ebold");
   }
-  $kernel->delay_set("psyradio_sentinel", 60);
+  $psy_id = $kernel->delay_set("psyradio_sentinel", 60);
+  $psy_chk = 1;
   return;  
 }
 
