@@ -130,6 +130,8 @@ my %botconfig = (
 		 'twoways_relay' => [],
 		 'msg_log' => [],
 		 'kw_prefix' => '',
+		 'psyradio' => '',
+		 'psychan' => '',
 		);
 
 my %debconfig = (
@@ -177,7 +179,8 @@ my $relay_dest = $botconfig{'relay_dest'};
 my $twoways_relay = $botconfig{'twoways_relay'};
 my $msg_log = $botconfig{'msg_log'};
 my $ircname = $serverconfig{'ircname'};
-
+my $psyradio = $botconfig{'psyradio'};
+my $psychan = $botconfig{'psychan'};
 my $debian_relfiles_base = File::Spec->catdir(getcwd(), 'debs');
 
 # When we start, we check if we have all the tables.  By no means this
@@ -266,6 +269,7 @@ POE::Session->create(
 						     dns_response
 						     greetings_and_die
 						     ping_check
+						     psyradio_sentinel
 						     reminder_del
 						     reminder_sentinel
 						     rss_sentinel
@@ -311,7 +315,7 @@ sub _start {
 									     meteo => '(meteo >city>) -- Ask the weatherman for location.',
 									     mode => '(mode <+|-><mode>) -- Set channels modes, like "mode +R-ks" but also users modes, like bans: "mode +b nick!user@host".',
 									     note => '(note <nick> <message>) -- Send a note to a user not in the channel: he/she will get a query next time logins.',
-									     notes => '(notes [del <nickname>] -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
+									     notes => '(notes [del <nickname>]) -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
 									     op => '(op <nick> [<nick2> <nick#n>]) -- Give operator status to the given nick(s) in the current channel.',
 									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument> | list) -- Manage the quotes database.',
 									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes. Alternate syntax: (<message> -- <date>). <date> accepts a wide variety of formats and an optional ZONE parameter at the end.',
@@ -349,6 +353,7 @@ sub _start {
   $kernel->delay_set("reminder_sentinel", 35);  # first run after 35 seconds
   $kernel->delay_set("tail_sentinel", 40);  # first run after 40 seconds
   $kernel->delay_set("rss_sentinel", 60);  # first run after 60 seconds
+  if ($psyradio) {$kernel->delay_set("psyradio_sentinel", 120)};  # first run after 120 seconds
   $kernel->delay_set("ping_check", 180);  # first run after 180 seconds
   $kernel->delay_set("debget_sentinel", 185);  # first run after 185 seconds
   $lastpinged = time();
@@ -1731,6 +1736,20 @@ sub ping_check {
   }
   $kernel->delay_set("ping_check", 60 );
   return;
+}
+
+my $lastsong;
+
+sub psyradio_sentinel {
+  my ($kernel, $sender) = @_[KERNEL, SENDER];
+  my $song = get('http://psyradio.com.ua/ajax/radio_new.php');
+  $song =~ s/^\x{FEFF}//;
+  if ($lastsong ne $song) {
+    $lastsong = $song;
+    bot_says($psychan, "$bbold" . "$song" . "$ebold");
+  }
+  $kernel->delay_set("psyradio_sentinel", 60);
+  return;  
 }
 
 sub reminder_del {
