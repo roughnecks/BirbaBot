@@ -361,7 +361,7 @@ sub _start {
   $kernel->delay_set("reminder_sentinel", 35);  # first run after 35 seconds
   $kernel->delay_set("tail_sentinel", 40);  # first run after 40 seconds
   $kernel->delay_set("rss_sentinel", 60);  # first run after 60 seconds
-  if ($psyradio) {$kernel->delay_set("psyradio_sentinel", 170)};  # first run after 170 seconds
+  if (($psyradio) && (! $psy_chk)) {$kernel->delay_set("psyradio_sentinel", 170)};  # first run after 170 seconds
   $kernel->delay_set("ping_check", 180);  # first run after 180 seconds
   $kernel->delay_set("debget_sentinel", 185);  # first run after 185 seconds
   $lastpinged = time();
@@ -1288,17 +1288,17 @@ sub irc_botcmd_psyradio {
   } elsif ($what eq 'status') {
     if (($psyradio) && ($psychan)) {
       if ($psy_chk) {
-	bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file on psychannel $psychan and broadcasting is currently " . "$bbold" . "on" . "$ebold" . ". To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
-      } else {bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file on psychannel $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . ". To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a few minutes and check status again if you have just started the bot.");}
+	bot_says($channel, "Psyradio is " . "$bbold" . "enabled at boot" . "$ebold" . " in config file on psychannel $psychan and broadcasting is currently " . "$bbold" . "on" . "$ebold" . ". To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
+      } else {bot_says($channel, "Psyradio is " . "$bbold" . "enabled at boot" . "$ebold" . " in config file on psychannel $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . ". If you just started the bot, please wait a few minutes and check status again, otherwise you can manually start broadcasting in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\".");}
     } elsif (($psyradio) && (! $psychan)) {
-      bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
+      bot_says($channel, "Psyradio is " . "$bbold" . "enabled at boot" . "$ebold" . " in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
     } elsif ((! $psyradio) && ($psychan)) {
       if ($psy_chk) {
-	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled" . "$ebold" . " in config file but psychannel for titles broadcasting is set to $psychan: broadcasting is currently " . "$bbold" . "on" . "$ebold");
+	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is set to $psychan: broadcasting is currently " . "$bbold" . "on" . "$ebold");
       } else {
-	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled" . "$ebold" . " in config file but psychannel for titles broadcasting is currently set to $psychan: broadcasting is currently " . "$bbold" . "off" . "$ebold" . ", you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
+	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is currently set to $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . "; you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
     } elsif ((! $psyradio) && (! $psychan)) {
-      bot_says($channel, "Psyradio is " . "$bbold" . "not enabled" . "$ebold" . " in config file and psychannel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
+      bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file and psychannel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
     }
   } elsif (($what eq 'last') && ($psychan) && ($channel eq $psychan) && ($psy_chk == 1)) {
     bot_says($channel, "Last and current track is " . "$bbold" .  "\"$lastsong\"" . "$ebold");
