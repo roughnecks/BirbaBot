@@ -1289,7 +1289,7 @@ sub irc_botcmd_psyradio {
     if (($psyradio) && ($psychan)) {
       if ($psy_chk) {
 	bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file on psychannel $psychan and broadcasting is currently " . "$bbold" . "on" . "$ebold" . ". To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
-      } else {bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file on psychannel $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . ". To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a few minutes if you have just started the bot and check status again.");}
+      } else {bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file on psychannel $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . ". To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a few minutes and check status again if you have just started the bot.");}
     } elsif (($psyradio) && (! $psychan)) {
       bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
     } elsif ((! $psyradio) && ($psychan)) {
