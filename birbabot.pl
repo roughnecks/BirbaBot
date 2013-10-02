@@ -324,7 +324,7 @@ sub _start {
 									     note => '(note <nick> <message>) -- Send a note to a user not in the channel: he/she will get a query next time logins.',
 									     notes => '(notes [del <nickname>]) -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
 									     op => '(op <nick> [<nick2> <nick#n>]) -- Give operator status to the given nick(s) in the current channel.',
-									     psyradio => '(psyradio <on | off>) -- Start or Stop psyradio titles broadcasting.',
+									     psyradio => '(psyradio <on | off | status>) -- Start, stop psyradio titles broadcasting or get info about the service. All commands require an Op/Admin.',
 									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument> | list) -- Manage the quotes database.',
 									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes. Alternate syntax: (<message> -- <date>). <date> accepts a wide variety of formats and an optional ZONE parameter at the end.',
 									     restart => '(restart) -- Restart BirbaBot',
@@ -1275,17 +1275,32 @@ sub irc_botcmd_psyradio {
   my ($who, $channel, $what) = @_[ARG0..$#_];
   my $nick = parse_user($who);
   return unless (check_if_op($channel, $nick) || check_if_admin($who));
-  return unless ($channel eq $psychan);
-  if (($what eq 'off') && ($psy_chk == 1)) {
+  #return unless ($channel eq $psychan);
+  if (($what eq 'off') && ($psy_chk == 1) && ($channel eq $psychan)) {
     bot_says($channel, "Stopping titles broadcasting on $channel.");
     $_[KERNEL]->alarm_remove($psy_id);
     $psy_chk = 0;
     return;
-  } elsif (($what eq 'on') && ($psy_chk == 0)) {
+  } elsif (($what eq 'on') && ($psy_chk == 0) && ($channel eq $psychan)) {
     bot_says($channel, "Starting titles broadcasting on $channel.");
     $kernel->delay_set("psyradio_sentinel", 5);
     return;
-  }
+  } elsif ($what eq 'status') {
+    if (($psyradio) && ($psychan)) {
+      if ($psy_chk) {
+	bot_says($channel, "Psyradio is enabled in config file on channel $psychan and broadcasting is currently on. To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
+      } else {bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan but broadcasting is currently off. To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
+    } elsif (($psyradio) && (! $psychan)) {
+      bot_says($channel, "Psyradio is enabled in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
+    } elsif ((! $psyradio) && ($psychan)) {
+      if ($psy_chk) {
+	bot_says($channel, "Psyradio is not enabled in config file but psychannel for titles broadcasting is currently set to $psychan: broadcasting is currently on.");
+      } else {
+	bot_says($channel, "Psyradio is not enabled in config file but psychannel for titles broadcasting is currently set to $psychan: broadcasting is currently off, you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
+    } elsif ((! $psyradio) && (! $psychan)) {
+      bot_says($channel, "Psyradio is not enabled in config file and channel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
+    }
+  } else {bot_says($channel, "Fail, check " . "\"$botconfig{'botprefix'}" . "psyradio status\"");}
 }
 
 sub irc_botcmd_quote {
