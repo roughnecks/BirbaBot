@@ -1288,17 +1288,17 @@ sub irc_botcmd_psyradio {
   } elsif ($what eq 'status') {
     if (($psyradio) && ($psychan)) {
       if ($psy_chk) {
-	bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan and broadcasting is currently on. To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
-      } else {bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan but broadcasting is currently off. To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a few minutes if you have just started the bot and check status again.");}
+	bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file on psychannel $psychan and broadcasting is currently " . "$bbold" . "on" . "$ebold" . ". To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
+      } else {bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file on psychannel $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . ". To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a few minutes if you have just started the bot and check status again.");}
     } elsif (($psyradio) && (! $psychan)) {
-      bot_says($channel, "Psyradio is enabled in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
+      bot_says($channel, "Psyradio is " . "$bbold" . "enabled" . "$ebold" . " in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
     } elsif ((! $psyradio) && ($psychan)) {
       if ($psy_chk) {
-	bot_says($channel, "Psyradio is not enabled in config file but psychannel for titles broadcasting is currently set to $psychan: broadcasting is currently on.");
+	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled" . "$ebold" . " in config file but psychannel for titles broadcasting is set to $psychan: broadcasting is currently " . "$bbold" . "on" . "$ebold");
       } else {
-	bot_says($channel, "Psyradio is not enabled in config file but psychannel for titles broadcasting is currently set to $psychan: broadcasting is currently off, you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
+	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled" . "$ebold" . " in config file but psychannel for titles broadcasting is currently set to $psychan: broadcasting is currently " . "$bbold" . "off" . "$ebold" . ", you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
     } elsif ((! $psyradio) && (! $psychan)) {
-      bot_says($channel, "Psyradio is not enabled in config file and psychannel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
+      bot_says($channel, "Psyradio is " . "$bbold" . "not enabled" . "$ebold" . " in config file and psychannel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
     }
   } elsif (($what eq 'last') && ($psyradio) && ($psychan) && ($channel eq $psychan) && ($psy_chk == 1)) {
     bot_says($channel, "Last and current track is " . "$bbold" .  "\"$lastsong\"" . "$ebold");
