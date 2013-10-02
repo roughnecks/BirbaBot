@@ -1296,7 +1296,7 @@ sub irc_botcmd_psyradio {
       if ($psy_chk) {
 	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is set to $psychan: broadcasting is currently " . "$bbold" . "on" . "$ebold");
       } else {
-	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is currently set to $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . "; you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
+	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is set to $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . "; you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
     } elsif ((! $psyradio) && (! $psychan)) {
       bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file and psychannel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
     }
