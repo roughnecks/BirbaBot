@@ -1288,7 +1288,7 @@ sub irc_botcmd_psyradio {
   } elsif ($what eq 'status') {
     if (($psyradio) && ($psychan)) {
       if ($psy_chk) {
-	bot_says($channel, "Psyradio is enabled in config file on channel $psychan and broadcasting is currently on. To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
+	bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan and broadcasting is currently on. To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
       } else {bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan but broadcasting is currently off. To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a couple of minutes if you have just started the bot and check status again.");}
     } elsif (($psyradio) && (! $psychan)) {
       bot_says($channel, "Psyradio is enabled in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
@@ -1298,7 +1298,7 @@ sub irc_botcmd_psyradio {
       } else {
 	bot_says($channel, "Psyradio is not enabled in config file but psychannel for titles broadcasting is currently set to $psychan: broadcasting is currently off, you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
     } elsif ((! $psyradio) && (! $psychan)) {
-      bot_says($channel, "Psyradio is not enabled in config file and channel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
+      bot_says($channel, "Psyradio is not enabled in config file and psychannel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
     }
   } else {bot_says($channel, "Fail, check " . "\"$botconfig{'botprefix'}" . "psyradio status\"");}
 }
