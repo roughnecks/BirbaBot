@@ -1289,7 +1289,7 @@ sub irc_botcmd_psyradio {
     if (($psyradio) && ($psychan)) {
       if ($psy_chk) {
 	bot_says($channel, "Psyradio is enabled in config file on channel $psychan and broadcasting is currently on. To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
-      } else {bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan but broadcasting is currently off. To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
+      } else {bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan but broadcasting is currently off. To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a couple of minutes if you have just started the bot and check status again.");}
     } elsif (($psyradio) && (! $psychan)) {
       bot_says($channel, "Psyradio is enabled in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
     } elsif ((! $psyradio) && ($psychan)) {
