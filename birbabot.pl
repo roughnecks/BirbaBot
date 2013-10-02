@@ -1300,7 +1300,7 @@ sub irc_botcmd_psyradio {
     } elsif ((! $psyradio) && (! $psychan)) {
       bot_says($channel, "Psyradio is " . "$bbold" . "not enabled" . "$ebold" . " in config file and psychannel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
     }
-  } elsif (($what eq 'last') && ($psyradio) && ($psychan) && ($channel eq $psychan) && ($psy_chk == 1)) {
+  } elsif (($what eq 'last') && ($psychan) && ($channel eq $psychan) && ($psy_chk == 1)) {
     bot_says($channel, "Last and current track is " . "$bbold" .  "\"$lastsong\"" . "$ebold");
   } else {bot_says($channel, "Fail, check " . "\"$botconfig{'botprefix'}" . "psyradio status\"");}
 }
