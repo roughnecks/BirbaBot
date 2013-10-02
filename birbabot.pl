@@ -324,7 +324,7 @@ sub _start {
 									     note => '(note <nick> <message>) -- Send a note to a user not in the channel: he/she will get a query next time logins.',
 									     notes => '(notes [del <nickname>]) -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
 									     op => '(op <nick> [<nick2> <nick#n>]) -- Give operator status to the given nick(s) in the current channel.',
-									     psyradio => '(psyradio <on | off | status>) -- Start, stop psyradio titles broadcasting or get info about the service. All commands require an Op/Admin.',
+									     psyradio => '(psyradio <on | off | status | last>) -- Start or stop psyradio titles broadcasting, get info about the service or get the last (current) track. All commands require an Op/Admin.',
 									     quote => '(quote add <text> | del <number> | <number> | rand | last | find <argument> | list) -- Manage the quotes database.',
 									     remind => '(remind [<x> | <xhxm> | <xdxhxm>] <message>) assuming "x" is a number -- Store an alarm for the current user, delayed by "x minutes" or by "xhxm" hours and minutes or by "xdxhxm" days, hours and minutes. Alternate syntax: (<message> -- <date>). <date> accepts a wide variety of formats and an optional ZONE parameter at the end.',
 									     restart => '(restart) -- Restart BirbaBot',
@@ -1300,6 +1300,8 @@ sub irc_botcmd_psyradio {
     } elsif ((! $psyradio) && (! $psychan)) {
       bot_says($channel, "Psyradio is not enabled in config file and psychannel for titles broadcasting is not set, so you must edit the config file before trying to manually start broadcasting.");
     }
+  } elsif (($what eq 'last') && ($psyradio) && ($psychan) && ($channel eq $psychan) && ($psy_chk == 1)) {
+    bot_says($channel, "Last and current track is " . "$bbold" .  "\"$lastsong\"" . "$ebold");
   } else {bot_says($channel, "Fail, check " . "\"$botconfig{'botprefix'}" . "psyradio status\"");}
 }
 
