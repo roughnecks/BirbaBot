@@ -361,7 +361,7 @@ sub _start {
   $kernel->delay_set("reminder_sentinel", 35);  # first run after 35 seconds
   $kernel->delay_set("tail_sentinel", 40);  # first run after 40 seconds
   $kernel->delay_set("rss_sentinel", 60);  # first run after 60 seconds
-  if ($psyradio) {$kernel->delay_set("psyradio_sentinel", 120)};  # first run after 120 seconds
+  if ($psyradio) {$kernel->delay_set("psyradio_sentinel", 170)};  # first run after 170 seconds
   $kernel->delay_set("ping_check", 180);  # first run after 180 seconds
   $kernel->delay_set("debget_sentinel", 185);  # first run after 185 seconds
   $lastpinged = time();
@@ -1289,7 +1289,7 @@ sub irc_botcmd_psyradio {
     if (($psyradio) && ($psychan)) {
       if ($psy_chk) {
 	bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan and broadcasting is currently on. To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
-      } else {bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan but broadcasting is currently off. To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a couple of minutes if you have just started the bot and check status again.");}
+      } else {bot_says($channel, "Psyradio is enabled in config file on psychannel $psychan but broadcasting is currently off. To start it tell me " . "\"$botconfig{'botprefix'}" . "psyradio on\". Please wait a few minutes if you have just started the bot and check status again.");}
     } elsif (($psyradio) && (! $psychan)) {
       bot_says($channel, "Psyradio is enabled in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
     } elsif ((! $psyradio) && ($psychan)) {
@@ -1787,7 +1787,7 @@ sub psyradio_sentinel {
     $lastsong = $song;
     bot_says($psychan, "$bbold" . "$song" . "$ebold");
   }
-  $psy_id = $kernel->delay_set("psyradio_sentinel", 60);
+  $psy_id = $kernel->delay_set("psyradio_sentinel", 100);
   $psy_chk = 1;
   return;  
 }
