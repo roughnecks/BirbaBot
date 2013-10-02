@@ -1294,7 +1294,7 @@ sub irc_botcmd_psyradio {
       bot_says($channel, "Psyradio is " . "$bbold" . "enabled at boot" . "$ebold" . " in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
     } elsif ((! $psyradio) && ($psychan)) {
       if ($psy_chk) {
-	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is set to $psychan: broadcasting is currently " . "$bbold" . "on" . "$ebold");
+	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is set to $psychan: broadcasting is currently " . "$bbold" . "on" . "$ebold" . ".");
       } else {
 	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is set to $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . "; you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
     } elsif ((! $psyradio) && (! $psychan)) {
@@ -1783,7 +1783,9 @@ sub ping_check {
 
 sub psyradio_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
-  my $song = get('http://psyradio.com.ua/ajax/radio_new.php');
+  my $song;
+  eval {$song = get('http://psyradio.com.ua/ajax/radio_new.php')};
+  return bot_says($psychan, "Connection to psyradio failed: check 'http://psyradio.com.ua/ajax/radio_new.php' or try again later.") unless $song;
   $song =~ s/^\x{FEFF}//;
   if ($lastsong ne $song) {
     $lastsong = $song;
