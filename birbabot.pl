@@ -1785,7 +1785,7 @@ sub psyradio_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $song;
   eval {$song = get('http://psyradio.com.ua/ajax/radio_new.php')};
-  return bot_says($psychan, "Connection to psyradio failed: check 'http://psyradio.com.ua/ajax/radio_new.php' or try again later.") unless $song;
+  return warn "Connection to psyradio failed: check 'http://psyradio.com.ua/ajax/radio_new.php'" unless $song;
   $song =~ s/^\x{FEFF}//;
   if ($lastsong ne $song) {
     $lastsong = $song;
