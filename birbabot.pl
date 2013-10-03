@@ -1788,6 +1788,7 @@ sub psyradio_sentinel {
   if ($psy_warn > 5) {
     bot_says($psychan, "Too many failed GETs: psyradio broadcasting aborted. Check bot logs.");
     undef $psy_warn;
+    $psy_chk = 0;
     return;
   }
   eval {$song = get('http://psyradio.com.ua/ajax/radio_new.php')};
