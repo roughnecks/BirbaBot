@@ -1787,7 +1787,7 @@ sub psyradio_sentinel {
   my $song;
   if ($psy_warn > 5) {
     bot_says($psychan, "Too many failed GETs: psyradio broadcasting aborted. Check bot logs.");
-    undef $psy_warn;
+    $psy_warn = 0;
     $psy_chk = 0;
     return;
   }
