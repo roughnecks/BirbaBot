@@ -200,6 +200,7 @@ my $ebold = "\x{000F}";
 my $lastsong;
 my $psy_id;
 my $psy_chk = 0;
+my $psy_warn = 0;
 
 # Starting POE stuff
 
@@ -1784,15 +1785,22 @@ sub ping_check {
 sub psyradio_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $song;
+  if ($psy_warn > 5) {
+    bot_says($psychan, "Too many failed GETs: psyradio broadcasting aborted. Check bot logs.");
+    undef $psy_warn;
+    return;
+  }
   eval {$song = get('http://psyradio.com.ua/ajax/radio_new.php')};
+  $psy_id = $kernel->delay_set("psyradio_sentinel", 100);
+  $psy_chk = 1;
+  $psy_warn++ unless $song;
   return warn "Connection to psyradio failed: check 'http://psyradio.com.ua/ajax/radio_new.php'" unless $song;
+  
   $song =~ s/^\x{FEFF}//;
   if ($lastsong ne $song) {
     $lastsong = $song;
     bot_says($psychan, "$bbold" . "$song" . "$ebold");
   }
-  $psy_id = $kernel->delay_set("psyradio_sentinel", 100);
-  $psy_chk = 1;
   return;  
 }
 
