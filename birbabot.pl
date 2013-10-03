@@ -362,7 +362,7 @@ sub _start {
   $kernel->delay_set("reminder_sentinel", 35);  # first run after 35 seconds
   $kernel->delay_set("tail_sentinel", 40);  # first run after 40 seconds
   $kernel->delay_set("rss_sentinel", 60);  # first run after 60 seconds
-  if (($psyradio) && (! $psy_chk)) {$kernel->delay_set("psyradio_sentinel", 170)};  # first run after 170 seconds
+  if ($psyradio) {$kernel->delay_set("psyradio_sentinel", 170)};  # first run after 170 seconds
   $kernel->delay_set("ping_check", 180);  # first run after 180 seconds
   $kernel->delay_set("debget_sentinel", 185);  # first run after 185 seconds
   $lastpinged = time();
