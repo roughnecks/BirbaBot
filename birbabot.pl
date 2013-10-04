@@ -1280,6 +1280,7 @@ sub irc_botcmd_psyradio {
     bot_says($channel, "Stopping psyradio broadcasting on $channel..");
     $_[KERNEL]->alarm_remove($psy_id);
     $psy_chk = 0;
+    $psy_warn = 0;
     return;
   } elsif (($what eq 'on') && ($psy_chk == 0) && ($channel eq $psychan)) {
     return unless (check_if_op($channel, $nick) || check_if_admin($who));
@@ -1290,12 +1291,14 @@ sub irc_botcmd_psyradio {
     if (($psyradio) && ($psychan)) {
       if ($psy_chk) {
 	bot_says($channel, "Psyradio is " . "$bbold" . "enabled at boot" . "$ebold" . " in config file on psychannel $psychan and broadcasting is currently " . "$bbold" . "on" . "$ebold" . ". To stop it tell me " . "\"$botconfig{'botprefix'}" . "psyradio off\"");
+	bot_says($channel, "$psy_warn warning(s) issued since we started broadcasting.") if ($psy_warn);
       } else {bot_says($channel, "Psyradio is " . "$bbold" . "enabled at boot" . "$ebold" . " in config file on psychannel $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . ". If you just started the bot, please wait a few minutes and check status again, otherwise you can manually start broadcasting in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\".");}
     } elsif (($psyradio) && (! $psychan)) {
       bot_says($channel, "Psyradio is " . "$bbold" . "enabled at boot" . "$ebold" . " in config file but psychannel for titles broadcasting is not set, so you cannot manually start broadcasting until you edit the configuration.");
     } elsif ((! $psyradio) && ($psychan)) {
       if ($psy_chk) {
 	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is set to $psychan: broadcasting is currently " . "$bbold" . "on" . "$ebold" . ".");
+	bot_says($channel, "$psy_warn warning(s) issued since we started broadcasting.") if ($psy_warn);
       } else {
 	bot_says($channel, "Psyradio is " . "$bbold" . "not enabled at boot" . "$ebold" . " in config file; psychannel for titles broadcasting is set to $psychan but broadcasting is currently " . "$bbold" . "off" . "$ebold" . "; you can manually start it in $psychan with " . "\"$botconfig{'botprefix'}" . "psyradio on\"");}
     } elsif ((! $psyradio) && (! $psychan)) {
