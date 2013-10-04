@@ -1306,7 +1306,7 @@ sub irc_botcmd_psyradio {
     }
   } elsif (($what eq 'last') && ($psychan) && ($channel eq $psychan) && ($psy_chk == 1)) {
     bot_says($channel, "Last and current track is " . "$bbold" .  "\"$lastsong\"" . "$ebold");
-  } else {bot_says($channel, "Fail, check " . "\"$botconfig{'botprefix'}" . "psyradio status\"");}
+  } else {bot_says($channel, "Fail, check " . "\"$botconfig{'botprefix'}" . "psyradio status\" and your configuration file.");}
 }
 
 sub irc_botcmd_quote {
@@ -1787,6 +1787,7 @@ sub ping_check {
 
 sub psyradio_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
+  return unless exists {map { $_ => 1 } @channels}->{$psychan};
   my $song;
   if ($psy_warn > 5) {
     bot_says($psychan, "Too many failed GETs: psyradio broadcasting will be delayed by 10 minutes; anyhow you can always manually stop it (and maybe restart it later).");
