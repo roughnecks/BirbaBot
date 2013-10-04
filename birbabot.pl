@@ -1789,9 +1789,9 @@ sub psyradio_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
   my $song;
   if ($psy_warn > 5) {
-    bot_says($psychan, "Too many failed GETs: psyradio broadcasting aborted. Check bot logs.");
+    bot_says($psychan, "Too many failed GETs: psyradio broadcasting will be delayed by 10 minutes; anyhow you can always manually stop it (and maybe restart it later).");
     $psy_warn = 0;
-    $psy_chk = 0;
+    $psy_id = $kernel->delay_set("psyradio_sentinel", 600);
     return;
   }
   eval {$song = get('http://psyradio.com.ua/ajax/radio_new.php')};
