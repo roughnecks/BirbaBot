@@ -1787,6 +1787,10 @@ sub ping_check {
 
 sub psyradio_sentinel {
   my ($kernel, $sender) = @_[KERNEL, SENDER];
+  # check if $psychan is a channel the bot joins
+  # if it exists as an element of @channels, returns 1
+  # we need this check in case psyradio is configured to start at boot
+  # when started manually we already have a check in place
   return unless exists {map { $_ => 1 } @channels}->{$psychan};
   my $song;
   if ($psy_warn > 5) {
