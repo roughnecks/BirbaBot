@@ -1227,15 +1227,19 @@ sub irc_botcmd_mode {
 }
 
 sub irc_botcmd_note {
-    my $nick = (split /!/, $_[ARG0])[0];
-    my ($where, $arg) = @_[ARG1, ARG2];
-    if ($arg =~ m/\s*([^\s]+)\s+(.+)\s*$/) {
-      bot_says($where, notes_add($dbh, $nick, $1, $2))
+  my $nick = (split /!/, $_[ARG0])[0];
+  my ($where, $arg) = @_[ARG1, ARG2];
+  if ($arg =~ m/\s*([^\s]+)\s+(.+)\s*$/) {
+    if ($irc->is_channel_member($where, $1)) {
+      bot_says($where, "$nick, why are you wasting my time? $1 is online right now.");
+      return;
     }
-    else {
-      bot_says($where, "Uh? Try note nick here goes the message")
-    }
-    return;
+    bot_says($where, notes_add($dbh, $nick, $1, $2))
+  }
+  else {
+    bot_says($where, "Uh? Try note nick here goes the message")
+  }
+  return;
 }
 
 sub irc_botcmd_notes {
