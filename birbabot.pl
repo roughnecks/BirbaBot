@@ -2083,11 +2083,22 @@ sub check_if_admin {
 }
 
 sub check_if_fucker {
-  my ($object, $nick, $place, $command, $args) = @_;
-  #  print "Authorization for $nick";
+  my ($object, $who, $place, $command, $args) = @_;
+  my $nick = parse_user($who);
+
+  # check if nick is on channel(s) while doing a query
+  my $presence;
+  foreach my $chan (@channels) {
+    if ($irc->is_channel_member($chan, $nick)) {
+      $presence = 1;
+    }
+  }
+  return 0 unless $presence;
+  
+  #  print "Authorization for $who";
   foreach my $pattern (@fuckers) {
-    if ($nick =~ m/\Q$pattern\E/i) {
-      # print "$nick match $pattern?";
+    if ($who =~ m/\Q$pattern\E/i) {
+      # print "$who match $pattern?";
       return 0, [];
     }
   }
