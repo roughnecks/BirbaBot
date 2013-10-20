@@ -2093,8 +2093,10 @@ sub check_if_fucker {
       $presence = 1;
     }
   }
-  return 0 unless $presence;
-  
+  # no presence => it's a fucker no matter what
+  unless ($presence) {
+      return 0 , [];
+  }
   #  print "Authorization for $who";
   foreach my $pattern (@fuckers) {
     if ($who =~ m/\Q$pattern\E/i) {
