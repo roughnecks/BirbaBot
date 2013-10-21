@@ -1382,6 +1382,12 @@ sub irc_botcmd_remind {
       return;
   }
   my $delay = time() + $seconds;
+  my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
+  $select->execute($where, $nick, $string);
+  if ($select->fetchrow_array()) {
+    bot_says($where, "There already is a reminder named \"$string\", please name it differently");
+    return;
+  }
   my $query = $dbh->prepare("INSERT INTO reminders (chan, author, time, phrase) VALUES (?, ?, ?, ?);");
   $query->execute($where, $nick, $delay, $string);
   my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
@@ -1821,7 +1827,7 @@ sub reminder_del {
   my ($kernel, $sender, $id) = @_[KERNEL, SENDER, ARG0];
   my $del_query = $dbh->prepare("DELETE from reminders WHERE id = ?;");
   $del_query->execute($id);
-  print "reminder deleted\n";
+  print "reminder $id deleted\n";
 }
 
 sub reminder_sentinel {
