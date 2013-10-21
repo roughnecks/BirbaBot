@@ -1382,12 +1382,15 @@ sub irc_botcmd_remind {
       return;
   }
   my $delay = time() + $seconds;
+  # first we check if reminders is already stored on db by the same user
+  # on the same channel with the same string; and in case we stop.
   my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
   $select->execute($where, $nick, $string);
   if ($select->fetchrow_array()) {
-    bot_says($where, "There already is a reminder named \"$string\", please name it differently");
+    bot_says($where, "There already is a reminder named \"$string\" for $nick on $where, please name it differently");
     return;
   }
+  # if the previous check was negative we continue storing and delaying the reminder
   my $query = $dbh->prepare("INSERT INTO reminders (chan, author, time, phrase) VALUES (?, ?, ?, ?);");
   $query->execute($where, $nick, $delay, $string);
   my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
