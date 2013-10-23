@@ -345,7 +345,7 @@ sub search_urban {
   while (@$results && ($counter < 3)) {
     my $res = shift(@$results);
     $res->{'term'} =~ s/ +//g;
-    $outstring .= $bbold . $counter . "." . " " .  $res->{'term'} . $ebold . " " .
+    $outstring .= $bbold . $res->{'term'} . $ebold . " " .
       $res->{'definition'} . " " . $res->{'example'} . "; ";
     $counter++;
   }
@@ -402,7 +402,6 @@ sub process_urban {
 		    start => [ sub {
 				 my ($tag, $attr) = @_;
 				 if ($tag &&
-				     ($tag eq 'td') &&
 				     $attr->{class} &&
 				     ($attr->{class} eq 'word')) {
 				   $in_entry = $tag;
