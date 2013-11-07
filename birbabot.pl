@@ -1378,7 +1378,7 @@ sub irc_botcmd_remind {
     }
   }
   if ($seconds <= 0) {
-      bot_says($where, "This date in the past, idiot!");
+      bot_says($where, "This date is in the past, idiot!");
       return;
   }
   my $delay = time() + $seconds;
