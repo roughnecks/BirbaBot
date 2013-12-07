@@ -1393,7 +1393,7 @@ sub irc_botcmd_remind {
   # if the previous check was negative we continue storing and delaying the reminder
   my $query = $dbh->prepare("INSERT INTO reminders (chan, author, time, phrase) VALUES (?, ?, ?, ?);");
   $query->execute($where, $nick, $delay, $string);
-  my $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
+  $select = $dbh->prepare("SELECT id FROM reminders WHERE chan = ? AND author = ? AND phrase = ?;");
   $select->execute($where, $nick, $string);
   my $id = $select->fetchrow_array();
   my $delayed = $irc->delay ( [ privmsg => $where => "$nick, it's time to: $string" ], $seconds );
@@ -1815,6 +1815,7 @@ sub psyradio_sentinel {
   eval {$song = get('http://psyradio.com.ua/ajax/radio_new.php')};
   if (length($song) > 300) {
       warn "Got garbage from radio_new.php, string length: " . length($song);
+      bot_says($psychan, "something's wrong, please check your logs.");
       return;
   }
   $psy_id = $kernel->delay_set("psyradio_sentinel", 100);
