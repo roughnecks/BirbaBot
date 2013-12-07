@@ -1813,6 +1813,11 @@ sub psyradio_sentinel {
     return;
   }
   eval {$song = get('http://psyradio.com.ua/ajax/radio_new.php')};
+  if (length($song) > 300) {
+      $psy_warn++;
+      warn "Got garbage from radio_new.php, string length: " . length($song);
+      return;
+  }
   $psy_id = $kernel->delay_set("psyradio_sentinel", 100);
   $psy_chk = 1;
   $psy_warn++ unless $song;
