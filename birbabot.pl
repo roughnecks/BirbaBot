@@ -1814,7 +1814,6 @@ sub psyradio_sentinel {
   }
   eval {$song = get('http://psyradio.com.ua/ajax/radio_new.php')};
   if (length($song) > 300) {
-      $psy_warn++;
       warn "Got garbage from radio_new.php, string length: " . length($song);
       return;
   }
