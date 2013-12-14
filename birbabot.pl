@@ -24,6 +24,7 @@ use POE::Component::IRC::State;
 use Cwd;
 use Data::Dumper;
 use Date::Parse;
+use DBI;
 use File::Basename;
 use File::Copy;
 use File::Path qw(make_path);

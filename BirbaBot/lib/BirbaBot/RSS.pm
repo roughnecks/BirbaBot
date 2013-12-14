@@ -27,7 +27,6 @@ our $VERSION = '0.01';
 
 use XML::Feed;
 use LWP::UserAgent;
-use DBI;
 use BirbaBot::Shorten;
 use Data::Dumper;
 use HTML::Parser 3.00 ();

@@ -5,7 +5,6 @@ package BirbaBot::Notes;
 use 5.010001;
 use strict;
 use warnings;
-use DBI;
 use Data::Dumper;
 require Exporter;
 
