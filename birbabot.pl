@@ -624,7 +624,14 @@ sub irc_botcmd_admin {
     print Dumper(\@adminregexps);
     bot_says($where, "Temporary Admin added.");
     return;
-  } else { print "Failed attempt to add a temporary Admin by $who\n"; }
+  } else { 
+    print "Failed attempt to add a Temporary Admin by $who\n"; 
+    foreach (@{$botconfig{'admins'}}) {
+      my $who = $_;
+      my $admin = parse_user($who); 
+      $irc->yield(privmsg => $admin, "Failed attempt to add a Temporary Admin by $who\n");
+    }
+  }
 }
 
 sub irc_botcmd_anotes {
