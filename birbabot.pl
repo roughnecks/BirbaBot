@@ -306,7 +306,7 @@ sub _start {
 									     deop => '(deop <nick> [<nick2> <nick#n>]) -- Deop someone in the current channel.',
 									     devoice => '(devoice <nick> [<nick2> <nick#n>]) -- Devoice someone in the current channel.',
 									     done => '(done <#n>) -- Delete something from the channel TODO; argument must be a number as shown by the list of channel (todo); see "help todo".',
-									     dremind => '(dremind <id>) -- Delete reminder with id "id". To know what id you\'r looking for try executing "lremind".',
+									     dremind => '(dremind <id>) -- Delete reminder with id "id". To know what id you\'re looking for try executing "lremind".',
 									     free => '(free) -- Show system memory usage.',
 									     g => '(g <string to search>) -- Do a google search: Takes a string of one or more arguments as search pattern.',
 									     geoip => '(geoip <ip_number|hostname>) -- IP Geolocation | Takes one argument: an ip or a hostname to lookup.',
