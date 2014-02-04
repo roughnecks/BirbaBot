@@ -237,6 +237,7 @@ POE::Session->create(
 						     irc_botcmd_deop
 						     irc_botcmd_devoice
 						     irc_botcmd_done
+						     irc_botcmd_dremind
 						     irc_botcmd_free
 						     irc_botcmd_g
 						     irc_botcmd_geoip
@@ -305,6 +306,7 @@ sub _start {
 									     deop => '(deop <nick> [<nick2> <nick#n>]) -- Deop someone in the current channel.',
 									     devoice => '(devoice <nick> [<nick2> <nick#n>]) -- Devoice someone in the current channel.',
 									     done => '(done <#n>) -- Delete something from the channel TODO; argument must be a number as shown by the list of channel (todo); see "help todo".',
+									     dremind => '(dremind <id>) -- Delete reminder with id "id". To know what id you\'r looking for try executing "lremind".',
 									     free => '(free) -- Show system memory usage.',
 									     g => '(g <string to search>) -- Do a google search: Takes a string of one or more arguments as search pattern.',
 									     geoip => '(geoip <ip_number|hostname>) -- IP Geolocation | Takes one argument: an ip or a hostname to lookup.',
@@ -788,6 +790,27 @@ sub irc_botcmd_done {
   return;
 }
 
+sub irc_botcmd_dremind {
+  my ($who, $chan, $id) = @_[ARG0, ARG1, ARG2];
+  my $nick = parse_user($who);
+  my $author;
+  if (($id) && ($id =~ m/^\s*\d*\s*$/)) { 
+    $id =~ s/^\s*//;
+    $id =~ s/\s*$//;
+    my $query = $dbh->prepare("SELECT author FROM reminders WHERE chan= ? AND id= ?;");
+    $query->execute($chan,$id);
+    while (my @values = $query->fetchrow_array()) {
+      $author = $values[0];
+    }
+    return bot_says($chan, "Can't find any reminder with id $id in channel $chan.") unless ($author);
+    if ($nick eq $author) {
+      my $del_query = $dbh->prepare("DELETE from reminders WHERE id = ?;");
+      $del_query->execute($id);
+      bot_says($chan, "Reminder deleted, restart me to also remove the hook.");
+    } else {bot_says($chan, "$nick is not the owner of reminder $id, i can't procede.");}
+  } else {bot_says($chan, "No id was given or it's not numeric.");}
+} 
+    
 sub irc_botcmd_free {
   my $mask = $_[ARG0];
   my $nick = (split /!/, $mask)[0];
