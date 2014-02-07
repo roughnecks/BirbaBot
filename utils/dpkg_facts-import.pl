@@ -35,11 +35,22 @@ my $dbh = DBI->connect("dbi:SQLite:dbname=$cwd/$dbname") or die $DBI::errstr;
 $dbh->do('PRAGMA foreign_keys = ON;');
 print "Succesfully connected to the sqlite database $dbname\n";
 
+## Let's count how many facts are going to be processed.
+my $check = $dbh->prepare("SELECT COUNT(*) FROM factoids WHERE nick='dpkg';");
+$check->execute;
+my $count;
+while (my @result = $check->fetchrow_array()) {
+	$count = $result[0];                        
+}                                              
+
+print "We are about to insert $count factoids into the sqlite database.\n";
+
 # Find all of the facts
 my @all_factoids = $schema->resultset('Factoids')->all;
 print "Starting importer..\n";
 print "The process may take a while to finish, please hold on.\n";
 
+return;
 # Cycle through facts and get keys/values to be imported in the sqlited db
 foreach my $fact (@all_factoids) {
 my $key = $fact->factoid_key;
