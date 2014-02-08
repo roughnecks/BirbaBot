@@ -38,7 +38,7 @@ set-up. It only inserts new factoids, does not overwrite nor update existing one
 
 ## How it works
 You need to stop BirbaBot, copy its sqlite db (birba.db) into the "utils" dir, where this README 
-is located. If you changed name to the database, please movev it to birba.db while doing this 
+is located. If you changed name to the database, please move it to birba.db while doing this 
 operations and then move back to whatever you chose in config file.
 
 Finally edit "dpkg_facts-import.pl" and set the custom variables for the sql connection handles.
