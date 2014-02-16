@@ -76,7 +76,7 @@ use BirbaBot::Debian qw(deb_pack_versions deb_pack_search);
 
 # Modules END
 
-our $VERSION = '1.8.4';
+our $VERSION = '1.8.5';
 
 use constant {
   USER_DATE     => 0,
