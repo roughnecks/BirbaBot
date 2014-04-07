@@ -53,8 +53,6 @@ use BirbaBot::RSS qw(
 		   );
 use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
-			  query_meteo
-			  yahoo_meteo
 			  search_imdb
 			  search_bash
 			  search_urban
@@ -254,7 +252,6 @@ POE::Session->create(
 						     irc_botcmd_lookup
 						     irc_botcmd_lremind
 						     irc_botcmd_math
-						     irc_botcmd_meteo
 						     irc_botcmd_mode
 						     irc_botcmd_note
 						     irc_botcmd_notes
@@ -274,7 +271,6 @@ POE::Session->create(
 						     irc_botcmd_version
 						     irc_botcmd_voice
 						     irc_botcmd_whoami
-						     irc_botcmd_wikiz
 						     debget_sentinel
 						     dns_response
 						     greetings_and_die
@@ -323,7 +319,6 @@ sub _start {
 									     lookup => '(lookup [<MX|AAAA>] <host>) -- Query Internet name servers | Takes two arguments: a record type like MX, AAAA (optional), and a host.',
 									     lremind => '(lremind) -- List active reminders in current channel, takes no argument.',
 									     math => '(math <num> <*|/|%|-|+> <num>) -- Do simple math: operators are " * / % - + ". Example: "math 3 * 3".',
-									     meteo => '(meteo >city>) -- Ask the weatherman for location.',
 									     mode => '(mode <+|-><mode>) -- Set channels modes, like "mode +R-ks" but also users modes, like bans: "mode +b nick!user@host".',
 									     note => '(note <nick> <message>) -- Send a note to a user not in the channel: he/she will get a query next time logins.',
 									     notes => '(notes [del <nickname>]) -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
@@ -342,8 +337,8 @@ sub _start {
 									     urban => '(urban [url] <foo>) -- Get definitions from the urban dictionary | "urban url <foo>" asks for the url',
 									     version => '(version) -- Show our version number and infos.',
 									     voice => '(voice <nick> [<nick2> <nick#n>]) -- Give voice status to someone in the current channel.',
-									     whoami => '(whoami) -- Check if you have Admin permission in BirbaBot.',
-									     wikiz => '(wikiz <foo>) -- Perform a search on "http://laltromondo.dynalias.net/~iki" and retrieve urls matching given argument.'									    },
+									     whoami => '(whoami) -- Check if you have Admin permission in BirbaBot.'
+									    },
 								In_channels => 1,
 								Auth_sub => \&check_if_fucker,
 								Ignore_unauthorized => 1,
@@ -1232,19 +1227,6 @@ sub irc_botcmd_math {
   return
 }
 
-sub irc_botcmd_meteo {
-  my ($where, $arg) = @_[ARG1, ARG2];
-  if (! defined $arg) {
-    bot_says($where, 'Missing location.');
-    return
-  } elsif ($arg =~ /^\s*$/) {
-    bot_says($where, 'Missing location.');
-    return
-  }
-  print "Asking the weatherman\n";
-  bot_says($where, yahoo_meteo($arg));
-  return;
-}
 
 sub irc_botcmd_mode {
   my ($who, $channel, $mode) = @_[ARG0..$#_];
@@ -1713,46 +1695,6 @@ sub irc_botcmd_whoami {
   } elsif (check_if_op($channel, $nick)) {
     bot_says($channel, "Hi $nick, you have operator status in $channel but i do not recognize you as a bot-admin.");
   } else {bot_says($channel, "Sorry pal, i do not recognize you.");}
-}
-
-sub irc_botcmd_wikiz {
-  my ($where, $arg) = @_[ARG1, ARG2];
-
-  # get the sitemap
-  my $file = get 'http://laltromondo.dynalias.net/~iki/sitemap/index.html';
-  my $prepend = 'http://laltromondo.dynalias.net/~iki';
-  my @out = ();
-
-  # split sitemap in an array and extract urls
-  my @list = split ( /(<.+?>)/, $file );
-  my @formatlist = grep ( /href="(\.\.)(.+?)"/, @list );
-
-  # grep the formatted list of url searching for pattern
-  if (! defined $arg) {
-    bot_says($where, 'Missing Argument');
-    return
-  } elsif ($arg =~ /^\s*$/) {
-    bot_says($where, 'Missing Argument');
-    return
-    } else {
-      @out = grep ( /\Q$arg\E/i , @formatlist );
-    }
-  # looping through the output of matching urls, clean some shit and spit to channel
-
-  my %hash;
-  foreach my $item (@out) {
-    $item =~ m!href="(\.\.)(.+?)"!;
-    $hash{$2} = 1;
-  }
-  @out = keys %hash;
-
-  if (@out) {
-    foreach (@out) {
-      bot_says ($where, $prepend .$_);
-    }
-  } else {
-    bot_says ($where, 'No matches found.');
-  }
 }
 
 # END irc_botcmd_ subs
