@@ -13,6 +13,8 @@ my $dbname = "birba.db";
 # Change the sqlite dbname as needed
 ### END Manual editable settings ###
 
+die "missing database file" unless (-e $dbname);
+
 my $dbh = DBI->connect("dbi:SQLite:dbname=$cwd/$dbname") or die $DBI::errstr;
 $dbh->do('PRAGMA foreign_keys = ON;');
 print "Succesfully connected to the sqlite database $dbname\n";
