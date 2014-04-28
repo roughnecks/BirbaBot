@@ -50,7 +50,6 @@ my @all_factoids = $schema->resultset('Factoids')->all;
 print "Starting importer..\n";
 print "The process may take a while to finish, please hold on.\n";
 
-return;
 # Cycle through facts and get keys/values to be imported in the sqlited db
 foreach my $fact (@all_factoids) {
 my $key = $fact->factoid_key;
