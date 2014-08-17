@@ -53,6 +53,8 @@ use BirbaBot::RSS qw(
 		   );
 use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
+			  query_meteo
+			  yahoo_meteo
 			  search_imdb
 			  search_bash
 			  search_urban
@@ -132,6 +134,7 @@ my %botconfig = (
 		 'kw_prefix' => '',
 		 'psyradio' => '',
 		 'psychan' => '',
+         'yahoo_key' => '',
 		);
 
 my %debconfig = (
@@ -252,6 +255,7 @@ POE::Session->create(
 						     irc_botcmd_lookup
 						     irc_botcmd_lremind
 						     irc_botcmd_math
+						     irc_botcmd_meteo
 						     irc_botcmd_mode
 						     irc_botcmd_note
 						     irc_botcmd_notes
@@ -319,6 +323,7 @@ sub _start {
 									     lookup => '(lookup [<MX|AAAA>] <host>) -- Query Internet name servers | Takes two arguments: a record type like MX, AAAA (optional), and a host.',
 									     lremind => '(lremind) -- List active reminders in current channel, takes no argument.',
 									     math => '(math <num> <*|/|%|-|+> <num>) -- Do simple math: operators are " * / % - + ". Example: "math 3 * 3".',
+									     meteo => '(meteo >city>) -- Ask the weatherman for location.',
 									     mode => '(mode <+|-><mode>) -- Set channels modes, like "mode +R-ks" but also users modes, like bans: "mode +b nick!user@host".',
 									     note => '(note <nick> <message>) -- Send a note to a user not in the channel: he/she will get a query next time logins.',
 									     notes => '(notes [del <nickname>]) -- Manage your own notes: without arguments lists pending notes by current user. "del" deletes all pending notes from the current user to <nickname>',
@@ -1227,6 +1232,19 @@ sub irc_botcmd_math {
   return
 }
 
+sub irc_botcmd_meteo {
+  my ($where, $arg) = @_[ARG1, ARG2];
+  if (! defined $arg) {
+    bot_says($where, 'Missing location.');
+    return
+  } elsif ($arg =~ /^\s*$/) {
+    bot_says($where, 'Missing location.');
+    return
+  }
+  print "Asking the weatherman\n";
+  bot_says($where, yahoo_meteo($botconfig{yahoo_key}, $arg));
+  return;
+}
 
 sub irc_botcmd_mode {
   my ($who, $channel, $mode) = @_[ARG0..$#_];

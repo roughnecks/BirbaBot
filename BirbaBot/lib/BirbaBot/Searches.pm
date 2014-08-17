@@ -470,11 +470,24 @@ sub process_urban {
 
 
 sub yahoo_meteo {
-  my $location = shift;
-  $location = uri_escape($location);
-  my $woeid = get "http://laltromondo.dynalias.net/yahoo/yahoo.php?city=$location";
+  my ($key, $location) = @_;
+  my $city_xml = get "http://where.yahooapis.com/v1/places.q('"
+    . uri_escape($location). "')?appid=$key";
+
+  my $woeid;
+  if ($city_xml) {
+      my $parser = XML::Parser->new(Style => 'Tree');
+      my $tree;
+      eval {
+          $tree = $parser->parse($city_xml);
+          $woeid = $tree->[1]->[2]->[2]->[2];
+      };
+  }
+  else {
+      return "No match for $location";
+  }
   my $key;
-  if ($woeid =~ m/(\d+)/) {
+  if ($woeid and $woeid =~ m/(\d+)/) {
     $key = $1;
   } else {
     return "No match for $location";
