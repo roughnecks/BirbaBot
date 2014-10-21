@@ -45,9 +45,7 @@ sub make_tiny_url {
   my $ua = LWP::UserAgent->new(timeout => 10);
   $ua->agent( 'Mozilla' );
   my $short;
-  if ($short = make_tiny_url_jumbo($ua, $url)) {
-    return $short
-  } elsif ($short = make_tiny_url_x($ua, $url)) {
+  if ($short = make_tiny_url_x($ua, $url)) {
     return $short
   } elsif ($short = make_tiny_url_metamark($ua, $url)) {
     return $short

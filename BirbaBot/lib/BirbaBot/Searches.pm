@@ -486,7 +486,7 @@ sub yahoo_meteo {
   else {
       return "No match for $location";
   }
-  my $key;
+#  my $key;
   if ($woeid and $woeid =~ m/(\d+)/) {
     $key = $1;
   } else {
