@@ -55,21 +55,6 @@ sub make_tiny_url {
   }
 }
 
-sub make_tiny_url_jumbo {
-  my ($ua, $url) = @_;
-  my $uri = uri_escape($url);
-  my $response = $ua->request( GET "http://jmb.tw/api/create/?newurl=$uri");
-  #  print $response->content, "\n";
-  if ($response->is_success and $response->content =~ m!($goodurlre)!) {
-    return $1;
-  } 
-  else {
-    warn $response->status_line;
-    return 0;
-  };
-}
-
-
 sub make_tiny_url_x {
   my ($ua, $url) = @_;
   my $response = $ua->request( POST 'http://api.x0.no/post/', 
