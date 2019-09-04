@@ -20,9 +20,10 @@ our @EXPORT_OK = qw(
 		     search_imdb
 		     search_bash
 		     search_urban
-                     get_youtube_title
+         get_youtube_title
 		     query_meteo
 		     yahoo_meteo
+         openweather_meteo
 		  );
 
 our $VERSION = '0.01';
@@ -531,6 +532,26 @@ sub yahoo_meteo {
     }
   }
   return join(" ", @collected);
+}
+
+
+sub openweather_meteo {
+  my ($key, $location) = @_;
+  my $url = "http://api.openweathermap.org/data/2.5/weather?q=$location&units=METRIC&appid=$key";
+
+  my $jsonresponse = $ua->get($url);
+  unless ($jsonresponse->is_success) {
+    return ("Huston, we have a problem... openweathermap is not responding or city not found", 1);
+  }
+
+  my $weather = JSON::Any->jsonToObj($jsonresponse->content);
+
+  #print Dumper(\$weather);
+
+  if ($weather->{cod} == 200) {
+  my $meteo = "It\'s " . $weather->{'weather'}[0]{description} . " and " . $weather->{main}->{temp} . "°C in " . $weather->{name} . ", " . $weather->{sys}->{country} . "! Pressure is " . $weather->{main}->{pressure} . "hPa, humidity is " . $weather->{main}->{humidity} . "% and wind speed is " . $weather->{wind}->{speed} . "meter/sec.";
+  return $meteo;
+  }
 }
 
 1;

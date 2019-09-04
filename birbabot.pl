@@ -55,6 +55,7 @@ use BirbaBot::Geo;
 use BirbaBot::Searches qw(search_google
 			  query_meteo
 			  yahoo_meteo
+        openweather_meteo
 			  search_imdb
 			  search_bash
 			  search_urban
@@ -1242,7 +1243,7 @@ sub irc_botcmd_meteo {
     return
   }
   print "Asking the weatherman\n";
-  bot_says($where, yahoo_meteo($botconfig{yahoo_key}, $arg));
+  bot_says($where, openweather_meteo($botconfig{yahoo_key}, $arg));
   return;
 }
 
