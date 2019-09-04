@@ -365,6 +365,7 @@ sub search_urban {
 }
 
 sub get_youtube_title {
+  return;
   my $url = shift;
   print "Parsing title of $url\n";
   my $response = $ua->get($url);
