@@ -19,6 +19,7 @@ our @EXPORT_OK = qw(make_tiny_url);
 
 our $VERSION = '0.01';
 
+use URI;
 use LWP::UserAgent;
 use HTTP::Response;
 use HTTP::Request::Common;
@@ -38,22 +39,22 @@ processing.
 =cut
 
 sub make_tiny_url {
-  return;
   my $url = shift;
   return $url unless ((length $url) > 60);
   print "Requesting tinyurl for $url\n";
 #  print $url, "\n";
   my $ua = LWP::UserAgent->new(timeout => 10);
   $ua->agent( 'Mozilla' );
-  my $short;
-  if ($short = make_tiny_url_x($ua, $url)) {
-    return $short
-  } elsif ($short = make_tiny_url_metamark($ua, $url)) {
-    return $short
-  }
-  else {
-    return $url
-  }
+  return make_tiny_url_isgd($ua, $url);
+}
+
+sub make_tiny_url_isgd {
+    my ($ua, $url) = @_;
+    my $uri = URI->new('https://is.gd/create.php');
+    $uri->query_form(format => 'simple',
+                     url => $url);
+    my $res = $ua->get($uri);
+    return $res->decoded_content;
 }
 
 sub make_tiny_url_x {
