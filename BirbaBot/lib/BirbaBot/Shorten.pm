@@ -38,6 +38,7 @@ processing.
 =cut
 
 sub make_tiny_url {
+  return;
   my $url = shift;
   return $url unless ((length $url) > 60);
   print "Requesting tinyurl for $url\n";
