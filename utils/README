@@ -59,6 +59,14 @@ DBD::SQLite::st execute failed: column key is not unique at ./dpkg_facts-import.
 
 If this is the second (or ahead) time you are about to upgrade dpkg factoids, you have to run the
 dpkg_facts-delete.pl script before the import one.
+
+*** note #3 (2022 update)
+
+If the importer fails with error message: Can't locate app/Schema.pm in @INC
+run this before launching the script:
+
+$ export PERL_USE_UNSAFE_INC=1
+
 ------------------------------------------------------------------------------------------------
 
 ## dpkg/#debian Bot database Cleanup Utility
