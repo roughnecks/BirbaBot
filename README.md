@@ -201,4 +201,4 @@ Contacts
 
 For any other help, contacts and informations:
 
-** freenode IRC Network, #BirbaBot channel.
+** libera IRC Network, #birbabot channel.
