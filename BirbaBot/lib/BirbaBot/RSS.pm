@@ -270,7 +270,7 @@ sub rss_fetch {
 	my $feed_item_title = $item->title;
 	my $feed_item_author = $item->author;
 	my $feed_item_content = $item->summary->body || $item->content->body;
-	my $feed_item_tinyurl = BirbaBot::Shorten::make_tiny_url($feed_item_link);
+	my $feed_item_tinyurl = $feed_item_link;
 	my $out_link;
 	if ($feed_item_link eq $feed_item_tinyurl) {
 	  $feed_item_tinyurl = undef;
